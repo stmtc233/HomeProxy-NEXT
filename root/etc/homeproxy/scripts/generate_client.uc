@@ -1003,6 +1003,26 @@ if (!isEmpty(main_node)) {
 			outbound: 'direct-out'
 		});
 
+	/* Main UDP out.
+	   This must be emitted BEFORE the resolve/geoip-cn pair below. `route` is a
+	   final action in sing-box: once it matches, the remaining rules are never
+	   evaluated. The unconditional `resolve` turns the destination into an IP,
+	   after which `geoip-cn` matches any CN address and routes it to
+	   direct-out - so a UDP rule placed after that pair is dead code and
+	   destinations inside the CN geoip would silently bypass main-udp-out.
+	   Placed here, an explicit UDP node owns every UDP connection, which is what
+	   configuring one means. */
+	if (dedicated_udp_node) {
+		const udp_override = direct_overrides[main_udp_node] || null;
+		push(config.route.rules, {
+			network: 'udp',
+			action: 'route',
+			outbound: 'main-udp-out',
+			override_address: udp_override ? udp_override.override_address : null,
+			override_port: udp_override ? udp_override.override_port : null
+		});
+	}
+
 	/* Bypass CN traffic: resolve the destination first, then route by IP.
 	   sing-box does not match an IP-based rule set (geoip-cn) against a domain
 	   destination unless it is resolved first, so add an explicit resolve
@@ -1020,18 +1040,6 @@ if (!isEmpty(main_node)) {
 			rule_set: 'geoip-cn',
 			action: 'route',
 			outbound: 'direct-out'
-		});
-	}
-
-	/* Main UDP out */
-	if (dedicated_udp_node) {
-		const udp_override = direct_overrides[main_udp_node] || null;
-		push(config.route.rules, {
-			network: 'udp',
-			action: 'route',
-			outbound: 'main-udp-out',
-			override_address: udp_override ? udp_override.override_address : null,
-			override_port: udp_override ? udp_override.override_port : null
 		});
 	}
 
