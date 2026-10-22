@@ -608,7 +608,7 @@
 					"kind": "Value",
 					"name": "dashboard_url",
 					"title": "Dashboard download URL",
-					"description": "ZIP archive of the dashboard files. Leave empty to use the default sing-box dashboard. Downloaded into /etc/homeproxy/dashboard and refreshed daily.",
+					"description": "ZIP archive of the dashboard files. Leave empty to use the default sing-box dashboard. Downloaded into /etc/homeproxy/dashboard/web and refreshed daily.",
 					"depends": [
 						[
 							"dashboard",

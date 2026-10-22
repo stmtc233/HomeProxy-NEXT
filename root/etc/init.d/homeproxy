@@ -154,8 +154,9 @@ start_service() {
 		config_get outbound_node "routing" "default_outbound" "nil"
 	fi
 
-	local server_enabled
+	local server_enabled dashboard
 	config_get_bool server_enabled "server" "enabled" "0"
+	config_get dashboard "config" "dashboard" "0"
 
 	if [ "$outbound_node" = "nil" ] && [ "$server_enabled" = "0" ]; then
 		log "Neither client nor server is configured. Service not started."
@@ -264,6 +265,7 @@ start_service() {
 		procd_append_param command run --config "$RUN_DIR/sing-box-c.json"
 
 		[ "$disable_gso" -eq "1" ] && procd_set_param env "QUIC_GO_DISABLE_GSO"="true"
+		[ "$dashboard" = "1" ] && procd_append_param env "TMPDIR=$HP_DIR/dashboard/tmp"
 
 		if [ -x "/sbin/ujail" ] && ! grep -Eq '"type": "(wireguard|tun)"' "$RUN_DIR/sing-box-c.json"; then
 			procd_add_jail "sing-box-c" log procfs
@@ -278,6 +280,7 @@ start_service() {
 			"bypass_mainland_china"|"custom")
 				procd_add_jail_mount_rw "$HP_DIR/cache.db" ;;
 			esac
+			[ "$dashboard" = "1" ] && procd_add_jail_mount_rw "$HP_DIR/dashboard/"
 			procd_add_jail_mount "$HP_DIR/certs/"
 			procd_add_jail_mount "/etc/acme/"
 			procd_add_jail_mount "/etc/ssl/"
@@ -366,6 +369,15 @@ start_service() {
 		# longer root, so the documented directory has to be readable by it.
 		chown -R sing-box:sing-box "$HP_DIR/ruleset" 2>"/dev/null" \
 			|| log "Warning: failed to hand ${HP_DIR}/ruleset to sing-box."
+	fi
+
+	# The jailed client has no writable /tmp, and sing-box needs room for both
+	# the downloaded dashboard archive and the unpacked files. Keep them in one
+	# read-write mount so that it never has to rename across filesystems.
+	if [ "$dashboard" = "1" ] && [ "$outbound_node" != "nil" ]; then
+		mkdir -p "$HP_DIR/dashboard/tmp" \
+			&& chown -R sing-box:sing-box "$HP_DIR/dashboard" 2>"/dev/null" \
+			|| log "Warning: failed to prepare ${HP_DIR}/dashboard for sing-box."
 	fi
 
 	[ "$outbound_node" = "nil" ] || echo > "$RUN_DIR/sing-box-c.log"
