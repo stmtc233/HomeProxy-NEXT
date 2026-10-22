@@ -1133,7 +1133,7 @@ if (dashboard_enabled === '1') {
 		secret: dashboard_secret,
 		dashboard: {
 			enabled: true,
-			path: '/etc/homeproxy/dashboard/web',
+			path: RUN_DIR + '/dashboard/web',
 			download_url: dashboard_url,
 			http_client: http_client_for(isEmpty(main_node) || main_node === 'nil' ? null : 'main-out')
 		}

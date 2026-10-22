@@ -54,7 +54,7 @@
 在「客户端设置 → 路由设置」中可启用 sing-box 1.14 的 `api` 服务（`services` 中 `type: api`，不使用 Clash API）：
 
 - 监听地址默认 `0.0.0.0:9090`（仅本机访问可改为 `127.0.0.1:9090`），建议同时设置密钥；
-- 网页 Dashboard 由 sing-box 下载到 `/etc/homeproxy/dashboard/web` 并每天刷新，下载走主节点（未设置主节点则直连）；可自定义 ZIP 下载地址，留空使用 sing-box 默认 Dashboard；
+- 网页 Dashboard 由 sing-box 下载到 `/var/run/homeproxy/dashboard/web` （内存中，重启后重新下载）并每天刷新，下载走主节点（未设置主节点则直连）；可自定义 ZIP 下载地址，留空使用 sing-box 默认 Dashboard；
 - 启用后通过 `http://路由器地址:9090/dashboard/` 访问，sing-box 官方客户端也可用该地址远程控制。
 
 ## 新增：规则集自动更新（r5）

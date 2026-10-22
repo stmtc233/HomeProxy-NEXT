@@ -3555,5 +3555,5 @@ msgid "Dashboard download URL"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "ZIP archive of the dashboard files. Leave empty to use the default sing-box dashboard. Downloaded into /etc/homeproxy/dashboard/web and refreshed daily."
+msgid "ZIP archive of the dashboard files. Leave empty to use the default sing-box dashboard. Downloaded into /var/run/homeproxy/dashboard/web and refreshed daily."
 msgstr ""
