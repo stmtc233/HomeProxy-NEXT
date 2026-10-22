@@ -144,6 +144,18 @@ const tun_dns_mode = (tun_dns_mode_raw === 'default') ? '' : tun_dns_mode_raw,
       udp_mapping = (udp_mapping_raw === 'default') ? '' : udp_mapping_raw,
       udp_filtering = (udp_filtering_raw === 'default') ? '' : udp_filtering_raw;
 
+const dashboard_enabled = uci.get(uciconfig, ucimain, 'dashboard') || '0',
+      dashboard_listen = uci.get(uciconfig, ucimain, 'dashboard_listen') || '0.0.0.0:9090',
+      dashboard_secret = uci.get(uciconfig, ucimain, 'dashboard_secret'),
+      dashboard_ui = uci.get(uciconfig, ucimain, 'dashboard_ui') || 'zashboard',
+      dashboard_ui_url = uci.get(uciconfig, ucimain, 'dashboard_ui_url');
+
+const dashboard_ui_urls = {
+	zashboard: 'https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip',
+	metacubexd: 'https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip',
+	yacd: 'https://github.com/MetaCubeX/Yacd-meta/archive/refs/heads/gh-pages.zip'
+};
+
 const direct_overrides = {};
 
 function parse_port(strport) {
@@ -1128,6 +1140,18 @@ if (routing_mode in ['bypass_mainland_china', 'custom']) {
 			path: '/etc/homeproxy/cache.db',
 			store_dns: (dns_store_dns === '1') ? true : null
 		}
+	};
+}
+
+if (dashboard_enabled === '1') {
+	const ui_url = (dashboard_ui === 'custom') ? dashboard_ui_url : dashboard_ui_urls[dashboard_ui];
+
+	config.experimental = config.experimental || {};
+	config.experimental.clash_api = {
+		external_controller: dashboard_listen,
+		external_ui: !isEmpty(ui_url) ? '/etc/homeproxy/ui' : null,
+		external_ui_download_url: ui_url,
+		secret: dashboard_secret
 	};
 }
 

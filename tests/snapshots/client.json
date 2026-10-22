@@ -559,6 +559,108 @@
 					}
 				},
 				{
+					"kind": "Flag",
+					"name": "dashboard",
+					"title": "Enable dashboard (Clash API)",
+					"description": "Expose the sing-box Clash API and serve a web dashboard on the controller address under /ui. Requires a sing-box build with Clash API support.",
+					"depends": [],
+					"values": [],
+					"props": {
+						"rmempty": false
+					}
+				},
+				{
+					"kind": "Value",
+					"name": "dashboard_listen",
+					"title": "Dashboard listen address",
+					"description": "Address and port of the Clash API controller. Use 127.0.0.1:9090 to keep it local only.",
+					"depends": [
+						[
+							"dashboard",
+							"1"
+						]
+					],
+					"values": [],
+					"props": {
+						"default": "0.0.0.0:9090",
+						"placeholder": "0.0.0.0:9090",
+						"rmempty": false
+					}
+				},
+				{
+					"kind": "Value",
+					"name": "dashboard_secret",
+					"title": "Dashboard secret",
+					"description": "Bearer token required by the API. Strongly recommended when listening on a non-local address.",
+					"depends": [
+						[
+							"dashboard",
+							"1"
+						]
+					],
+					"values": [],
+					"props": {
+						"password": true,
+						"rmempty": true
+					}
+				},
+				{
+					"kind": "ListValue",
+					"name": "dashboard_ui",
+					"title": "Dashboard UI",
+					"description": "Downloaded by sing-box on first start into /etc/homeproxy/ui and reused afterwards. Delete that directory to fetch it again.",
+					"depends": [
+						[
+							"dashboard",
+							"1"
+						]
+					],
+					"values": [
+						[
+							"zashboard",
+							"Zashboard"
+						],
+						[
+							"metacubexd",
+							"MetaCubeXD"
+						],
+						[
+							"yacd",
+							"Yacd-meta"
+						],
+						[
+							"custom",
+							"Custom URL"
+						],
+						[
+							"none",
+							"API only (no UI)"
+						]
+					],
+					"props": {
+						"default": "zashboard",
+						"rmempty": false
+					}
+				},
+				{
+					"kind": "Value",
+					"name": "dashboard_ui_url",
+					"title": "Dashboard UI download URL",
+					"description": "URL of a ZIP archive containing the dashboard files.",
+					"depends": [
+						{
+							"dashboard": "1",
+							"dashboard_ui": "custom"
+						}
+					],
+					"values": [],
+					"props": {
+						"datatype": "string",
+						"placeholder": "https://example.com/dist.zip",
+						"rmempty": false
+					}
+				},
+				{
 					"kind": "SectionValue",
 					"name": "_routing",
 					"description": "routing",

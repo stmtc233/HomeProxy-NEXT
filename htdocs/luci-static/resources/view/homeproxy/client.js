@@ -351,6 +351,48 @@ return view.extend({
 		o.depends('proxy_mode', 'redirect_tun');
 		o.depends('proxy_mode', 'tun');
 
+		o = s.taboption('routing', form.Flag, 'dashboard', _('Enable dashboard (Clash API)'),
+			_('Expose the sing-box Clash API and serve a web dashboard on the controller address under /ui. Requires a sing-box build with Clash API support.'));
+		o.rmempty = false;
+
+		o = s.taboption('routing', form.Value, 'dashboard_listen', _('Dashboard listen address'),
+			_('Address and port of the Clash API controller. Use 127.0.0.1:9090 to keep it local only.'));
+		o.default = '0.0.0.0:9090';
+		o.placeholder = '0.0.0.0:9090';
+		o.validate = function(section_id, value) {
+			if (!value)
+				return _('Expecting: %s').format(_('non-empty value'));
+			if (!/^(\[[0-9a-fA-F:.]+\]|[0-9A-Za-z.-]*):([0-9]{1,5})$/.test(value) || +value.split(':').pop() > 65535)
+				return _('Expecting: %s').format(_('host:port'));
+			return true;
+		};
+		o.depends('dashboard', '1');
+		o.rmempty = false;
+
+		o = s.taboption('routing', form.Value, 'dashboard_secret', _('Dashboard secret'),
+			_('Bearer token required by the API. Strongly recommended when listening on a non-local address.'));
+		o.password = true;
+		o.depends('dashboard', '1');
+		o.rmempty = true;
+
+		o = s.taboption('routing', form.ListValue, 'dashboard_ui', _('Dashboard UI'),
+			_('Downloaded by sing-box on first start into /etc/homeproxy/ui and reused afterwards. Delete that directory to fetch it again.'));
+		o.value('zashboard', 'Zashboard');
+		o.value('metacubexd', 'MetaCubeXD');
+		o.value('yacd', 'Yacd-meta');
+		o.value('custom', _('Custom URL'));
+		o.value('none', _('API only (no UI)'));
+		o.default = 'zashboard';
+		o.depends('dashboard', '1');
+		o.rmempty = false;
+
+		o = s.taboption('routing', form.Value, 'dashboard_ui_url', _('Dashboard UI download URL'),
+			_('URL of a ZIP archive containing the dashboard files.'));
+		o.datatype = 'string';
+		o.placeholder = 'https://example.com/dist.zip';
+		o.depends({'dashboard': '1', 'dashboard_ui': 'custom'});
+		o.rmempty = false;
+
 		o = s.taboption('routing', form.SectionValue, '_routing', form.NamedSection, 'routing', 'homeproxy');
 		o.depends('routing_mode', 'custom');
 
