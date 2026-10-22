@@ -147,14 +147,7 @@ const tun_dns_mode = (tun_dns_mode_raw === 'default') ? '' : tun_dns_mode_raw,
 const dashboard_enabled = uci.get(uciconfig, ucimain, 'dashboard') || '0',
       dashboard_listen = uci.get(uciconfig, ucimain, 'dashboard_listen') || '0.0.0.0:9090',
       dashboard_secret = uci.get(uciconfig, ucimain, 'dashboard_secret'),
-      dashboard_ui = uci.get(uciconfig, ucimain, 'dashboard_ui') || 'zashboard',
-      dashboard_ui_url = uci.get(uciconfig, ucimain, 'dashboard_ui_url');
-
-const dashboard_ui_urls = {
-	zashboard: 'https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip',
-	metacubexd: 'https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip',
-	yacd: 'https://github.com/MetaCubeX/Yacd-meta/archive/refs/heads/gh-pages.zip'
-};
+      dashboard_url = uci.get(uciconfig, ucimain, 'dashboard_url');
 
 const direct_overrides = {};
 
@@ -1130,6 +1123,23 @@ if (!isEmpty(main_node)) {
 if (isEmpty(config.route.default_domain_resolver))
 	config.route.default_domain_resolver = { server: 'default-dns' };
 
+if (dashboard_enabled === '1') {
+	const listen_match = match(dashboard_listen, /^\[?([^\]]*)\]?:([0-9]+)$/);
+
+	config.services = [{
+		type: 'api',
+		listen: listen_match ? listen_match[1] : '0.0.0.0',
+		listen_port: listen_match ? int(listen_match[2]) : 9090,
+		secret: dashboard_secret,
+		dashboard: {
+			enabled: true,
+			path: '/etc/homeproxy/dashboard',
+			download_url: dashboard_url,
+			http_client: http_client_for(isEmpty(main_node) || main_node === 'nil' ? null : 'main-out')
+		}
+	}];
+}
+
 if (length(http_clients))
 	config.http_clients = http_clients;
 
@@ -1140,18 +1150,6 @@ if (routing_mode in ['bypass_mainland_china', 'custom']) {
 			path: '/etc/homeproxy/cache.db',
 			store_dns: (dns_store_dns === '1') ? true : null
 		}
-	};
-}
-
-if (dashboard_enabled === '1') {
-	const ui_url = (dashboard_ui === 'custom') ? dashboard_ui_url : dashboard_ui_urls[dashboard_ui];
-
-	config.experimental = config.experimental || {};
-	config.experimental.clash_api = {
-		external_controller: dashboard_listen,
-		external_ui: !isEmpty(ui_url) ? '/etc/homeproxy/ui' : null,
-		external_ui_download_url: ui_url,
-		secret: dashboard_secret
 	};
 }
 

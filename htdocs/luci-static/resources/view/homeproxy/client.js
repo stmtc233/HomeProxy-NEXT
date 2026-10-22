@@ -351,12 +351,12 @@ return view.extend({
 		o.depends('proxy_mode', 'redirect_tun');
 		o.depends('proxy_mode', 'tun');
 
-		o = s.taboption('routing', form.Flag, 'dashboard', _('Enable dashboard (Clash API)'),
-			_('Expose the sing-box Clash API and serve a web dashboard on the controller address under /ui. Requires a sing-box build with Clash API support.'));
+		o = s.taboption('routing', form.Flag, 'dashboard', _('Enable dashboard (sing-box API)'),
+			_('Run the sing-box 1.14 API service and serve its web dashboard at /dashboard/ on the listen address.'));
 		o.rmempty = false;
 
 		o = s.taboption('routing', form.Value, 'dashboard_listen', _('Dashboard listen address'),
-			_('Address and port of the Clash API controller. Use 127.0.0.1:9090 to keep it local only.'));
+			_('Address and port of the API service. Use 127.0.0.1:9090 to keep it local only.'));
 		o.default = '0.0.0.0:9090';
 		o.placeholder = '0.0.0.0:9090';
 		o.validate = function(section_id, value) {
@@ -375,23 +375,11 @@ return view.extend({
 		o.depends('dashboard', '1');
 		o.rmempty = true;
 
-		o = s.taboption('routing', form.ListValue, 'dashboard_ui', _('Dashboard UI'),
-			_('Downloaded by sing-box on first start into /etc/homeproxy/ui and reused afterwards. Delete that directory to fetch it again.'));
-		o.value('zashboard', 'Zashboard');
-		o.value('metacubexd', 'MetaCubeXD');
-		o.value('yacd', 'Yacd-meta');
-		o.value('custom', _('Custom URL'));
-		o.value('none', _('API only (no UI)'));
-		o.default = 'zashboard';
+		o = s.taboption('routing', form.Value, 'dashboard_url', _('Dashboard download URL'),
+			_('ZIP archive of the dashboard files. Leave empty to use the default sing-box dashboard. Downloaded into /etc/homeproxy/dashboard and refreshed daily.'));
+		o.placeholder = 'https://example.com/dashboard.zip';
 		o.depends('dashboard', '1');
-		o.rmempty = false;
-
-		o = s.taboption('routing', form.Value, 'dashboard_ui_url', _('Dashboard UI download URL'),
-			_('URL of a ZIP archive containing the dashboard files.'));
-		o.datatype = 'string';
-		o.placeholder = 'https://example.com/dist.zip';
-		o.depends({'dashboard': '1', 'dashboard_ui': 'custom'});
-		o.rmempty = false;
+		o.rmempty = true;
 
 		o = s.taboption('routing', form.SectionValue, '_routing', form.NamedSection, 'routing', 'homeproxy');
 		o.depends('routing_mode', 'custom');

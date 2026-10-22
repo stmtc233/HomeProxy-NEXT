@@ -3627,7 +3627,6 @@ msgstr "使用额外标签时 URL 需包含 {tag}"
 msgid "{tag} in initial path when extra tags are used"
 msgstr "使用额外标签时初始路径需包含 {tag}"
 
-
 msgid "Block HTTPS/SVCB DNS records"
 msgstr "拦截 HTTPS/SVCB DNS 记录"
 
@@ -3746,20 +3745,8 @@ msgstr "GeoSite CN 规则集版本"
 #~ "天）</code>。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "API only (no UI)"
-msgstr "仅 API（不带界面）"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "Address and port of the Clash API controller. Use 127.0.0.1:9090 to keep it local only."
-msgstr "Clash API 控制器的监听地址和端口。填 127.0.0.1:9090 则仅限本机访问。"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Bearer token required by the API. Strongly recommended when listening on a non-local address."
 msgstr "API 访问所需的 Bearer 令牌。监听非本机地址时强烈建议设置。"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "Custom URL"
-msgstr "自定义 URL"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Dashboard listen address"
@@ -3770,29 +3757,25 @@ msgid "Dashboard secret"
 msgstr "Dashboard 密钥"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "Dashboard UI"
-msgstr "Dashboard 界面"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "Dashboard UI download URL"
-msgstr "Dashboard 界面下载 URL"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "Downloaded by sing-box on first start into /etc/homeproxy/ui and reused afterwards. Delete that directory to fetch it again."
-msgstr "由 sing-box 首次启动时下载到 /etc/homeproxy/ui 并在之后复用。删除该目录可重新下载。"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "Enable dashboard (Clash API)"
-msgstr "启用 Dashboard（Clash API）"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "Expose the sing-box Clash API and serve a web dashboard on the controller address under /ui. Requires a sing-box build with Clash API support."
-msgstr "开启 sing-box 的 Clash API，并在控制器地址的 /ui 路径提供网页 Dashboard。需要 sing-box 编译时包含 Clash API 支持。"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "URL of a ZIP archive containing the dashboard files."
-msgstr "包含 Dashboard 文件的 ZIP 压缩包 URL。"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "host:port"
 msgstr "主机:端口"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Enable dashboard (sing-box API)"
+msgstr "启用 Dashboard（sing-box API）"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Run the sing-box 1.14 API service and serve its web dashboard at /dashboard/ on the listen address."
+msgstr "运行 sing-box 1.14 的 API 服务，并在监听地址的 /dashboard/ 路径提供网页 Dashboard。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Address and port of the API service. Use 127.0.0.1:9090 to keep it local only."
+msgstr "API 服务的监听地址和端口。填 127.0.0.1:9090 则仅限本机访问。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Dashboard download URL"
+msgstr "Dashboard 下载 URL"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "ZIP archive of the dashboard files. Leave empty to use the default sing-box dashboard. Downloaded into /etc/homeproxy/dashboard and refreshed daily."
+msgstr "Dashboard 文件的 ZIP 压缩包。留空则使用 sing-box 默认 Dashboard。下载到 /etc/homeproxy/dashboard，每天刷新。"

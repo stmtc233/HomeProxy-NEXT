@@ -49,14 +49,13 @@
 
 > 这版块确实很难两全，改来改去也都存在缺憾，就这样不改了，照顾大多数为准。
 
-## 新增：Dashboard 支持（Clash API）
+## 新增：Dashboard 支持（sing-box 1.14 原生 API）
 
-在「客户端设置 → 路由设置」中可启用 sing-box 的 Clash API 与网页 Dashboard：
+在「客户端设置 → 路由设置」中可启用 sing-box 1.14 的 `api` 服务（`services` 中 `type: api`，不使用 Clash API）：
 
 - 监听地址默认 `0.0.0.0:9090`（仅本机访问可改为 `127.0.0.1:9090`），建议同时设置密钥；
-- 内置 Zashboard / MetaCubeXD / Yacd-meta 三种界面，也可自定义 ZIP 下载地址，或选择「仅 API」；
-- 界面由 sing-box 首次启动时下载到 `/etc/homeproxy/ui`，之后复用（删除该目录可重新下载）；
-- 启用后通过 `http://路由器地址:9090/ui` 访问。需要 sing-box 编译时包含 Clash API。
+- 网页 Dashboard 由 sing-box 下载到 `/etc/homeproxy/dashboard` 并每天刷新，下载走主节点（未设置主节点则直连）；可自定义 ZIP 下载地址，留空使用 sing-box 默认 Dashboard；
+- 启用后通过 `http://路由器地址:9090/dashboard/` 访问，sing-box 官方客户端也可用该地址远程控制。
 
 ## 新增：规则集自动更新（r5）
 
