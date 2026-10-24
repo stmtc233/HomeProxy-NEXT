@@ -316,6 +316,15 @@ function main() {
 			if (main_node === 'urltest') {
 				const old_urltest_nodes = uci.get(uciconfig, ucimain, 'main_urltest_nodes') || [];
 				main_urltest_nodes = filter(old_urltest_nodes, (v) => {
+					if (substr(v, 0, 4) === 'sub_') {
+						const sub_hash = substr(v, 4);
+						for (let suburl in subscription_urls) {
+							if (md5(replace(suburl, /#.*$/, '')) === sub_hash)
+								return true;
+						}
+						log(sprintf('Subscription %s is gone, removing from urltest list.', sub_hash));
+						return false;
+					}
 					if (!uci.get(uciconfig, v)) {
 						log(sprintf('Node %s is gone, removing from urltest list.', v));
 						return false;
@@ -342,6 +351,15 @@ function main() {
 				if (main_udp_node === 'urltest') {
 					const old_udp_urltest_nodes = uci.get(uciconfig, ucimain, 'main_udp_urltest_nodes') || [];
 					main_udp_urltest_nodes = filter(old_udp_urltest_nodes, (v) => {
+						if (substr(v, 0, 4) === 'sub_') {
+							const sub_hash = substr(v, 4);
+							for (let suburl in subscription_urls) {
+								if (md5(replace(suburl, /#.*$/, '')) === sub_hash)
+									return true;
+							}
+							log(sprintf('Subscription %s is gone, removing from udp urltest list.', sub_hash));
+							return false;
+						}
 						if (!uci.get(uciconfig, v)) {
 							log(sprintf('Node %s is gone, removing from urltest list.', v));
 							return false;
@@ -377,7 +395,18 @@ function main() {
 		if (cfg.node !== 'urltest' || isEmpty(cfg.urltest_nodes))
 			return null;
 
-		const cleaned_nodes = filter(cfg.urltest_nodes, (v) => uci.get(uciconfig, v));
+		const cleaned_nodes = filter(cfg.urltest_nodes, (v) => {
+			if (substr(v, 0, 4) === 'sub_') {
+				const sub_hash = substr(v, 4);
+				for (let suburl in subscription_urls) {
+					if (md5(replace(suburl, /#.*$/, '')) === sub_hash)
+						return true;
+				}
+				log(sprintf('Routing node %s: subscription %s is gone, removing from urltest list.', cfg['.name'], sub_hash));
+				return false;
+			}
+			return !!uci.get(uciconfig, v);
+		});
 		if (length(cleaned_nodes) !== length(cfg.urltest_nodes)) {
 			uci.set(uciconfig, cfg['.name'], 'urltest_nodes', cleaned_nodes);
 			uci.commit(uciconfig);

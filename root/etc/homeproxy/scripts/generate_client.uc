@@ -752,11 +752,30 @@ config.outbounds = [
 	}
 ];
 
+function expand_urltest_nodes(nodes) {
+	let expanded = [];
+	for (let item in (nodes || [])) {
+		if (substr(item, 0, 4) === 'sub_') {
+			const group_hash = substr(item, 4);
+			uci.foreach(uciconfig, ucinode, (node) => {
+				if (node.grouphash === group_hash) {
+					if (!~index(expanded, node['.name']))
+						push(expanded, node['.name']);
+				}
+			});
+		} else if (uci.get(uciconfig, item)) {
+			if (!~index(expanded, item))
+				push(expanded, item);
+		}
+	}
+	return expanded;
+}
+
 if (!isEmpty(main_node)) {
 	let urltest_nodes = [];
 
 	if (main_node === 'urltest') {
-		const main_urltest_nodes = filter(uci.get(uciconfig, ucimain, 'main_urltest_nodes') || [], (k) => uci.get(uciconfig, k));
+		const main_urltest_nodes = expand_urltest_nodes(uci.get(uciconfig, ucimain, 'main_urltest_nodes'));
 		const main_urltest_interval = uci.get(uciconfig, ucimain, 'main_urltest_interval');
 		const main_urltest_tolerance = uci.get(uciconfig, ucimain, 'main_urltest_tolerance');
 
@@ -781,7 +800,7 @@ if (!isEmpty(main_node)) {
 	}
 
 	if (main_udp_node === 'urltest') {
-		const main_udp_urltest_nodes = filter(uci.get(uciconfig, ucimain, 'main_udp_urltest_nodes') || [], (k) => uci.get(uciconfig, k));
+		const main_udp_urltest_nodes = expand_urltest_nodes(uci.get(uciconfig, ucimain, 'main_udp_urltest_nodes'));
 		const main_udp_urltest_interval = uci.get(uciconfig, ucimain, 'main_udp_urltest_interval');
 		const main_udp_urltest_tolerance = uci.get(uciconfig, ucimain, 'main_udp_urltest_tolerance');
 
@@ -826,7 +845,7 @@ if (!isEmpty(main_node)) {
 			return;
 
 		if (cfg.node === 'urltest') {
-			const cfg_urltest_nodes = filter(cfg.urltest_nodes || [], (k) => uci.get(uciconfig, k));
+			const cfg_urltest_nodes = expand_urltest_nodes(cfg.urltest_nodes);
 			push(config.outbounds, {
 				type: 'urltest',
 				tag: 'cfg-' + cfg['.name'] + '-out',

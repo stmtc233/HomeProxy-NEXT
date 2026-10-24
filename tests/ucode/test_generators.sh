@@ -106,6 +106,21 @@ else
 	FAILED=1
 fi
 
+run_case client-sub "$ROOT/tests/fixtures/generators/client-sub.uci" generate_client.uc sing-box-c.json
+CLIENT_SUB_OUT="$WORK/client-sub/run/sing-box-c.json"
+assert_sub() {
+	label="$1"
+	pattern="$2"
+	if grep -q -- "$pattern" "$CLIENT_SUB_OUT"; then
+		echo "PASS: $label"
+	else
+		echo "FAIL: $label (no match for: $pattern)"
+		FAILED=1
+	fi
+}
+assert_sub "client-sub: n_anytls expanded from subscription" '"cfg-n_anytls-out"'
+assert_sub "client-sub: n_ss expanded from subscription" '"cfg-n_ss-out"'
+
 run_case custom "$ROOT/tests/fixtures/generators/custom.uci" generate_client.uc sing-box-c.json
 run_case custom_no_default "$ROOT/tests/fixtures/generators/custom-no-default-outbound.uci" generate_client.uc sing-box-c.json
 

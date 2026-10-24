@@ -3557,3 +3557,15 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "ZIP archive of the dashboard files. Leave empty to use the default sing-box dashboard. Downloaded into /var/run/homeproxy/dashboard/web and refreshed daily."
 msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "[Subscription] %s (All nodes)"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Manual"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Unknown subscription"
+msgstr ""

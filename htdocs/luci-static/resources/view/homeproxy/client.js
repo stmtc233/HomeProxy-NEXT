@@ -87,15 +87,74 @@ return view.extend({
 		let features = data[1],
 		    hosts = data[2]?.hosts;
 
-		let proxy_nodes = {};
+		let subinfo = [];
+		let submap = {};
+		for (let suburl of (uci.get(data[0], 'subscription', 'subscription_url') || [])) {
+			try {
+				const url = new URL(suburl);
+				const urlhash = hp.calcStringMD5(suburl.replace(/#.*$/, ''));
+				const title = url.hash ? decodeURIComponent(url.hash.slice(1)) : url.hostname;
+				subinfo.push({ hash: urlhash, title: title });
+				submap[urlhash] = title;
+			} catch(e) {}
+		}
+
+		let sub_nodes = {};
+		for (let info of subinfo)
+			sub_nodes[info.hash] = [];
+
+		let orphan_sub_nodes = {};
+		let manual_nodes = [];
+
 		uci.sections(data[0], 'node', (res) => {
 			let nodeaddr = ((res.type === 'direct') ? res.override_address : res.address) || '',
 			    nodeport = ((res.type === 'direct') ? res.override_port : res.port) || '';
+			let nodename = res.label || ((stubValidator.apply('ip6addr', nodeaddr) ?
+				String.format('[%s]', nodeaddr) : nodeaddr) + ':' + nodeport);
+			let item = { id: res['.name'], label: nodename, type: res.type, grouphash: res.grouphash };
 
-			proxy_nodes[res['.name']] =
-				String.format('[%s] %s', res.type, res.label || ((stubValidator.apply('ip6addr', nodeaddr) ?
-					String.format('[%s]', nodeaddr) : nodeaddr) + ':' + nodeport));
+			if (res.grouphash) {
+				if (sub_nodes[res.grouphash]) {
+					sub_nodes[res.grouphash].push(item);
+				} else {
+					if (!orphan_sub_nodes[res.grouphash])
+						orphan_sub_nodes[res.grouphash] = [];
+					orphan_sub_nodes[res.grouphash].push(item);
+				}
+			} else {
+				manual_nodes.push(item);
+			}
 		});
+
+		let has_subscriptions = (subinfo.length > 0 || Object.keys(orphan_sub_nodes).length > 0);
+		let proxy_nodes = {};
+		let urltest_choices = {};
+
+		for (let info of subinfo) {
+			urltest_choices['sub_' + info.hash] = String.format(_('[Subscription] %s (All nodes)'), info.title);
+			for (let node of sub_nodes[info.hash]) {
+				let text = String.format('[%s] [%s] %s', info.title, node.type, node.label);
+				proxy_nodes[node.id] = text;
+				urltest_choices[node.id] = text;
+			}
+		}
+
+		for (let ghash in orphan_sub_nodes) {
+			urltest_choices['sub_' + ghash] = String.format(_('[Subscription] %s (All nodes)'), _('Unknown subscription'));
+			for (let node of orphan_sub_nodes[ghash]) {
+				let text = String.format('[%s] [%s] %s', _('Unknown subscription'), node.type, node.label);
+				proxy_nodes[node.id] = text;
+				urltest_choices[node.id] = text;
+			}
+		}
+
+		for (let node of manual_nodes) {
+			let text = has_subscriptions ?
+				String.format('[%s] [%s] %s', _('Manual'), node.type, node.label) :
+				String.format('[%s] %s', node.type, node.label);
+			proxy_nodes[node.id] = text;
+			urltest_choices[node.id] = text;
+		}
 
 		m = new form.Map('homeproxy', _('HomeProxy'),
 			_('The modern ImmortalWrt proxy platform for ARM64/AMD64.'));
@@ -129,8 +188,8 @@ return view.extend({
 
 		o = s.taboption('routing', hp.CBIStaticList, 'main_urltest_nodes', _('URLTest nodes'),
 			_('List of nodes to test.'));
-		for (let i in proxy_nodes)
-			o.value(i, proxy_nodes[i]);
+		for (let i in urltest_choices)
+			o.value(i, urltest_choices[i]);
 		o.depends('main_node', 'urltest');
 		o.rmempty = false;
 
@@ -158,8 +217,8 @@ return view.extend({
 
 		o = s.taboption('routing', hp.CBIStaticList, 'main_udp_urltest_nodes', _('URLTest nodes'),
 			_('List of nodes to test.'));
-		for (let i in proxy_nodes)
-			o.value(i, proxy_nodes[i]);
+		for (let i in urltest_choices)
+			o.value(i, urltest_choices[i]);
 		o.depends('main_udp_node', 'urltest');
 		o.rmempty = false;
 
@@ -552,13 +611,15 @@ return view.extend({
 		so.validate = function(section_id, value) {
 			if (section_id && value) {
 				let node = this.section.formvalue(section_id, 'node');
+				let node_gh = uci.get(data[0], node, 'grouphash');
 
 				let conflict = false;
 				uci.sections(data[0], 'routing_node', (res) => {
 					if (res['.name'] !== section_id) {
+						let in_urltest = res.urltest_nodes?.includes(node) || (node_gh && res.urltest_nodes?.includes('sub_' + node_gh));
 						if (res.outbound === section_id && res['.name'] == value)
 							conflict = true;
-						else if (res.node === 'urltest' && res.urltest_nodes?.includes(node) && res['.name'] == value)
+						else if (res.node === 'urltest' && in_urltest && res['.name'] == value)
 							conflict = true;
 					}
 				});
@@ -573,8 +634,8 @@ return view.extend({
 
 		so = ss.option(hp.CBIStaticList, 'urltest_nodes', _('URLTest nodes'),
 			_('List of nodes to test.'));
-		for (let i in proxy_nodes)
-			so.value(i, proxy_nodes[i]);
+		for (let i in urltest_choices)
+			so.value(i, urltest_choices[i]);
 		so.depends('node', 'urltest');
 		so.validate = function(section_id) {
 			let value = this.section.formvalue(section_id, 'urltest_nodes');
