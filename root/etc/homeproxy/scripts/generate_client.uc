@@ -826,10 +826,10 @@ if (!isEmpty(main_node)) {
 				type: 'urltest',
 				tag: 'cfg-' + cfg['.name'] + '-out',
 				outbounds: map(cfg_urltest_nodes, (k) => `cfg-${k}-out`),
-				url: cfg.urltest_url,
-				interval: strToTime(cfg.urltest_interval),
-				tolerance: strToInt(cfg.urltest_tolerance),
-				idle_timeout: strToTime(cfg.urltest_idle_timeout),
+				url: cfg.urltest_url || 'https://www.gstatic.com/generate_204',
+				interval: strToTime(cfg.urltest_interval || '180s'),
+				tolerance: strToInt(cfg.urltest_tolerance || '50'),
+				idle_timeout: strToTime(cfg.urltest_idle_timeout || '1800s'),
 				interrupt_exist_connections: strToBool(cfg.urltest_interrupt_exist_connections)
 			});
 			urltest_nodes = [...urltest_nodes, ...filter(cfg_urltest_nodes, (l) => !~index(urltest_nodes, l))];

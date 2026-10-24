@@ -558,6 +558,7 @@ return view.extend({
 		so = ss.option(form.Value, 'urltest_url', _('Test URL'),
 			_('The URL to test.'));
 		so.placeholder = 'https://www.gstatic.com/generate_204';
+		so.default = 'https://www.gstatic.com/generate_204';
 		so.validate = function(section_id, value) {
 			if (section_id && value) {
 				try {
@@ -579,6 +580,7 @@ return view.extend({
 			_('The test interval in seconds.'));
 		so.datatype = 'uinteger';
 		so.placeholder = '180';
+		so.default = '180';
 		so.validate = function(section_id, value) {
 			if (section_id && value) {
 				let idle_timeout = this.section.formvalue(section_id, 'urltest_idle_timeout') || '1800';
@@ -595,6 +597,7 @@ return view.extend({
 			_('The test tolerance in milliseconds.'));
 		so.datatype = 'uinteger';
 		so.placeholder = '50';
+		so.default = '50';
 		so.depends('node', 'urltest');
 		so.modalonly = true;
 
@@ -602,6 +605,7 @@ return view.extend({
 			_('The idle timeout in seconds.'));
 		so.datatype = 'uinteger';
 		so.placeholder = '1800';
+		so.default = '1800';
 		so.depends('node', 'urltest');
 		so.modalonly = true;
 

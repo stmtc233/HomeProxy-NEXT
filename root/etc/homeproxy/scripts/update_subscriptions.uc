@@ -109,6 +109,10 @@ function release_lock() {
 	system(sprintf('rmdir %s 2>/dev/null', shellQuote(LOCK_DIR)));
 }
 
+function validation_port(port) {
+	return match(port, /^\d{1,5}$/) != null && int(port) > 0 && int(port) <= 65535;
+}
+
 function node_problem(cfg) {
 	if (isEmpty(cfg.address) || isEmpty(cfg.port))
 		return 'missing address or port';
@@ -148,10 +152,6 @@ function node_problem(cfg) {
 	}
 
 	return null;
-}
-
-function validation_port(port) {
-	return match(port, /^\d{1,5}$/) != null && int(port) > 0 && int(port) <= 65535;
 }
 
 function main() {
