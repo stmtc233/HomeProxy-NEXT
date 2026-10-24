@@ -20,6 +20,7 @@ PROG="/usr/bin/sing-box"
 
 HP_DIR="/etc/homeproxy"
 RUN_DIR="/var/run/homeproxy"
+KILLSWITCH="$HP_DIR/scripts/killswitch.sh"
 LOG_PATH="$RUN_DIR/homeproxy.log"
 DASHBOARD_DIR="$RUN_DIR/dashboard"
 
@@ -125,6 +126,47 @@ apply_firewall() {
 	fi
 	fw4 reload >"/dev/null" 2>&1 || log "Error: fw4 reload failed."
 	restore_upnp_mappings
+
+	# After fw4 reload on purpose: it keeps the armed/disarmed state of an
+	# existing table, so a restart stays blocked until the guard sees sing-box.
+	if killswitch_wanted; then
+		"$KILLSWITCH" install || log "Warning: failed to install the kill switch."
+	else
+		"$KILLSWITCH" remove
+	fi
+}
+
+# Outbound node the client routes through ("nil" when the client is not
+# configured); requires config_load.
+client_outbound_node() {
+	local mode node
+	config_get mode "config" "routing_mode" "bypass_mainland_china"
+	if [ "$mode" != "custom" ]; then
+		config_get node "config" "main_node" "nil"
+	else
+		config_get node "routing" "default_outbound" "nil"
+	fi
+	echo "$node"
+}
+
+# 0 when the kill switch is switched on and there is a client it can watch;
+# requires config_load. The routing modes it cannot serve are filtered by
+# killswitch.sh itself.
+killswitch_wanted() {
+	local kill_switch
+	config_get_bool kill_switch "config" "kill_switch" "0"
+	[ "$kill_switch" = "1" ] && [ "$(client_outbound_node)" != "nil" ]
+}
+
+# `restart` is stop + start, but the kill switch has to tell it apart from a
+# plain stop (which lifts the block), so leave a note for stop_service.
+restart() {
+	mkdir -p "$RUN_DIR"
+	: > "$RUN_DIR/ks_restarting"
+	trap '' TERM
+	stop "$@"
+	start "$@"
+	trap TERM
 }
 
 start_service() {
@@ -355,6 +397,17 @@ start_service() {
 	procd_set_param respawn
 	procd_close_instance
 
+	# The guard blocks overseas traffic whenever the client is not running
+	# (crash, reload, restart, failed start). The hold file of a restart ends
+	# here: from now on only a running sing-box lifts the block.
+	rm -f "$RUN_DIR/ks_hold"
+	if killswitch_wanted && "$KILLSWITCH" supported; then
+		procd_open_instance "killswitch-guard"
+		procd_set_param command "$KILLSWITCH" guard
+		procd_set_param respawn
+		procd_close_instance
+	fi
+
 	# cache_file is enabled for bypass_mainland_china and custom alike, and the
 	# file has to exist before the client jail binds it read-write.
 	case "$routing_mode" in
@@ -406,6 +459,24 @@ start_service() {
 }
 
 stop_service() {
+	config_load "$CONF"
+
+	# A restart/reload keeps the kill switch armed through the gap, anything
+	# else (stop, disable, shutdown) lifts it. The hold file stops a still
+	# running guard from disarming while the firewall is being torn down.
+	if [ -e "$RUN_DIR/ks_restarting" ]; then
+		rm -f "$RUN_DIR/ks_restarting"
+		if killswitch_wanted; then
+			: > "$RUN_DIR/ks_hold"
+			"$KILLSWITCH" arm || log "Warning: failed to arm the kill switch."
+		else
+			"$KILLSWITCH" remove
+		fi
+	else
+		rm -f "$RUN_DIR/ks_hold"
+		"$KILLSWITCH" remove
+	fi
+
 	sed -i "/#${CONF}_autosetup/d" "/etc/crontabs/root" 2>"/dev/null" \
 		|| log "Warning: failed to drop the auto-update cron entry."
 	/etc/init.d/cron restart >"/dev/null" 2>&1 || log "Warning: failed to restart cron."
@@ -506,6 +577,9 @@ reload_service() {
 		fi
 	fi
 
+	# only now: an aborted reload must not leave the note behind
+	mkdir -p "$RUN_DIR"
+	: > "$RUN_DIR/ks_restarting"
 	stop
 	start
 }

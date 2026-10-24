@@ -362,6 +362,13 @@ return view.extend({
 		o.depends('routing_mode', 'bypass_mainland_china');
 		o.rmempty = false;
 
+		o = s.taboption('routing', form.Flag, 'kill_switch', _('Kill switch'),
+			_('Drop forwarded traffic to overseas destinations while the sing-box client is not running (crash, restart, reload or failed start), so nothing leaks out directly. Mainland China and private addresses stay reachable.<br/>' +
+			'Stopping the service from the init script lifts the block; if the client cannot start, internet access stays blocked until it is fixed or the service is stopped.'));
+		o.depends({'routing_mode': /^(bypass_mainland_china|custom|global)$/});
+		o.default = o.disabled;
+		o.rmempty = false;
+
 		o = s.taboption('routing', form.Flag, 'block_https_rr', _('Block HTTPS/SVCB DNS records'),
 			_('Answer HTTPS (type 65) and SVCB (type 64) queries with an empty response. Keeps clients off HTTPS-RR/ECH, which this DNS chain cannot serve through some proxies; disable it if ECH is wanted.'));
 		o.default = o.enabled;
