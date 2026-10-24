@@ -3569,3 +3569,75 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Unknown subscription"
 msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Backup and restore"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Export configuration"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Export"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Include nodes and subscriptions"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Download the HomeProxy configuration as a JSON file. Leave the option off to share the settings without your nodes and subscription URLs."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Failed to export the configuration: %s"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Import configuration"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Import nodes and subscriptions"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Restore the configuration from a file exported here. Without the option above the current nodes and subscriptions are kept."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Not a valid HomeProxy backup file."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "The current configuration will be replaced by the content of %s."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Nodes and subscriptions will be replaced as well."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "The nodes and subscriptions in the file will be ignored, the current ones are kept."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "The file contains no nodes or subscriptions, the current ones are kept."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Failed to import the configuration: %s"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Successfully imported %d sections."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Reload page"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Failed to read the file."
+msgstr ""

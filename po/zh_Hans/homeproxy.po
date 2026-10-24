@@ -3791,3 +3791,75 @@ msgstr "手动"
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Unknown subscription"
 msgstr "未知订阅"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Backup and restore"
+msgstr "备份与恢复"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Export configuration"
+msgstr "导出配置"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Export"
+msgstr "导出"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Include nodes and subscriptions"
+msgstr "包含节点和订阅"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Download the HomeProxy configuration as a JSON file. Leave the option off to share the settings without your nodes and subscription URLs."
+msgstr "将 HomeProxy 配置下载为 JSON 文件。取消勾选则不导出节点与订阅链接，方便分享设置。"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Failed to export the configuration: %s"
+msgstr "导出配置失败：%s"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Import configuration"
+msgstr "导入配置"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Import nodes and subscriptions"
+msgstr "导入节点和订阅"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Restore the configuration from a file exported here. Without the option above the current nodes and subscriptions are kept."
+msgstr "从此处导出的文件恢复配置。未勾选上方选项时，保留当前的节点和订阅。"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Not a valid HomeProxy backup file."
+msgstr "不是有效的 HomeProxy 备份文件。"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "The current configuration will be replaced by the content of %s."
+msgstr "当前配置将被 %s 的内容替换。"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Nodes and subscriptions will be replaced as well."
+msgstr "节点和订阅也将被替换。"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "The nodes and subscriptions in the file will be ignored, the current ones are kept."
+msgstr "文件中的节点和订阅将被忽略，保留当前的节点和订阅。"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "The file contains no nodes or subscriptions, the current ones are kept."
+msgstr "文件不含节点和订阅，保留当前的节点和订阅。"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Failed to import the configuration: %s"
+msgstr "导入配置失败：%s"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Successfully imported %d sections."
+msgstr "成功导入 %d 个配置段。"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Reload page"
+msgstr "刷新页面"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Failed to read the file."
+msgstr "读取文件失败。"

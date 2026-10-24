@@ -11,6 +11,7 @@
 				"service": [ "list" ],
 				"luci.homeproxy": [
 					"acllist_read",
+					"config_export",
 					"connection_check",
 					"resources_get_version",
 					"singbox_get_features"
@@ -21,12 +22,14 @@
 		"write": {
 			"file": {
 				"/tmp/homeproxy_certificate.tmp": [ "write" ],
+				"/tmp/homeproxy_import.tmp": [ "write" ],
 				"/etc/homeproxy/scripts/update_subscriptions.uc": [ "exec" ]
 			},
 			"ubus": {
 				"luci.homeproxy": [
 					"acllist_write",
 					"certificate_write",
+					"config_import",
 					"log_clean",
 					"resources_update",
 					"singbox_generator"
