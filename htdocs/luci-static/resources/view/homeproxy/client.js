@@ -596,18 +596,38 @@ return view.extend({
 
 		so = ss.option(form.ListValue, 'outbound', _('Outbound'),
 			_('The tag of the upstream outbound.<br/>Other dial fields will be ignored when enabled.'));
-		so.load = function(section_id) {
-			delete this.keylist;
-			delete this.vallist;
+		so.renderWidget = function(section_id, option_index, cfgvalue) {
+			let choices = { '': _('Direct') };
+			let sort = [''];
 
-			this.value('', _('Direct'));
 			uci.sections(data[0], 'routing_node', (res) => {
-				if (res['.name'] !== section_id && res.enabled === '1')
-					this.value(res['.name'], res.label);
+				if (res['.name'] !== section_id && res.enabled === '1') {
+					choices[res['.name']] = res.label || res['.name'];
+					sort.push(res['.name']);
+				}
 			});
 
-			return this.super('load', section_id);
-		}
+			let widget = new ui.Select((cfgvalue != null) ? cfgvalue : this.default, choices, {
+				id: this.cbid(section_id),
+				size: this.size,
+				sort: sort,
+				widget: this.widget,
+				optional: this.optional,
+				orientation: this.orientation,
+				placeholder: this.placeholder,
+				validate: L.bind(this.validate, this, section_id),
+				disabled: (this.readonly != null) ? this.readonly : this.map.readonly
+			});
+
+			return widget.render();
+		};
+		so.textvalue = function(section_id) {
+			let val = this.cfgvalue(section_id);
+			if (!val)
+				return _('Direct');
+			let target = uci.get(data[0], val);
+			return target ? (target.label || target['.name']) : val;
+		};
 		so.validate = function(section_id, value) {
 			if (section_id && value) {
 				let node = this.section.formvalue(section_id, 'node');
@@ -1168,20 +1188,46 @@ return view.extend({
 
 		so = ss.option(form.ListValue, 'address_resolver', _('Address resolver'),
 			_('Tag of a another server to resolve the domain name in the address. Required if address contains domain.'));
-		so.load = function(section_id) {
-			delete this.keylist;
-			delete this.vallist;
+		so.renderWidget = function(section_id, option_index, cfgvalue) {
+			let choices = {
+				'': _('None'),
+				'default-dns': _('Default DNS (issued by WAN)'),
+				'system-dns': _('System DNS')
+			};
+			let sort = ['', 'default-dns', 'system-dns'];
 
-			this.value('', _('None'));
-			this.value('default-dns', _('Default DNS (issued by WAN)'));
-			this.value('system-dns', _('System DNS'));
 			uci.sections(data[0], 'dns_server', (res) => {
-				if (res['.name'] !== section_id && res.enabled === '1')
-					this.value(res['.name'], res.label);
+				if (res['.name'] !== section_id && res.enabled === '1') {
+					choices[res['.name']] = res.label || res['.name'];
+					sort.push(res['.name']);
+				}
 			});
 
-			return this.super('load', section_id);
-		}
+			let widget = new ui.Select((cfgvalue != null) ? cfgvalue : this.default, choices, {
+				id: this.cbid(section_id),
+				size: this.size,
+				sort: sort,
+				widget: this.widget,
+				optional: this.optional,
+				orientation: this.orientation,
+				placeholder: this.placeholder,
+				validate: L.bind(this.validate, this, section_id),
+				disabled: (this.readonly != null) ? this.readonly : this.map.readonly
+			});
+
+			return widget.render();
+		};
+		so.textvalue = function(section_id) {
+			let val = this.cfgvalue(section_id);
+			if (!val)
+				return _('None');
+			if (val === 'default-dns')
+				return _('Default DNS (issued by WAN)');
+			if (val === 'system-dns')
+				return _('System DNS');
+			let target = uci.get(data[0], val);
+			return target ? (target.label || target['.name']) : val;
+		};
 		so.validate = function(section_id, value) {
 			if (section_id && value) {
 				let conflict = false;
