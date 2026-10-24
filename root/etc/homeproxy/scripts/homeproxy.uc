@@ -466,6 +466,25 @@ export function buildTLSObject(cfg, is_server) {
 	};
 };
 
+/* Hysteria2 realm (1.14); the same uci options feed the outbound and the inbound. */
+export function buildHysteria2Realm(cfg) {
+	if (cfg.type !== 'hysteria2' || cfg.hysteria_realm !== '1')
+		return null;
+
+	return {
+		server_url: cfg.hysteria_realm_server_url,
+		token: cfg.hysteria_realm_token,
+		realm_id: cfg.hysteria_realm_id,
+		stun_servers: cfg.hysteria_realm_stun_servers,
+		ip_version: strToInt(cfg.hysteria_realm_ip_version),
+		port_mapping: (cfg.hysteria_realm_port_mapping === '1' && cfg.hysteria_realm_ip_version !== '6') ? {
+			enabled: true,
+			timeout: strToTime(cfg.hysteria_realm_port_mapping_timeout),
+			lifetime: strToTime(cfg.hysteria_realm_port_mapping_lifetime)
+		} : null
+	};
+};
+
 export function buildTransportObject(cfg, is_server) {
 	if (isEmpty(cfg.transport))
 		return null;

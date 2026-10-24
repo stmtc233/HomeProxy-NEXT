@@ -444,12 +444,17 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 
 	o = s.option(form.Value, 'address', _('Address'));
 	o.datatype = 'host';
-	o.depends({'type': 'direct', '!reverse': true});
+	/* direct has no address; hysteria2 connecting through a realm has none either */
+	o.depends({'type': /^((?!direct$|hysteria2$).)+$/});
+	o.depends({'type': 'hysteria2', 'hysteria_realm': '0'});
+	o.depends({'type': 'hysteria2', 'hysteria_realm': null});
 	o.rmempty = false;
 
 	o = s.option(form.Value, 'port', _('Port'));
 	o.datatype = 'port';
-	o.depends({'type': 'direct', '!reverse': true});
+	o.depends({'type': /^((?!direct$|hysteria2$).)+$/});
+	o.depends({'type': 'hysteria2', 'hysteria_realm': '0'});
+	o.depends({'type': 'hysteria2', 'hysteria_realm': null});
 	o.rmempty = false;
 
 	o = s.option(form.Value, 'username', _('Username'));
@@ -613,6 +618,71 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 	o = s.option(form.Flag, 'hysteria_disable_chrome_parrot', _('Disable Chrome QUIC fingerprint (1.14)'),
 		_('Disable Chrome QUIC handshake parroting, which is enabled by default since sing-box 1.14. Turn this on only when the server uses an Ed25519 certificate or the handshake otherwise fails.'));
 	o.depends('type', 'hysteria2');
+	o.modalonly = true;
+
+	o = s.option(form.Flag, 'hysteria_realm', _('Realm (1.14)'),
+		_('Reach the server through a Hysteria Realm rendezvous service (STUN + UDP hole punching) instead of a fixed address and port. Set the TLS SNI if the server certificate does not match the host of the service URL.'));
+	o.depends('type', 'hysteria2');
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'hysteria_realm_server_url', _('Realm service URL'),
+		_('URL of the Hysteria Realm rendezvous service, e.g. <code>https://realm.example.com</code>.'));
+	o.depends({'type': 'hysteria2', 'hysteria_realm': '1'});
+	o.rmempty = false;
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'hysteria_realm_id', _('Realm ID'),
+		_('Slot identifier registered by the server (1-64 characters: letters, digits, <code>_</code> and <code>-</code>). Clients must use the same ID.'));
+	o.validate = function(section_id, value) {
+		if (section_id && !/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(value || ''))
+			return _('Expecting: %s').format(_('1-64 characters of letters, digits, "_" or "-", not starting with "_" or "-"'));
+
+		return true;
+	};
+	o.depends({'type': 'hysteria2', 'hysteria_realm': '1'});
+	o.rmempty = false;
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'hysteria_realm_token', _('Realm token'),
+		_('Bearer token of the realm service.'));
+	o.password = true;
+	o.depends({'type': 'hysteria2', 'hysteria_realm': '1'});
+	o.modalonly = true;
+
+	o = s.option(form.DynamicList, 'hysteria_realm_stun_servers', _('STUN servers'),
+		_('STUN servers used to discover the public address, as <code>host</code> or <code>host:port</code>.'));
+	o.placeholder = 'stun.example.com:3478';
+	o.datatype = 'or(host, hostport)';
+	o.depends({'type': 'hysteria2', 'hysteria_realm': '1'});
+	o.rmempty = false;
+	o.modalonly = true;
+
+	o = s.option(form.ListValue, 'hysteria_realm_ip_version', _('Realm IP version'),
+		_('Restrict STUN, hole punching and the QUIC path to one IP version.'));
+	o.value('', _('Both'));
+	o.value('4', _('IPv4'));
+	o.value('6', _('IPv6'));
+	o.depends({'type': 'hysteria2', 'hysteria_realm': '1'});
+	o.modalonly = true;
+
+	o = s.option(form.Flag, 'hysteria_realm_port_mapping', _('Port mapping'),
+		_('Keep a UDP port mapping on the local gateway via UPnP or NAT-PMP to help hole punching. IPv4 only.'));
+	o.depends({'type': 'hysteria2', 'hysteria_realm': '1', 'hysteria_realm_ip_version': ''});
+	o.depends({'type': 'hysteria2', 'hysteria_realm': '1', 'hysteria_realm_ip_version': '4'});
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'hysteria_realm_port_mapping_timeout', _('Port mapping timeout'),
+		_('Timeout for gateway discovery and mapping operations, in seconds.'));
+	o.datatype = 'uinteger';
+	o.placeholder = '10';
+	o.depends({'type': 'hysteria2', 'hysteria_realm': '1', 'hysteria_realm_port_mapping': '1'});
+	o.modalonly = true;
+
+	o = s.option(form.Value, 'hysteria_realm_port_mapping_lifetime', _('Port mapping lifetime'),
+		_('Lease lifetime of the mapping, in seconds.'));
+	o.datatype = 'uinteger';
+	o.placeholder = '600';
+	o.depends({'type': 'hysteria2', 'hysteria_realm': '1', 'hysteria_realm_port_mapping': '1'});
 	o.modalonly = true;
 
 	o = s.option(form.ListValue, 'shadowsocks_encrypt_method', _('Encrypt method'));

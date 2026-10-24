@@ -12,7 +12,7 @@ import { cursor } from 'uci';
 
 import {
 	strToBool, strToInt, strToTime,
-	removeBlankAttrs, buildTLSObject, buildTransportObject, HP_DIR, RUN_DIR
+	removeBlankAttrs, buildTLSObject, buildTransportObject, buildHysteria2Realm, HP_DIR, RUN_DIR
 } from 'homeproxy';
 
 const uci = cursor();
@@ -84,6 +84,7 @@ uci.foreach(uciconfig, uciserver, (cfg) => {
 		} : cfg.hysteria_obfs_password,
 		ignore_client_bandwidth: strToBool(cfg.hysteria_ignore_client_bandwidth),
 		masquerade: cfg.hysteria_masquerade,
+		realm: buildHysteria2Realm(cfg),
 
 		method: (cfg.type === 'shadowsocks') ? cfg.shadowsocks_encrypt_method : null,
 		password: (cfg.type in ['shadowsocks', 'shadowtls']) ? cfg.password : null,

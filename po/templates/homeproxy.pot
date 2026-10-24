@@ -3689,3 +3689,83 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "A Respond rule must come after an enabled Evaluate rule."
 msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Realm (1.14)"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Register this server with a Hysteria Realm rendezvous service so clients can reach it through NAT without a fixed address. TLS is required."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Reach the server through a Hysteria Realm rendezvous service (STUN + UDP hole punching) instead of a fixed address and port. Set the TLS SNI if the server certificate does not match the host of the service URL."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Realm service URL"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "URL of the Hysteria Realm rendezvous service, e.g. <code>https://realm.example.com</code>."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Realm ID"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Slot identifier registered by the server (1-64 characters: letters, digits, <code>_</code> and <code>-</code>). Clients must use the same ID."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "1-64 characters of letters, digits, "_" or "-", not starting with "_" or "-""
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Realm token"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Bearer token of the realm service."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "STUN servers"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "STUN servers used to discover the public address, as <code>host</code> or <code>host:port</code>."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Realm IP version"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Restrict STUN, hole punching and the QUIC path to one IP version."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Port mapping"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Keep a UDP port mapping on the local gateway via UPnP or NAT-PMP to help hole punching. IPv4 only."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Port mapping timeout"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Timeout for gateway discovery and mapping operations, in seconds."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Port mapping lifetime"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Lease lifetime of the mapping, in seconds."
+msgstr ""

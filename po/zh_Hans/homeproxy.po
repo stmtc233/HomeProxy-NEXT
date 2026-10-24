@@ -3911,3 +3911,83 @@ msgstr "Respond 规则必须位于已启用的 Evaluate 规则之后。"
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Respond (1.14)"
 msgstr "Respond 响应 (1.14)"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Realm (1.14)"
+msgstr "Realm (1.14)"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Register this server with a Hysteria Realm rendezvous service so clients can reach it through NAT without a fixed address. TLS is required."
+msgstr "将此服务器注册到 Hysteria Realm 会合服务，客户端无需固定地址即可穿透 NAT 连接。需要启用 TLS。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Reach the server through a Hysteria Realm rendezvous service (STUN + UDP hole punching) instead of a fixed address and port. Set the TLS SNI if the server certificate does not match the host of the service URL."
+msgstr "通过 Hysteria Realm 会合服务（STUN + UDP 打洞）连接服务器，无需固定地址和端口。若服务器证书与服务 URL 的主机名不一致，请设置 TLS SNI。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Realm service URL"
+msgstr "Realm 服务 URL"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "URL of the Hysteria Realm rendezvous service, e.g. <code>https://realm.example.com</code>."
+msgstr "Hysteria Realm 会合服务的 URL，例如 <code>https://realm.example.com</code>。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Realm ID"
+msgstr "Realm ID"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Slot identifier registered by the server (1-64 characters: letters, digits, <code>_</code> and <code>-</code>). Clients must use the same ID."
+msgstr "服务器注册的槽位标识（1-64 个字符：字母、数字、<code>_</code> 和 <code>-</code>）。客户端必须使用相同的 ID。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "1-64 characters of letters, digits, "_" or "-", not starting with "_" or "-""
+msgstr "1-64 个字母、数字、"_" 或 "-"，且不以 "_" 或 "-" 开头"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Realm token"
+msgstr "Realm 令牌"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Bearer token of the realm service."
+msgstr "Realm 服务的 Bearer 令牌。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "STUN servers"
+msgstr "STUN 服务器"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "STUN servers used to discover the public address, as <code>host</code> or <code>host:port</code>."
+msgstr "用于探测公网地址的 STUN 服务器，格式为 <code>host</code> 或 <code>host:port</code>。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Realm IP version"
+msgstr "Realm IP 版本"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Restrict STUN, hole punching and the QUIC path to one IP version."
+msgstr "将 STUN、打洞和 QUIC 路径限制为单一 IP 版本。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Port mapping"
+msgstr "端口映射"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Keep a UDP port mapping on the local gateway via UPnP or NAT-PMP to help hole punching. IPv4 only."
+msgstr "通过 UPnP 或 NAT-PMP 在本地网关上保持 UDP 端口映射，以提高打洞成功率。仅限 IPv4。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Port mapping timeout"
+msgstr "端口映射超时"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Timeout for gateway discovery and mapping operations, in seconds."
+msgstr "网关发现与映射操作的超时时间，单位为秒。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Port mapping lifetime"
+msgstr "端口映射租期"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Lease lifetime of the mapping, in seconds."
+msgstr "映射的租约时长，单位为秒。"

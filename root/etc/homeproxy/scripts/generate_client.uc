@@ -14,7 +14,7 @@ import { cursor } from 'uci';
 
 import {
 	isEmpty, parseURL, strToBool, strToInt, strToTime, strToMs,
-	removeBlankAttrs, validation, buildTLSObject, buildTransportObject,
+	removeBlankAttrs, validation, buildTLSObject, buildTransportObject, buildHysteria2Realm,
 	HP_DIR, RUN_DIR
 } from 'homeproxy';
 
@@ -231,14 +231,18 @@ function generate_outbound(node) {
 	if (type(node) !== 'object' || isEmpty(node))
 		return null;
 
+	/* a realm replaces server, server_port and server_ports */
+	const realm = buildHysteria2Realm(node);
+
 	const outbound = {
 		type: node.type,
 		tag: 'cfg-' + node['.name'] + '-out',
 		routing_mark: strToInt(self_mark),
 
-		server: node.address,
-		server_port: strToInt(node.port),
-		server_ports: node.hysteria_hopping_port,
+		server: realm ? null : node.address,
+		server_port: realm ? null : strToInt(node.port),
+		server_ports: realm ? null : node.hysteria_hopping_port,
+		realm: realm,
 
 		username: (node.type !== 'ssh') ? node.username : null,
 		user: (node.type === 'ssh') ? node.username : null,
@@ -254,8 +258,8 @@ function generate_outbound(node) {
 		idle_session_check_interval: strToTime(node.anytls_idle_session_check_interval),
 		idle_session_timeout: strToTime(node.anytls_idle_session_timeout),
 		min_idle_session: strToInt(node.anytls_min_idle_session),
-		hop_interval: strToTime(node.hysteria_hop_interval),
-		hop_interval_max: strToTime(node.hysteria_hop_interval_max),
+		hop_interval: realm ? null : strToTime(node.hysteria_hop_interval),
+		hop_interval_max: realm ? null : strToTime(node.hysteria_hop_interval_max),
 		up_mbps: strToInt(node.hysteria_up_mbps),
 		down_mbps: strToInt(node.hysteria_down_mbps),
 		obfs: node.hysteria_obfs_type ? {

@@ -143,6 +143,7 @@ assert_json "custom/no-default: the user DNS rule survived" 'dns-rule-marker.exa
 assert_json "custom/no-default: the hosts DNS server is emitted" '"hosts-marker.example.com"'
 assert_json "custom/no-default: the dhcp DNS server is emitted" '"type": "dhcp"'
 assert_json "custom/no-default: the respond action is emitted" '"action": "respond"'
+assert_json "custom/no-default: the realm outbound carries its realm" '"realm_id": "hp-test"'
 assert_json "custom/no-default: the urltest group survived" '"cfg-Routing_Node_Proxy-out"'
 assert_json "custom/no-default: its member nodes survived" '"cfg-n_hk-out"'
 assert_json "custom/no-default: the user rule-set survived" '"cfg-rs_cn-rule"'
