@@ -3863,3 +3863,51 @@ msgstr "刷新页面"
 #: htdocs/luci-static/resources/view/homeproxy/status.js
 msgid "Failed to read the file."
 msgstr "读取文件失败。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "DHCP"
+msgstr "DHCP"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Hosts"
+msgstr "Hosts"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Interface"
+msgstr "接口"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Interface to fetch the DNS servers from (DHCP). Leave empty to use the default interface."
+msgstr "获取 DNS 服务器所用的接口 (DHCP)。留空则使用默认接口。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Hosts files"
+msgstr "Hosts 文件"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Hosts files to read. Leave empty to use <code>/etc/hosts</code>."
+msgstr "要读取的 hosts 文件。留空则使用 <code>/etc/hosts</code>。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Predefined hosts"
+msgstr "预定义 hosts"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "One entry per line in the form <code>domain ip [ip ...]</code>, e.g. <code>nas.lan 192.168.1.10</code>."
+msgstr "每行一条，格式为 <code>域名 ip [ip ...]</code>，例如 <code>nas.lan 192.168.1.10</code>。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "domain followed by at least one IP address"
+msgstr "域名后跟至少一个 IP 地址"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "valid IP address"
+msgstr "有效的 IP 地址"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "A Respond rule must come after an enabled Evaluate rule."
+msgstr "Respond 规则必须位于已启用的 Evaluate 规则之后。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Respond (1.14)"
+msgstr "Respond 响应 (1.14)"

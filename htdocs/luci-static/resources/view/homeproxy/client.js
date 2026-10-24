@@ -1153,18 +1153,58 @@ return view.extend({
 		so.value('https', _('HTTPS'));
 		so.value('h3', _('HTTP/3'));
 		so.value('quic', _('QUIC'));
+		so.value('dhcp', _('DHCP'));
+		so.value('hosts', _('Hosts'));
 		so.default = 'udp';
 		so.rmempty = false;
+
+		const dns_remote_types = ['udp', 'tcp', 'tls', 'https', 'h3', 'quic'];
 
 		so = ss.option(form.Value, 'server', _('Address'),
 			_('The address of the dns server.'));
 		so.datatype = 'or(hostname, ipaddr)';
 		so.rmempty = false;
+		for (let t of dns_remote_types)
+			so.depends('type', t);
 
 		so = ss.option(form.Value, 'server_port', _('Port'),
 			_('The port of the DNS server.'));
 		so.placeholder = 'auto';
 		so.datatype = 'port';
+		for (let t of dns_remote_types)
+			so.depends('type', t);
+
+		so = ss.option(widgets.DeviceSelect, 'dhcp_interface', _('Interface'),
+			_('Interface to fetch the DNS servers from (DHCP). Leave empty to use the default interface.'));
+		so.multiple = false;
+		so.noaliases = true;
+		so.depends('type', 'dhcp');
+		so.modalonly = true;
+
+		so = ss.option(form.DynamicList, 'hosts_path', _('Hosts files'),
+			_('Hosts files to read. Leave empty to use <code>/etc/hosts</code>.'));
+		so.placeholder = '/etc/hosts';
+		so.depends('type', 'hosts');
+		so.modalonly = true;
+
+		so = ss.option(form.DynamicList, 'hosts_predefined', _('Predefined hosts'),
+			_('One entry per line in the form <code>domain ip [ip ...]</code>, e.g. <code>nas.lan 192.168.1.10</code>.'));
+		so.placeholder = 'nas.lan 192.168.1.10';
+		so.validate = function(section_id, value) {
+			if (!section_id || !value)
+				return true;
+
+			const fields = value.trim().split(/[\s,]+/);
+			if (fields.length < 2)
+				return _('Expecting: %s').format(_('domain followed by at least one IP address'));
+			for (let ip of fields.slice(1))
+				if (!stubValidator.apply('ipaddr', ip))
+					return _('Expecting: %s').format(_('valid IP address'));
+
+			return true;
+		};
+		so.depends('type', 'hosts');
+		so.modalonly = true;
 
 		so = ss.option(form.Value, 'path', _('Path'),
 			_('The path of the DNS server.'));
@@ -1243,6 +1283,8 @@ return view.extend({
 
 			return true;
 		}
+		for (let t of dns_remote_types)
+			so.depends('type', t);
 		so.modalonly = true;
 
 		so = ss.option(form.ListValue, 'address_strategy', _('Address strategy'),
@@ -1269,6 +1311,8 @@ return view.extend({
 		so.default = 'direct-out';
 		so.rmempty = false;
 		so.editable = true;
+		for (let t of [...dns_remote_types, 'dhcp'])
+			so.depends('type', t);
 
 		s.tab('dns_rule', _('DNS Rules'));
 		o = s.taboption('dns_rule', form.SectionValue, '_dns_rule', form.GridSection, 'dns_rule');
@@ -1371,9 +1415,27 @@ return view.extend({
 		so.value('reject', _('Reject'));
 		so.value('predefined', _('Predefined'));
 		so.value('evaluate', _('Evaluate (1.14)'));
+		so.value('respond', _('Respond (1.14)'));
 		so.default = 'route';
 		so.rmempty = false;
 		so.editable = true;
+		so.validate = function(section_id, value) {
+			if (!section_id || value !== 'respond')
+				return true;
+
+			/* respond returns the response saved by an earlier evaluate rule */
+			let evaluated = false, found = false;
+			uci.sections(data[0], 'dns_rule', (res) => {
+				if (found)
+					return;
+				if (res['.name'] === section_id)
+					found = true;
+				else if (res.enabled === '1' && res.action === 'evaluate')
+					evaluated = true;
+			});
+
+			return evaluated || _('A Respond rule must come after an enabled Evaluate rule.');
+		};
 
 		so = ss.taboption('field_other', form.ListValue, 'server', _('Server'),
 			_('Tag of the target dns server.'));

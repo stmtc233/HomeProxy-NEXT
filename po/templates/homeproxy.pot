@@ -3641,3 +3641,51 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/status.js
 msgid "Failed to read the file."
 msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "DHCP"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Hosts"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Interface"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Interface to fetch the DNS servers from (DHCP). Leave empty to use the default interface."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Hosts files"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Hosts files to read. Leave empty to use <code>/etc/hosts</code>."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Predefined hosts"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "One entry per line in the form <code>domain ip [ip ...]</code>, e.g. <code>nas.lan 192.168.1.10</code>."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "domain followed by at least one IP address"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "valid IP address"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Respond (1.14)"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "A Respond rule must come after an enabled Evaluate rule."
+msgstr ""

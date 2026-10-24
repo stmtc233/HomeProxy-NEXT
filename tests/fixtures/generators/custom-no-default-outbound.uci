@@ -81,6 +81,34 @@ config dns_server 'DNS_Server_Proxy'
 	option address_strategy 'ipv4_only'
 	option outbound 'Routing_Node_Proxy'
 
+# Local-only server types: hosts has no dial fields, dhcp takes the interface.
+config dns_server 'DNS_Server_Hosts'
+	option enabled '1'
+	option label 'DNS_Server_Hosts'
+	option type 'hosts'
+	list hosts_predefined 'hosts-marker.example.com 192.168.1.10 fd00::10'
+
+config dns_server 'DNS_Server_Dhcp'
+	option enabled '1'
+	option label 'DNS_Server_Dhcp'
+	option type 'dhcp'
+
+# evaluate then respond: the response saved by the first rule is returned as is.
+config dns_rule 'DNS_Rule_Evaluate'
+	option enabled '1'
+	option label 'DNS_Rule_Evaluate'
+	option mode 'default'
+	list domain_suffix 'dns-respond-marker.example.com'
+	option action 'evaluate'
+	option server 'DNS_Server_Proxy'
+
+config dns_rule 'DNS_Rule_Respond'
+	option enabled '1'
+	option label 'DNS_Rule_Respond'
+	option mode 'default'
+	list domain_suffix 'dns-respond-marker.example.com'
+	option action 'respond'
+
 config dns_rule 'DNS_Rule_Proxy'
 	option enabled '1'
 	option label 'DNS_Rule_Proxy'
