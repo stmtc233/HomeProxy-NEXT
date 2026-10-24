@@ -351,6 +351,36 @@ return view.extend({
 		o.depends('proxy_mode', 'redirect_tun');
 		o.depends('proxy_mode', 'tun');
 
+		o = s.taboption('routing', form.Flag, 'dashboard', _('Enable dashboard (sing-box API)'),
+			_('Run the sing-box 1.14 API service and serve its web dashboard at /dashboard/ on the listen address.'));
+		o.rmempty = false;
+
+		o = s.taboption('routing', form.Value, 'dashboard_listen', _('Dashboard listen address'),
+			_('Address and port of the API service. Use 127.0.0.1:9090 to keep it local only.'));
+		o.default = '0.0.0.0:9090';
+		o.placeholder = '0.0.0.0:9090';
+		o.validate = function(section_id, value) {
+			if (!value)
+				return _('Expecting: %s').format(_('non-empty value'));
+			if (!/^(\[[0-9a-fA-F:.]+\]|[0-9A-Za-z.-]*):([0-9]{1,5})$/.test(value) || +value.split(':').pop() > 65535)
+				return _('Expecting: %s').format(_('host:port'));
+			return true;
+		};
+		o.depends('dashboard', '1');
+		o.rmempty = false;
+
+		o = s.taboption('routing', form.Value, 'dashboard_secret', _('Dashboard secret'),
+			_('Bearer token required by the API. Strongly recommended when listening on a non-local address.'));
+		o.password = true;
+		o.depends('dashboard', '1');
+		o.rmempty = true;
+
+		o = s.taboption('routing', form.Value, 'dashboard_url', _('Dashboard download URL'),
+			_('ZIP archive of the dashboard files. Leave empty to use the default sing-box dashboard. Downloaded into /var/run/homeproxy/dashboard/web and refreshed daily.'));
+		o.placeholder = 'https://example.com/dashboard.zip';
+		o.depends('dashboard', '1');
+		o.rmempty = true;
+
 		o = s.taboption('routing', form.SectionValue, '_routing', form.NamedSection, 'routing', 'homeproxy');
 		o.depends('routing_mode', 'custom');
 

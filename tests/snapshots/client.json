@@ -559,6 +559,69 @@
 					}
 				},
 				{
+					"kind": "Flag",
+					"name": "dashboard",
+					"title": "Enable dashboard (sing-box API)",
+					"description": "Run the sing-box 1.14 API service and serve its web dashboard at /dashboard/ on the listen address.",
+					"depends": [],
+					"values": [],
+					"props": {
+						"rmempty": false
+					}
+				},
+				{
+					"kind": "Value",
+					"name": "dashboard_listen",
+					"title": "Dashboard listen address",
+					"description": "Address and port of the API service. Use 127.0.0.1:9090 to keep it local only.",
+					"depends": [
+						[
+							"dashboard",
+							"1"
+						]
+					],
+					"values": [],
+					"props": {
+						"default": "0.0.0.0:9090",
+						"placeholder": "0.0.0.0:9090",
+						"rmempty": false
+					}
+				},
+				{
+					"kind": "Value",
+					"name": "dashboard_secret",
+					"title": "Dashboard secret",
+					"description": "Bearer token required by the API. Strongly recommended when listening on a non-local address.",
+					"depends": [
+						[
+							"dashboard",
+							"1"
+						]
+					],
+					"values": [],
+					"props": {
+						"password": true,
+						"rmempty": true
+					}
+				},
+				{
+					"kind": "Value",
+					"name": "dashboard_url",
+					"title": "Dashboard download URL",
+					"description": "ZIP archive of the dashboard files. Leave empty to use the default sing-box dashboard. Downloaded into /var/run/homeproxy/dashboard/web and refreshed daily.",
+					"depends": [
+						[
+							"dashboard",
+							"1"
+						]
+					],
+					"values": [],
+					"props": {
+						"placeholder": "https://example.com/dashboard.zip",
+						"rmempty": true
+					}
+				},
+				{
 					"kind": "SectionValue",
 					"name": "_routing",
 					"description": "routing",

@@ -21,6 +21,7 @@ PROG="/usr/bin/sing-box"
 HP_DIR="/etc/homeproxy"
 RUN_DIR="/var/run/homeproxy"
 LOG_PATH="$RUN_DIR/homeproxy.log"
+DASHBOARD_DIR="$RUN_DIR/dashboard"
 
 # fw4 chain/set inventory; single source of truth shared with firewall_post.ut
 [ -f "$HP_DIR/scripts/fw4_names.sh" ] && . "$HP_DIR/scripts/fw4_names.sh"
@@ -154,8 +155,9 @@ start_service() {
 		config_get outbound_node "routing" "default_outbound" "nil"
 	fi
 
-	local server_enabled
+	local server_enabled dashboard
 	config_get_bool server_enabled "server" "enabled" "0"
+	config_get dashboard "config" "dashboard" "0"
 
 	if [ "$outbound_node" = "nil" ] && [ "$server_enabled" = "0" ]; then
 		log "Neither client nor server is configured. Service not started."
@@ -264,6 +266,7 @@ start_service() {
 		procd_append_param command run --config "$RUN_DIR/sing-box-c.json"
 
 		[ "$disable_gso" -eq "1" ] && procd_set_param env "QUIC_GO_DISABLE_GSO"="true"
+		[ "$dashboard" = "1" ] && procd_append_param env "TMPDIR=$DASHBOARD_DIR/tmp"
 
 		if [ -x "/sbin/ujail" ] && ! grep -Eq '"type": "(wireguard|tun)"' "$RUN_DIR/sing-box-c.json"; then
 			procd_add_jail "sing-box-c" log procfs
@@ -278,6 +281,7 @@ start_service() {
 			"bypass_mainland_china"|"custom")
 				procd_add_jail_mount_rw "$HP_DIR/cache.db" ;;
 			esac
+			[ "$dashboard" = "1" ] && procd_add_jail_mount_rw "$DASHBOARD_DIR/"
 			procd_add_jail_mount "$HP_DIR/certs/"
 			procd_add_jail_mount "/etc/acme/"
 			procd_add_jail_mount "/etc/ssl/"
@@ -366,6 +370,17 @@ start_service() {
 		# longer root, so the documented directory has to be readable by it.
 		chown -R sing-box:sing-box "$HP_DIR/ruleset" 2>"/dev/null" \
 			|| log "Warning: failed to hand ${HP_DIR}/ruleset to sing-box."
+	fi
+
+	# The jailed client has no writable /tmp, and the flash overlay is often too
+	# small for the dashboard, so it lives in RAM under RUN_DIR (re-downloaded
+	# after a reboot). The archive and the unpacked files share one read-write
+	# mount so that sing-box never has to rename across filesystems.
+	rm -rf "$HP_DIR/dashboard"
+	if [ "$dashboard" = "1" ] && [ "$outbound_node" != "nil" ]; then
+		mkdir -p "$DASHBOARD_DIR/tmp" \
+			&& chown -R sing-box:sing-box "$DASHBOARD_DIR" 2>"/dev/null" \
+			|| log "Warning: failed to prepare ${DASHBOARD_DIR} for sing-box."
 	fi
 
 	[ "$outbound_node" = "nil" ] || echo > "$RUN_DIR/sing-box-c.log"

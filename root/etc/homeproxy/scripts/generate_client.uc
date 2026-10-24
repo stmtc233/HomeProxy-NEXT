@@ -144,6 +144,11 @@ const tun_dns_mode = (tun_dns_mode_raw === 'default') ? '' : tun_dns_mode_raw,
       udp_mapping = (udp_mapping_raw === 'default') ? '' : udp_mapping_raw,
       udp_filtering = (udp_filtering_raw === 'default') ? '' : udp_filtering_raw;
 
+const dashboard_enabled = uci.get(uciconfig, ucimain, 'dashboard') || '0',
+      dashboard_listen = uci.get(uciconfig, ucimain, 'dashboard_listen') || '0.0.0.0:9090',
+      dashboard_secret = uci.get(uciconfig, ucimain, 'dashboard_secret'),
+      dashboard_url = uci.get(uciconfig, ucimain, 'dashboard_url');
+
 const direct_overrides = {};
 
 function parse_port(strport) {
@@ -1117,6 +1122,23 @@ if (!isEmpty(main_node)) {
 
 if (isEmpty(config.route.default_domain_resolver))
 	config.route.default_domain_resolver = { server: 'default-dns' };
+
+if (dashboard_enabled === '1') {
+	const listen_match = match(dashboard_listen, /^\[?([^\]]*)\]?:([0-9]+)$/);
+
+	config.services = [{
+		type: 'api',
+		listen: listen_match ? listen_match[1] : '0.0.0.0',
+		listen_port: listen_match ? int(listen_match[2]) : 9090,
+		secret: dashboard_secret,
+		dashboard: {
+			enabled: true,
+			path: RUN_DIR + '/dashboard/web',
+			download_url: dashboard_url,
+			http_client: http_client_for(isEmpty(main_node) || main_node === 'nil' ? null : 'main-out')
+		}
+	}];
+}
 
 if (length(http_clients))
 	config.http_clients = http_clients;

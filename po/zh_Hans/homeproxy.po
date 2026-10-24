@@ -3627,7 +3627,6 @@ msgstr "使用额外标签时 URL 需包含 {tag}"
 msgid "{tag} in initial path when extra tags are used"
 msgstr "使用额外标签时初始路径需包含 {tag}"
 
-
 msgid "Block HTTPS/SVCB DNS records"
 msgstr "拦截 HTTPS/SVCB DNS 记录"
 
@@ -3744,3 +3743,39 @@ msgstr "GeoSite CN 规则集版本"
 #~ "被拒绝的 DNS 响应缓存的超时时间（单位：秒）。默认使用 <code>604800 (7d)</"
 #~ "code>。被拒绝的 DNS 响应缓存超时时间（单位：秒）。默认为 <code>604800（7 "
 #~ "天）</code>。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Bearer token required by the API. Strongly recommended when listening on a non-local address."
+msgstr "API 访问所需的 Bearer 令牌。监听非本机地址时强烈建议设置。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Dashboard listen address"
+msgstr "Dashboard 监听地址"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Dashboard secret"
+msgstr "Dashboard 密钥"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "host:port"
+msgstr "主机:端口"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Enable dashboard (sing-box API)"
+msgstr "启用 Dashboard（sing-box API）"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Run the sing-box 1.14 API service and serve its web dashboard at /dashboard/ on the listen address."
+msgstr "运行 sing-box 1.14 的 API 服务，并在监听地址的 /dashboard/ 路径提供网页 Dashboard。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Address and port of the API service. Use 127.0.0.1:9090 to keep it local only."
+msgstr "API 服务的监听地址和端口。填 127.0.0.1:9090 则仅限本机访问。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Dashboard download URL"
+msgstr "Dashboard 下载 URL"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "ZIP archive of the dashboard files. Leave empty to use the default sing-box dashboard. Downloaded into /var/run/homeproxy/dashboard/web and refreshed daily."
+msgstr "Dashboard 文件的 ZIP 压缩包。留空则使用 sing-box 默认 Dashboard。下载到 /var/run/homeproxy/dashboard/web，每天刷新。"

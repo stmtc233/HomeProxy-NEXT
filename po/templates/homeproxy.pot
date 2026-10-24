@@ -3521,3 +3521,39 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/status.js:264
 msgid "GeoSite CN rule-set version"
 msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Bearer token required by the API. Strongly recommended when listening on a non-local address."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Dashboard listen address"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Dashboard secret"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "host:port"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Enable dashboard (sing-box API)"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Run the sing-box 1.14 API service and serve its web dashboard at /dashboard/ on the listen address."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Address and port of the API service. Use 127.0.0.1:9090 to keep it local only."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Dashboard download URL"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "ZIP archive of the dashboard files. Leave empty to use the default sing-box dashboard. Downloaded into /var/run/homeproxy/dashboard/web and refreshed daily."
+msgstr ""
