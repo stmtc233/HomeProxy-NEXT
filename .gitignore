@@ -5,3 +5,4 @@
 # the checkout on purpose and must never be published - same rule as
 # luci-app-homeproxy-pro.
 /docs/
+/scratch/

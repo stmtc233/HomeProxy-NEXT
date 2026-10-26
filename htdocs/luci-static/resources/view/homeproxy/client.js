@@ -839,21 +839,56 @@ return view.extend({
 
 		so = ss.taboption('field_other', form.ListValue, 'outbound', _('Outbound'),
 			_('Tag of the target outbound.'));
-		so.load = function(section_id) {
-			delete this.keylist;
-			delete this.vallist;
-
-			this.value('direct-out', _('Direct'));
-			uci.sections(data[0], 'routing_node', (res) => {
-				if (res.enabled === '1')
-					this.value(res['.name'], res.label);
-			});
-
-			return this.super('load', section_id);
-		}
+		so.default = 'direct-out';
 		so.rmempty = false;
 		so.depends('action', 'route');
 		so.editable = true;
+		so.renderWidget = function(section_id, option_index, cfgvalue) {
+			let choices = { 'direct-out': _('Direct') };
+			let sort = ['direct-out'];
+
+			uci.sections(data[0], 'routing_node', (res) => {
+				if (res.enabled === '1') {
+					choices[res['.name']] = res.label || res['.name'];
+					sort.push(res['.name']);
+				}
+			});
+
+			let widget = new ui.Select((cfgvalue != null) ? cfgvalue : this.default, choices, {
+				id: this.cbid(section_id),
+				size: this.size,
+				sort: sort,
+				widget: this.widget,
+				optional: this.optional,
+				orientation: this.orientation,
+				placeholder: this.placeholder,
+				validate: L.bind(this.validate, this, section_id),
+				disabled: (this.readonly != null) ? this.readonly : this.map.readonly
+			});
+
+			return widget.render();
+		};
+		so.textvalue = function(section_id) {
+			let val = this.cfgvalue(section_id);
+			if (!val || val === 'direct-out')
+				return _('Direct');
+			let target = uci.get(data[0], val);
+			return target ? (target.label || target['.name']) : val;
+		};
+		so.write = function(section_id, formvalue) {
+			let res = this.super('write', section_id, formvalue);
+			if (this.map && this.map.parent) {
+				let node = this.map.parent.findElement('id', this.cbid(section_id));
+				if (node) {
+					let select = node.querySelector('select');
+					if (select) {
+						select.value = formvalue;
+						select.dispatchEvent(new Event('change'));
+					}
+				}
+			}
+			return res;
+		};
 
 		so = ss.taboption('field_other', form.Value, 'override_address', _('Override address'),
 			_('Override the connection destination address.'));
@@ -1254,21 +1289,55 @@ return view.extend({
 
 		so = ss.option(form.ListValue, 'outbound', _('Outbound'),
 			_('Tag of an outbound for connecting to the dns server.'));
-		so.load = function(section_id) {
-			delete this.keylist;
-			delete this.vallist;
-
-			this.value('direct-out', _('Direct'));
-			uci.sections(data[0], 'routing_node', (res) => {
-				if (res.enabled === '1')
-					this.value(res['.name'], res.label);
-			});
-
-			return this.super('load', section_id);
-		}
 		so.default = 'direct-out';
 		so.rmempty = false;
 		so.editable = true;
+		so.renderWidget = function(section_id, option_index, cfgvalue) {
+			let choices = { 'direct-out': _('Direct') };
+			let sort = ['direct-out'];
+
+			uci.sections(data[0], 'routing_node', (res) => {
+				if (res.enabled === '1') {
+					choices[res['.name']] = res.label || res['.name'];
+					sort.push(res['.name']);
+				}
+			});
+
+			let widget = new ui.Select((cfgvalue != null) ? cfgvalue : this.default, choices, {
+				id: this.cbid(section_id),
+				size: this.size,
+				sort: sort,
+				widget: this.widget,
+				optional: this.optional,
+				orientation: this.orientation,
+				placeholder: this.placeholder,
+				validate: L.bind(this.validate, this, section_id),
+				disabled: (this.readonly != null) ? this.readonly : this.map.readonly
+			});
+
+			return widget.render();
+		};
+		so.textvalue = function(section_id) {
+			let val = this.cfgvalue(section_id);
+			if (!val || val === 'direct-out')
+				return _('Direct');
+			let target = uci.get(data[0], val);
+			return target ? (target.label || target['.name']) : val;
+		};
+		so.write = function(section_id, formvalue) {
+			let res = this.super('write', section_id, formvalue);
+			if (this.map && this.map.parent) {
+				let node = this.map.parent.findElement('id', this.cbid(section_id));
+				if (node) {
+					let select = node.querySelector('select');
+					if (select) {
+						select.value = formvalue;
+						select.dispatchEvent(new Event('change'));
+					}
+				}
+			}
+			return res;
+		};
 
 		s.tab('dns_rule', _('DNS Rules'));
 		o = s.taboption('dns_rule', form.SectionValue, '_dns_rule', form.GridSection, 'dns_rule');
@@ -1377,23 +1446,62 @@ return view.extend({
 
 		so = ss.taboption('field_other', form.ListValue, 'server', _('Server'),
 			_('Tag of the target dns server.'));
-		so.load = function(section_id) {
-			delete this.keylist;
-			delete this.vallist;
-
-			this.value('default-dns', _('Default DNS (issued by WAN)'));
-			this.value('system-dns', _('System DNS'));
-			uci.sections(data[0], 'dns_server', (res) => {
-				if (res.enabled === '1')
-					this.value(res['.name'], res.label);
-			});
-
-			return this.super('load', section_id);
-		}
+		so.default = 'default-dns';
 		so.rmempty = false;
 		so.editable = true;
 		so.depends('action', 'route');
 		so.depends('action', 'evaluate');
+		so.renderWidget = function(section_id, option_index, cfgvalue) {
+			let choices = {
+				'default-dns': _('Default DNS (issued by WAN)'),
+				'system-dns': _('System DNS')
+			};
+			let sort = ['default-dns', 'system-dns'];
+
+			uci.sections(data[0], 'dns_server', (res) => {
+				if (res.enabled === '1') {
+					choices[res['.name']] = res.label || res['.name'];
+					sort.push(res['.name']);
+				}
+			});
+
+			let widget = new ui.Select((cfgvalue != null) ? cfgvalue : this.default, choices, {
+				id: this.cbid(section_id),
+				size: this.size,
+				sort: sort,
+				widget: this.widget,
+				optional: this.optional,
+				orientation: this.orientation,
+				placeholder: this.placeholder,
+				validate: L.bind(this.validate, this, section_id),
+				disabled: (this.readonly != null) ? this.readonly : this.map.readonly
+			});
+
+			return widget.render();
+		};
+		so.textvalue = function(section_id) {
+			let val = this.cfgvalue(section_id);
+			if (!val || val === 'default-dns')
+				return _('Default DNS (issued by WAN)');
+			if (val === 'system-dns')
+				return _('System DNS');
+			let target = uci.get(data[0], val);
+			return target ? (target.label || target['.name']) : val;
+		};
+		so.write = function(section_id, formvalue) {
+			let res = this.super('write', section_id, formvalue);
+			if (this.map && this.map.parent) {
+				let node = this.map.parent.findElement('id', this.cbid(section_id));
+				if (node) {
+					let select = node.querySelector('select');
+					if (select) {
+						select.value = formvalue;
+						select.dispatchEvent(new Event('change'));
+					}
+				}
+			}
+			return res;
+		};
 
 		so = ss.taboption('field_other', form.Flag, 'dns_disable_cache', _('Disable dns cache'),
 			_('Disable cache and save cache in this query.'));
@@ -1669,20 +1777,44 @@ return view.extend({
 
 		so = ss.option(form.ListValue, 'outbound', _('Outbound'),
 			_('Outbound used to download this rule-set (via sing-box 1.14 http_clients).'));
-		so.load = function(section_id) {
-			delete this.keylist;
-			delete this.vallist;
+		so.depends('type', 'remote');
+		so.renderWidget = function(section_id, option_index, cfgvalue) {
+			let choices = {
+				'': _('Default'),
+				'direct-out': _('Direct')
+			};
+			let sort = ['', 'direct-out'];
 
-			this.value('', _('Default'));
-			this.value('direct-out', _('Direct'));
 			uci.sections(data[0], 'routing_node', (res) => {
-				if (res.enabled === '1')
-					this.value(res['.name'], res.label);
+				if (res.enabled === '1') {
+					choices[res['.name']] = res.label || res['.name'];
+					sort.push(res['.name']);
+				}
 			});
 
-			return this.super('load', section_id);
-		}
-		so.depends('type', 'remote');
+			let widget = new ui.Select((cfgvalue != null) ? cfgvalue : this.default, choices, {
+				id: this.cbid(section_id),
+				size: this.size,
+				sort: sort,
+				widget: this.widget,
+				optional: this.optional,
+				orientation: this.orientation,
+				placeholder: this.placeholder,
+				validate: L.bind(this.validate, this, section_id),
+				disabled: (this.readonly != null) ? this.readonly : this.map.readonly
+			});
+
+			return widget.render();
+		};
+		so.textvalue = function(section_id) {
+			let val = this.cfgvalue(section_id);
+			if (!val)
+				return _('Default');
+			if (val === 'direct-out')
+				return _('Direct');
+			let target = uci.get(data[0], val);
+			return target ? (target.label || target['.name']) : val;
+		};
 
 		so = ss.option(form.Value, 'initial_path', _('Initial path'),
 			_('Local file with initial rule-set content; avoids blocking startup on first download (1.14).'));
