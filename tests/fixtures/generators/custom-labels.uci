@@ -5,7 +5,7 @@
 # Outbound, DNS server and rule-set tags are taken from the section label
 # instead of the UCI section name (subscription nodes are named by md5, so
 # the old cfg-<md5>-out tags could not be told apart). Covered here:
-#   - non-ASCII labels with spaces
+#   - non-ASCII labels with spaces and emoji (flags, variation selector)
 #   - the same label on two nodes (two subscriptions), suffixed " #2"
 #   - a label equal to a built-in tag (main-out, default-dns), suffixed " #2"
 #   - an empty label, falling back to cfg-<name>-<suffix>
@@ -34,7 +34,7 @@ config homeproxy 'infra'
 	option ntp_server 'nil'
 
 config node '0f3c2a1b9d8e7f60a1b2c3d4e5f60718'
-	option label '香港 01'
+	option label '🇭🇰 香港 01'
 	option type 'trojan'
 	option address 'hk1.example.com'
 	option port '443'
@@ -44,7 +44,7 @@ config node '0f3c2a1b9d8e7f60a1b2c3d4e5f60718'
 
 # Same label from another subscription
 config node '9a8b7c6d5e4f30211203f4e5d6c7b8a9'
-	option label '香港 01'
+	option label '🇭🇰 香港 01'
 	option type 'trojan'
 	option address 'hk2.example.com'
 	option port '443'
@@ -71,7 +71,7 @@ config node 'n_nolabel'
 
 config routing_node 'rn_auto'
 	option enabled '1'
-	option label '自动选择'
+	option label '🚀 自动选择'
 	option node 'urltest'
 	list urltest_nodes '0f3c2a1b9d8e7f60a1b2c3d4e5f60718'
 	list urltest_nodes '9a8b7c6d5e4f30211203f4e5d6c7b8a9'
@@ -85,7 +85,7 @@ config routing_node 'rn_hk'
 
 config dns_server 'ds_google'
 	option enabled '1'
-	option label '谷歌 DNS'
+	option label '🌐 谷歌 DNS ✈️'
 	option type 'tls'
 	option server '8.8.8.8'
 	option outbound 'rn_auto'
