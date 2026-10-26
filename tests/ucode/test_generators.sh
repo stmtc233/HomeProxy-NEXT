@@ -175,6 +175,9 @@ assert_json "custom/labels: dns.final points at the DNS label" '"final": "ğŸŒ è
 assert_json "custom/labels: extra rule-set tags are kept verbatim" '"geosite"$'
 assert_json "custom/labels: a rule-set label clashing with an extra tag is suffixed" '"tag": "geosite #2"'
 
+run_case rules "$ROOT/tests/fixtures/generators/rules.uci" generate_client.uc sing-box-c.json
+check_golden rules sing-box-c.json
+
 run_case server "$ROOT/tests/fixtures/generators/server.uci" generate_server.uc sing-box-s.json
 check_golden server sing-box-s.json
 

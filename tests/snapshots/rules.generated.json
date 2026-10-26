@@ -1,0 +1,415 @@
+{
+	"log": {
+		"disabled": false,
+		"level": "error",
+		"output": "__WORKDIR__/run/sing-box-c.log",
+		"timestamp": true
+	},
+	"ntp": {
+		"enabled": true,
+		"server": "time.apple.com",
+		"detour": "direct-out",
+		"domain_resolver": "default-dns"
+	},
+	"dns": {
+		"servers": [
+			{
+				"tag": "default-dns",
+				"type": "udp",
+				"server": "223.5.5.5",
+				"detour": "direct-out"
+			},
+			{
+				"tag": "system-dns",
+				"type": "local",
+				"detour": "direct-out"
+			},
+			{
+				"tag": "ds-main",
+				"type": "udp",
+				"server": "8.8.8.8"
+			}
+		],
+		"rules": [
+			{
+				"action": "evaluate",
+				"server": "ds-main",
+				"tag": "_hp_eval_dr_match",
+				"ip_version": 6,
+				"query_type": [
+					"A",
+					"AAAA"
+				],
+				"network": "udp",
+				"protocol": [
+					"dns"
+				],
+				"domain": [
+					"full.example.com"
+				],
+				"domain_suffix": [
+					"suffix.example.com"
+				],
+				"domain_keyword": [
+					"keyword"
+				],
+				"domain_regex": [
+					"^regex\\.example\\.com$"
+				],
+				"port": [
+					53
+				],
+				"port_range": [
+					"5000:6000"
+				],
+				"source_ip_cidr": [
+					"192.168.1.0/24"
+				],
+				"source_ip_is_private": true,
+				"source_port": [
+					12345
+				],
+				"source_port_range": [
+					"10000:20000"
+				],
+				"process_name": [
+					"curl"
+				],
+				"process_path": [
+					"/usr/bin/curl"
+				],
+				"process_path_regex": [
+					"^/usr/bin/.*$"
+				],
+				"user": [
+					"nobody"
+				],
+				"rule_set": [
+					"rs-local"
+				],
+				"rule_set_ip_cidr_match_source": true,
+				"invert": true,
+				"query_client_subnet": "198.51.100.0/24",
+				"query_dnssec": true,
+				"source_mac_address": [
+					"00:11:22:33:44:55"
+				],
+				"source_hostname": [
+					"laptop"
+				]
+			},
+			{
+				"ip_version": 6,
+				"query_type": [
+					"A",
+					"AAAA"
+				],
+				"network": "udp",
+				"protocol": [
+					"dns"
+				],
+				"domain": [
+					"full.example.com"
+				],
+				"domain_suffix": [
+					"suffix.example.com"
+				],
+				"domain_keyword": [
+					"keyword"
+				],
+				"domain_regex": [
+					"^regex\\.example\\.com$"
+				],
+				"port": [
+					53
+				],
+				"port_range": [
+					"5000:6000"
+				],
+				"source_ip_cidr": [
+					"192.168.1.0/24"
+				],
+				"source_ip_is_private": true,
+				"source_port": [
+					12345
+				],
+				"source_port_range": [
+					"10000:20000"
+				],
+				"process_name": [
+					"curl"
+				],
+				"process_path": [
+					"/usr/bin/curl"
+				],
+				"process_path_regex": [
+					"^/usr/bin/.*$"
+				],
+				"user": [
+					"nobody"
+				],
+				"rule_set": [
+					"rs-local"
+				],
+				"rule_set_ip_cidr_match_source": true,
+				"invert": true,
+				"action": "route",
+				"server": "ds-main",
+				"disable_cache": true,
+				"disable_optimistic_cache": true,
+				"rewrite_ttl": 60,
+				"timeout": "5s",
+				"client_subnet": "198.51.100.0/24",
+				"query_client_subnet": "198.51.100.0/24",
+				"query_dnssec": true,
+				"source_mac_address": [
+					"00:11:22:33:44:55"
+				],
+				"source_hostname": [
+					"laptop"
+				],
+				"match_response": "_hp_eval_dr_match",
+				"ip_cidr": [
+					"203.0.113.0/24"
+				],
+				"ip_is_private": true
+			},
+			{
+				"domain_suffix": [
+					"evaluate.example.com"
+				],
+				"speculative": true,
+				"action": "evaluate",
+				"server": "ds-main",
+				"tag": "eval-tag"
+			},
+			{
+				"domain_suffix": [
+					"evaluate.example.com"
+				],
+				"race": true,
+				"action": "route",
+				"server": "ds-main",
+				"remove_client_subnet": true,
+				"match_response": "eval-tag",
+				"response_rcode": "NOERROR",
+				"response_answer": [
+					"evaluate.example.com. IN A 203.0.113.1"
+				],
+				"response_ns": [
+					"example.com. IN NS ns.example.com."
+				],
+				"response_extra": [
+					"ns.example.com. IN A 203.0.113.2"
+				],
+				"ip_cidr": [
+					"203.0.113.0/24"
+				]
+			},
+			{
+				"domain_suffix": [
+					"predefined.example.com"
+				],
+				"action": "predefined",
+				"rcode": "NOERROR",
+				"answer": [
+					"predefined.example.com. IN A 203.0.113.3"
+				],
+				"ns": [
+					"example.com. IN NS ns.example.com."
+				],
+				"extra": [
+					"ns.example.com. IN A 203.0.113.4"
+				]
+			},
+			{
+				"domain_suffix": [
+					"reject.example.com"
+				],
+				"action": "reject",
+				"method": "default",
+				"no_drop": true
+			}
+		],
+		"final": "ds-main"
+	},
+	"inbounds": [
+		{
+			"type": "direct",
+			"tag": "dns-in",
+			"listen": "127.0.0.1",
+			"listen_port": 5333
+		},
+		{
+			"type": "mixed",
+			"tag": "mixed-in",
+			"listen": "::",
+			"listen_port": 5330,
+			"set_system_proxy": false
+		},
+		{
+			"type": "redirect",
+			"tag": "redirect-in",
+			"listen": "::",
+			"listen_port": 5331
+		},
+		{
+			"type": "tproxy",
+			"tag": "tproxy-in",
+			"listen": "::",
+			"listen_port": 5332,
+			"network": "udp"
+		}
+	],
+	"outbounds": [
+		{
+			"type": "direct",
+			"tag": "direct-out",
+			"routing_mark": 100
+		},
+		{
+			"type": "block",
+			"tag": "block-out"
+		}
+	],
+	"route": {
+		"rules": [
+			{
+				"inbound": "dns-in",
+				"action": "hijack-dns"
+			},
+			{
+				"action": "sniff"
+			},
+			{
+				"ip_version": 4,
+				"protocol": [
+					"quic"
+				],
+				"network": "udp",
+				"client": "chromium",
+				"domain": [
+					"full.example.com"
+				],
+				"domain_suffix": [
+					"suffix.example.com"
+				],
+				"domain_keyword": [
+					"keyword"
+				],
+				"domain_regex": [
+					"^regex\\.example\\.com$"
+				],
+				"source_ip_cidr": [
+					"192.168.1.0/24"
+				],
+				"source_ip_is_private": true,
+				"ip_cidr": [
+					"203.0.113.0/24"
+				],
+				"ip_is_private": true,
+				"source_port": [
+					12345
+				],
+				"source_port_range": [
+					"10000:20000"
+				],
+				"port": [
+					443
+				],
+				"port_range": [
+					"8000:9000"
+				],
+				"process_name": [
+					"curl"
+				],
+				"process_path": [
+					"/usr/bin/curl"
+				],
+				"process_path_regex": [
+					"^/usr/bin/.*$"
+				],
+				"user": [
+					"nobody"
+				],
+				"rule_set": [
+					"rs-local"
+				],
+				"rule_set_ip_cidr_match_source": true,
+				"invert": true,
+				"action": "route",
+				"outbound": "direct-out",
+				"source_mac_address": [
+					"00:11:22:33:44:55"
+				],
+				"source_hostname": [
+					"laptop"
+				]
+			},
+			{
+				"domain_suffix": [
+					"options.example.com"
+				],
+				"action": "route-options",
+				"override_address": "198.51.100.1",
+				"override_port": 8443,
+				"udp_disable_domain_unmapping": true,
+				"udp_connect": true,
+				"udp_timeout": "30s",
+				"tls_fragment": true,
+				"tls_fragment_fallback_delay": "500ms",
+				"tls_spoof": "spoof.example.com",
+				"tls_spoof_method": "wrong-sequence"
+			},
+			{
+				"domain_suffix": [
+					"record.example.com"
+				],
+				"action": "route",
+				"outbound": "direct-out",
+				"tls_record_fragment": true
+			},
+			{
+				"domain_suffix": [
+					"resolve.example.com"
+				],
+				"action": "resolve",
+				"server": "ds-main",
+				"strategy": "prefer_ipv4",
+				"disable_cache": true,
+				"disable_optimistic_cache": true,
+				"rewrite_ttl": 60,
+				"timeout": "5s",
+				"client_subnet": "198.51.100.0/24"
+			},
+			{
+				"domain_suffix": [
+					"reject.example.com"
+				],
+				"action": "reject",
+				"method": "default",
+				"no_drop": true
+			}
+		],
+		"rule_set": [
+			{
+				"type": "local",
+				"tag": "rs-local",
+				"format": "binary",
+				"path": "__WORKDIR__/ruleset/test.srs"
+			}
+		],
+		"auto_detect_interface": true,
+		"default_domain_resolver": {
+			"server": "default-dns"
+		},
+		"final": "direct-out"
+	},
+	"experimental": {
+		"cache_file": {
+			"enabled": true,
+			"path": "/etc/homeproxy/cache.db"
+		}
+	},
+	"$schema": "https://sing-box.sagernet.org/schema.json"
+}
