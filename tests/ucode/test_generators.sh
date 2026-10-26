@@ -19,6 +19,9 @@ run_case() {
 	mkdir -p "$dir/config" "$dir/run" "$dir/scripts" "$dir/resources" "$dir/ruleset"
 	: > "$dir/resources/direct_list.txt"
 	: > "$dir/resources/proxy_list.txt"
+	for list in direct_list proxy_list; do
+		[ -f "${fixture%.uci}.$list.txt" ] && cp "${fixture%.uci}.$list.txt" "$dir/resources/$list.txt"
+	done
 
 	if [ "$local_rs" = "1" ]; then
 		printf '%s' '{"version":1,"rules":[{"domain_suffix":["example.com"]}]}' > "$dir/rs-src.json"
@@ -177,6 +180,11 @@ assert_json "custom/labels: a rule-set label clashing with an extra tag is suffi
 
 run_case rules "$ROOT/tests/fixtures/generators/rules.uci" generate_client.uc sing-box-c.json
 check_golden rules sing-box-c.json
+
+for name in global-tun bypass-direct custom-extras; do
+	run_case "$name" "$ROOT/tests/fixtures/generators/$name.uci" generate_client.uc sing-box-c.json
+	check_golden "$name" sing-box-c.json
+done
 
 run_case server "$ROOT/tests/fixtures/generators/server.uci" generate_server.uc sing-box-s.json
 check_golden server sing-box-s.json

@@ -1,0 +1,175 @@
+{
+	"log": {
+		"disabled": false,
+		"level": "info",
+		"output": "__WORKDIR__/run/sing-box-c.log",
+		"timestamp": true
+	},
+	"ntp": {
+		"enabled": true,
+		"server": "time.example.com",
+		"detour": "direct-out",
+		"domain_resolver": "default-dns"
+	},
+	"dns": {
+		"servers": [
+			{
+				"tag": "default-dns",
+				"type": "udp",
+				"server": "8.8.8.8",
+				"detour": "direct-out"
+			},
+			{
+				"tag": "system-dns",
+				"type": "local",
+				"detour": "direct-out"
+			},
+			{
+				"tag": "main-dns",
+				"domain_resolver": {
+					"server": "default-dns"
+				},
+				"detour": "main-out",
+				"type": "tls",
+				"server": "1.1.1.1"
+			}
+		],
+		"rules": [
+		],
+		"final": "main-dns"
+	},
+	"inbounds": [
+		{
+			"type": "direct",
+			"tag": "dns-in",
+			"listen": "127.0.0.1",
+			"listen_port": 5333
+		},
+		{
+			"type": "mixed",
+			"tag": "mixed-in",
+			"listen": "::",
+			"listen_port": 5330,
+			"udp_timeout": "300s",
+			"set_system_proxy": false
+		},
+		{
+			"type": "redirect",
+			"tag": "redirect-in",
+			"listen": "::",
+			"listen_port": 5331
+		},
+		{
+			"type": "tun",
+			"tag": "tun-in",
+			"interface_name": "singtun0",
+			"address": [
+				"172.19.0.1/30",
+				"fdfe:dcba:9876::1/126"
+			],
+			"mtu": 1500,
+			"auto_route": false,
+			"udp_timeout": "300s",
+			"dns_mode": "native",
+			"dns_address": "172.19.0.2",
+			"udp_mapping": "endpoint_independent",
+			"udp_filtering": "address_dependent",
+			"udp_nat_max": 4096,
+			"stack": "system"
+		}
+	],
+	"endpoints": [
+		{
+			"type": "wireguard",
+			"tag": "main-out",
+			"address": [
+				"10.0.0.2/32",
+				"fd00::2/128"
+			],
+			"mtu": 1408,
+			"private_key": "IDTYSQiGLnnkIWRPNr6QJP+eYxdX6xeUbfp3VPl/100=",
+			"peers": [
+				{
+					"address": "wg.example.com",
+					"port": 51820,
+					"allowed_ips": [
+						"0.0.0.0/0",
+						"::/0"
+					],
+					"persistent_keepalive_interval": 25,
+					"public_key": "sJzNCbWwYeXOeCaWk5r+VEpKDWfeKE3P7ccbVmWF9nw=",
+					"reserved": [
+						1,
+						2,
+						3
+					]
+				}
+			],
+			"system": false,
+			"udp_fragment": true,
+			"udp_mapping": "endpoint_independent",
+			"udp_filtering": "address_dependent",
+			"udp_nat_max": 4096
+		}
+	],
+	"outbounds": [
+		{
+			"type": "direct",
+			"tag": "direct-out",
+			"routing_mark": 100
+		},
+		{
+			"type": "block",
+			"tag": "block-out"
+		},
+		{
+			"type": "direct",
+			"tag": "main-udp-out",
+			"routing_mark": 100
+		}
+	],
+	"route": {
+		"rules": [
+			{
+				"inbound": "dns-in",
+				"action": "hijack-dns"
+			},
+			{
+				"action": "sniff"
+			},
+			{
+				"network": "udp",
+				"action": "route",
+				"outbound": "main-udp-out",
+				"override_address": "198.51.100.7",
+				"override_port": 4433
+			}
+		],
+		"default_interface": "eth1",
+		"default_domain_resolver": {
+			"server": "default-dns"
+		},
+		"final": "main-out"
+	},
+	"services": [
+		{
+			"type": "api",
+			"listen": "::1",
+			"listen_port": 9191,
+			"secret": "test-secret",
+			"dashboard": {
+				"enabled": true,
+				"path": "__WORKDIR__/run/dashboard/web",
+				"download_url": "https://example.com/dashboard.zip",
+				"http_client": "hp-main-out"
+			}
+		}
+	],
+	"http_clients": [
+		{
+			"tag": "hp-main-out",
+			"detour": "main-out"
+		}
+	],
+	"$schema": "https://sing-box.sagernet.org/schema.json"
+}

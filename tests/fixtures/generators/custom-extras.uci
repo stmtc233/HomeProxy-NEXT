@@ -1,0 +1,111 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# Coverage fixture for the custom-mode settings the other fixtures leave out:
+# the global routing options (domain strategy, find_neighbor, tun stack,
+# endpoint-independent NAT, UDP timeout), the global DNS options, routing
+# nodes (WireGuard endpoint and a plain outbound) with bind_interface /
+# detour / domain_resolver, a DoH server with headers, a hosts file server,
+# a remote rule-set with initial_path and the dashboard without a main node.
+# The keys are test-only.
+
+config homeproxy 'config'
+	option routing_mode 'custom'
+	option proxy_mode 'redirect_tun'
+	option ipv6_support '1'
+	option log_level 'error'
+	option dashboard '1'
+
+config homeproxy 'infra'
+	option mixed_port '5330'
+	option dns_port '5333'
+	option redirect_port '5331'
+	option self_mark '100'
+	option tun_name 'singtun0'
+	option tun_addr4 '172.19.0.1/30'
+	option tun_addr6 'fdfe:dcba:9876::1/126'
+	option tun_mtu '9000'
+	option ntp_server 'nil'
+
+config homeproxy 'routing'
+	option default_outbound 'rn_proxy'
+	option default_outbound_dns 'ds_doh'
+	option domain_strategy 'prefer_ipv4'
+	option find_neighbor '1'
+	option tcpip_stack 'gvisor'
+	option endpoint_independent_nat '1'
+	option udp_timeout '120'
+
+config homeproxy 'dns'
+	option default_strategy 'prefer_ipv6'
+	option default_server 'ds_doh'
+	option disable_cache_expire '1'
+	option client_subnet '198.51.100.0/24'
+
+config node 'n_ss'
+	option label 'ss'
+	option type 'shadowsocks'
+	option address 'ss.example.com'
+	option port '8388'
+	option shadowsocks_encrypt_method 'aes-128-gcm'
+	option password 'secret'
+
+config node 'n_wg'
+	option label 'wg'
+	option type 'wireguard'
+	option address 'wg.example.com'
+	option port '51820'
+	list wireguard_local_address '10.0.0.2/32'
+	option wireguard_private_key 'qKjjYlTKsxzuuThqBRUQ6ON4T7fo52Q/VsBtJrqdNUc='
+	option wireguard_peer_public_key 'zoKstuivPm2HhlAcg6Uui1hKUtVsvn/HDQUXeEyCVxg='
+	option wireguard_pre_shared_key 'IDTYSQiGLnnkIWRPNr6QJP+eYxdX6xeUbfp3VPl/100='
+
+config routing_node 'rn_proxy'
+	option enabled '1'
+	option label 'rn-proxy'
+	option node 'n_ss'
+	option bind_interface 'eth1'
+	option domain_resolver 'ds_doh'
+	option domain_strategy 'ipv4_only'
+
+config routing_node 'rn_wg'
+	option enabled '1'
+	option label 'rn-wg'
+	option node 'n_wg'
+	option bind_interface 'eth2'
+	option outbound 'rn_proxy'
+	option domain_resolver 'ds_doh'
+	option domain_strategy 'ipv4_only'
+
+config dns_server 'ds_doh'
+	option enabled '1'
+	option label 'ds-doh'
+	option type 'https'
+	option server '1.1.1.1'
+	option server_port '443'
+	option path '/dns-query'
+	list headers 'X-Test: 1'
+	option tls_sni 'cloudflare-dns.com'
+	option outbound 'rn_wg'
+
+config dns_server 'ds_hosts'
+	option enabled '1'
+	option label 'ds-hosts'
+	option type 'hosts'
+	option hosts_path '/etc/hosts'
+
+config ruleset 'rs_remote'
+	option enabled '1'
+	option label 'rs-remote'
+	option type 'remote'
+	option format 'binary'
+	option url 'https://example.com/remote.srs'
+	option initial_path '/etc/homeproxy/ruleset/remote.srs'
+	option update_interval '12h'
+	option outbound 'rn_wg'
+
+config routing_rule 'rr_remote'
+	option enabled '1'
+	option label 'rr-remote'
+	list rule_set 'rs_remote'
+	option action 'route'
+	option outbound 'rn_wg'
