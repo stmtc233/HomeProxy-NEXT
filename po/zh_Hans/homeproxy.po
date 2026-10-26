@@ -1204,14 +1204,14 @@ msgstr "劫持"
 #: htdocs/luci-static/resources/view/homeproxy/client.js:101
 #: htdocs/luci-static/resources/view/homeproxy/status.js:282
 #: root/usr/share/luci/menu.d/luci-app-homeproxy.json:3
-msgid "HomeProxy"
-msgstr "HomeProxy"
+msgid "HomeProxy NEXT"
+msgstr "HomeProxy NEXT"
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:58
 #: htdocs/luci-static/resources/view/homeproxy/server.js:60
 #: htdocs/luci-static/resources/view/homeproxy/server.js:129
-msgid "HomeProxy Server"
-msgstr "HomeProxy 服务端"
+msgid "HomeProxy NEXT Server"
+msgstr "HomeProxy NEXT 服务端"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:556
 msgid "Hop interval"
@@ -2998,8 +2998,8 @@ msgstr "可接受的最低 TLS 版本。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:102
 #: htdocs/luci-static/resources/view/homeproxy/server.js:130
-msgid "The modern ImmortalWrt proxy platform for ARM64/AMD64."
-msgstr "为 ARM64/AMD64 设计的现代 ImmortalWrt 代理平台。"
+msgid "A lean sing-box 1.14 proxy for ImmortalWrt: fewer features, each one done well."
+msgstr "基于 sing-box 1.14 的精简代理：化繁为简，够用就好，把现有功能做好。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:502
 #: htdocs/luci-static/resources/view/homeproxy/server.js:914

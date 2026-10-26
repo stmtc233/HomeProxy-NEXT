@@ -448,7 +448,7 @@ return view.extend({
 		s.anonymous = true;
 
 		o = s.option(form.DummyValue, '_homeproxy_logview');
-		o.render = L.bind(getRuntimeLog, this, o, _('HomeProxy'));
+		o.render = L.bind(getRuntimeLog, this, o, _('HomeProxy NEXT'));
 
 		o = s.option(form.DummyValue, '_sing-box-c_logview');
 		o.render = L.bind(getRuntimeLog, this, o, _('sing-box client'));

@@ -55,9 +55,9 @@ function renderStatus(isRunning, version) {
 	let spanTemp = '<em><span style="color:%s"><strong>%s (sing-box v%s) %s</strong></span></em>';
 	let renderHTML;
 	if (isRunning)
-		renderHTML = spanTemp.format('green', _('HomeProxy Server'), version, _('RUNNING'));
+		renderHTML = spanTemp.format('green', _('HomeProxy NEXT Server'), version, _('RUNNING'));
 	else
-		renderHTML = spanTemp.format('red', _('HomeProxy Server'), version, _('NOT RUNNING'));
+		renderHTML = spanTemp.format('red', _('HomeProxy NEXT Server'), version, _('NOT RUNNING'));
 
 	return renderHTML;
 }
@@ -129,8 +129,8 @@ return view.extend({
 		let m, s, o;
 		let features = data[1];
 
-		m = new form.Map('homeproxy', _('HomeProxy Server'),
-			_('The modern ImmortalWrt proxy platform for ARM64/AMD64.'));
+		m = new form.Map('homeproxy', _('HomeProxy NEXT Server'),
+			_('A lean sing-box 1.14 proxy for ImmortalWrt: fewer features, each one done well.'));
 
 		s = m.section(form.TypedSection);
 		s.render = function() {

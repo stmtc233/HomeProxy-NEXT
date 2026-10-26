@@ -121,7 +121,7 @@ jobs:
       - name: Upload package artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: homeproxy-packages
+          name: homeproxy-next-packages
           include-hidden-files: true
           path: |
             .github/*.apk
@@ -171,7 +171,7 @@ jobs:
             exit 1
           fi
           # shields.io badge：label 与 message 中 "-" 需写作 "--"（path 分隔转义）
-          LABEL="luci--app--homeproxy"
+          LABEL="HomeProxy_NEXT"
           MSG="v${TAG_VERSION//-/--}"
           NOTES="[![v$TAG_VERSION](https://img.shields.io/badge/${LABEL}-${MSG}-blue)](https://github.com/$GITHUB_REPOSITORY/releases/tag/v$TAG_VERSION)"
           # 同名 tag/release 视为重新发布：先移除旧的（连同 tag），再由下面的 create 重建
