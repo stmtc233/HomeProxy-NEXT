@@ -37,6 +37,9 @@ sh "$ROOT/tests/ucode/test_fw4_cleanup.sh" "$ROOT" "$WORK/fw4_cleanup" || FAILED
 echo "== kill switch =="
 sh "$ROOT/tests/ucode/test_killswitch.sh" "$ROOT" "$WORK/killswitch" || FAILED=1
 
+echo "== resource list mirrors =="
+sh "$ROOT/tests/ucode/test_update_resources.sh" "$ROOT" "$WORK/update_resources" || FAILED=1
+
 echo "== firewall template rendering =="
 sh "$ROOT/tests/ucode/test_firewall_template.sh" "$ROOT" || FAILED=1
 
