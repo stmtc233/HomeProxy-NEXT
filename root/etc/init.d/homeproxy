@@ -295,6 +295,9 @@ instance_pid() {
 # plain stop (which lifts the block), so leave a note for stop_service.
 # HP_RESTARTING also tells stop_service to leave the firewall, dnsmasq and
 # cron to start_service, which only touches what actually changed.
+# rc.common's start does not pass on the status of start_service; a start
+# that gave up has removed the fingerprint, so that is what tells (the LuCI
+# restart button shows a failure by the exit code).
 restart() {
 	mkdir -p "$RUN_DIR"
 	: > "$RUN_DIR/ks_restarting"
@@ -303,6 +306,7 @@ restart() {
 	stop "$@"
 	start "$@"
 	trap TERM
+	[ -e "$RUN_DIR/restart.fingerprint" ]
 }
 
 # What a plain stop takes down besides the sing-box instances.
@@ -728,7 +732,11 @@ reload_service() {
 		if { [ "$outbound_node" = "nil" ] || [ -n "$client_pid" ]; } \
 			&& { [ "$server_enabled" = "0" ] || [ -n "$server_pid" ]; }; then
 			HP_INPLACE=1
-			start || return 1
+			start
+			if [ ! -e "$RUN_DIR/restart.fingerprint" ]; then
+				log "Error: in-place reload failed, service stopped."
+				return 1
+			fi
 
 			# Only to the process that was already running: a restarted one
 			# (new pid) has read the new config, and a SIGHUP that lands before

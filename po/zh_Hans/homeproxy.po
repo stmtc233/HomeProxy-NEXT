@@ -2375,6 +2375,22 @@ msgid ""
 "Return expired cache immediately and refresh in background (sing-box 1.14)."
 msgstr "立即返回已过期缓存并在后台刷新（sing-box 1.14）。"
 
+#: htdocs/luci-static/resources/view/homeproxy/client.js:200
+msgid "Restart"
+msgstr "重启"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js:61
+msgid "Restart failed (exit code %d), see the HomeProxy log on the Service Status page."
+msgstr "重启失败（退出码 %d），请在“服务状态”页查看 HomeProxy 日志。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js:66
+msgid "Restart failed: %s"
+msgstr "重启失败：%s"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js:198
+msgid "Restart the HomeProxy service"
+msgstr "重启 HomeProxy 服务"
+
 #: htdocs/luci-static/resources/view/homeproxy/server.js:919
 msgid "Reuse address"
 msgstr "复用地址"
@@ -3019,6 +3035,10 @@ msgstr "v6 下，上方的预共享密钥（密码）长度须为 12-255 字节�
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1360
 msgid "The response code."
 msgstr "响应代码。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js:64
+msgid "The restart is taking a while and goes on in the background."
+msgstr "重启耗时较长，正在后台继续进行。"
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:815
 msgid "The server private key, in PEM format."

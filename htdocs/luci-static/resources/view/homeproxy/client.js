@@ -6,6 +6,7 @@
 
 'use strict';
 'require form';
+'require fs';
 'require network';
 'require poll';
 'require rpc';
@@ -46,6 +47,23 @@ function getServiceStatus() {
 			isRunning = res['homeproxy']['instances']['sing-box-c']['running'];
 		} catch (e) { }
 		return isRunning;
+	});
+}
+
+/*
+ * The init script waits for the WAN and regenerates everything, which can
+ * outlast the RPC timeout of the browser; the restart itself goes on in rpcd
+ * then, so a timeout is not reported as a failure.
+ */
+function restartService() {
+	return fs.exec('/etc/init.d/homeproxy', ['restart']).then((res) => {
+		if (res.code !== 0)
+			ui.addNotification(null, E('p', _('Restart failed (exit code %d), see the HomeProxy log on the Service Status page.').format(res.code)));
+	}).catch((err) => {
+		if (/time(d)? ?out/i.test(String(err)))
+			ui.addNotification(null, E('p', _('The restart is taking a while and goes on in the background.')), 'info');
+		else
+			ui.addNotification(null, E('p', _('Restart failed: %s').format(err)));
 	});
 }
 
@@ -166,15 +184,20 @@ return view.extend({
 
 		s = m.section(form.TypedSection);
 		s.render = function () {
-			poll.add(function () {
-				return L.resolveDefault(getServiceStatus()).then((res) => {
-					let view = document.getElementById('service_status');
-					view.innerHTML = renderStatus(res, features.version);
-				});
+			const updateStatus = () => L.resolveDefault(getServiceStatus()).then((res) => {
+				let view = document.getElementById('service_status');
+				view.innerHTML = renderStatus(res, features.version);
 			});
+			poll.add(updateStatus);
 
-			return E('div', { class: 'cbi-section', id: 'status_bar' }, [
-					E('p', { id: 'service_status' }, _('Collecting data...'))
+			return E('div', { class: 'cbi-section', id: 'status_bar',
+				style: 'display: flex; flex-wrap: wrap; align-items: center; gap: 0.5em 1em' }, [
+					E('p', { id: 'service_status', style: 'margin: 0' }, _('Collecting data...')),
+					E('button', {
+						class: 'btn cbi-button cbi-button-reload',
+						title: _('Restart the HomeProxy service'),
+						click: ui.createHandlerFn(this, () => restartService().then(updateStatus))
+					}, [ _('Restart') ])
 			]);
 		}
 
