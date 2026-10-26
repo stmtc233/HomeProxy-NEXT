@@ -30,6 +30,29 @@ on its own on a target:
 sh tests/ucode/run.sh "$PWD"
 ```
 
+### In CI / with Docker
+
+`.github/workflows/test.yml` runs the form snapshots and the whole ucode suite
+on every push to `main` and every pull request. The ucode job starts the
+ImmortalWrt rootfs image (pinned by digest) with `--privileged` (the fw4 and
+kill switch tests need network namespaces), mounts the checkout and the
+official static sing-box build into it, and runs `tests/ci/ucode-in-rootfs.sh`.
+That script installs the few missing packages, lays out
+`/etc/homeproxy/{scripts,resources}` and `/etc/config/homeproxy` the way the
+package installs them, and calls `tests/ucode/run.sh`.
+
+The same thing works on any machine with Docker (`/tmp/sing-box` being the
+`sing-box` binary from `sing-box-<version>-linux-amd64-musl.tar.gz`; the image
+and version are the ones pinned in `test.yml`):
+
+```sh
+docker run --rm --privileged \
+	-v "$PWD:/src:ro" -v "/tmp/sing-box:/usr/bin/sing-box:ro" \
+	-v "/tmp/hp-ucode-tests:/tmp/hp-ucode-tests" \
+	immortalwrt/rootfs:x86-64-openwrt-25.12.2 \
+	sh /src/tests/ci/ucode-in-rootfs.sh /src
+```
+
 ## What is covered
 
 | Path | Checks |
@@ -44,11 +67,11 @@ sh tests/ucode/run.sh "$PWD"
 | `tests/ucode/test_fw4_names.sh` | Keeps the fw4 chain/set inventory in `scripts/fw4_names.sh` (used by `init.d/homeproxy` to clean up on stop) in sync with the objects declared in `scripts/firewall_post.ut`. |
 | `tests/ucode/test_fw4_cleanup.sh` | The fw4 helpers in `scripts/fw4_names.sh` that `init.d/homeproxy` uses to skip a fw4 reload whose snippets did not change and to take the homeproxy objects out in one nft batch: only inventory objects are listed, a partly loaded snippet is not taken for loaded, a chain fw4 still jumps to survives the fallback, and reload-on-blank-snippets plus one batch removes everything. Runs in a network namespace against a stand-in fw4 table (skipped without `nft`/`unshare`). |
 | `tests/ucode/test_parse_uri.uc` | Per-scheme assertions on the `parse_uri()` result: anytls, http/https, hysteria, hysteria2/hy2, snell, socks(4/4a/5/5h), shadowsocks (SIP002 base64 + plain + plugin, Shadowrocket), trojan (ws/grpc), tuic, vless (reality/ws/http/httpupgrade), vmess (ws/h2/httpupgrade/grpc) and SIP008 objects, plus the rejection paths (unsupported kcp/quic, no QUIC support, invalid port, unknown scheme). |
-| `tests/ucode/test_generators.sh` | Runs `generate_client.uc`/`generate_server.uc` against the UCI fixtures in `tests/fixtures/generators/` inside a scratch directory (the `uci` cursor and `HP_DIR`/`RUN_DIR` are redirected) and validates each result with `sing-box check`. The client case is additionally compared byte for byte against the golden snapshot `tests/snapshots/client.generated.json` (with the scratch directory normalized out), which is what catches rule-order/DNS-routing/field-emission regressions that `sing-box check` accepts. `custom-labels.uci` covers the label-based tags of nodes, DNS servers and rule-sets: non-ASCII labels, duplicates and clashes with built-in tags (suffixed ` #2`), the `cfg-<name>-…` fallback for unlabelled sections and verbatim extra rule-set tags. |
+| `tests/ucode/test_generators.sh` | Runs `generate_client.uc`/`generate_server.uc` against the UCI fixtures in `tests/fixtures/generators/` inside a scratch directory (the `uci` cursor and `HP_DIR`/`RUN_DIR` are redirected) and validates each result with `sing-box check`. The `client` and `server` cases are additionally compared byte for byte against the golden snapshots `tests/snapshots/{client,server}.generated.json` (with the scratch directory normalized out, and the WAN DNS lookup over ubus stubbed so the result does not depend on the host), which is what catches rule-order/DNS-routing/field-emission regressions that `sing-box check` accepts. `custom-labels.uci` covers the label-based tags of nodes, DNS servers and rule-sets: non-ASCII labels, duplicates and clashes with built-in tags (suffixed ` #2`), the `cfg-<name>-…` fallback for unlabelled sections and verbatim extra rule-set tags. |
 
-`tests/ucode/mocks/homeproxy.uc` is a test double for the real module: only
-`validation()` is stubbed (the real one runs `/sbin/validate_data`, which does
-not exist outside OpenWrt), everything else is a copy of the production code.
+The ucode tests use the production `homeproxy.uc` (with paths rewritten where
+needed), never a hand-kept copy; `validation()` calls the real
+`/sbin/validate_data`, which both the target and the CI rootfs provide.
 
 ## Adding cases
 
@@ -63,12 +86,12 @@ not exist outside OpenWrt), everything else is a copy of the production code.
   node tests/luci-form-snapshot.js . client > tests/snapshots/client.json
   node tests/luci-form-snapshot.js . server > tests/snapshots/server.json
   ```
-* Intentional generated-config change → regenerate the client golden after
-  reviewing the diff (the file lives in `/tmp/hp-ucode-tests/generators/client/`
-  on the host that ran the suite):
+* Intentional generated-config change → review the diff the failing run
+  printed, then copy the normalized output over the golden (it is written to
+  `/tmp/hp-ucode-tests/generators/<case>/normalized.json` on the host or in the
+  mounted directory of the Docker run above):
 
   ```sh
-  sed 's#/tmp/hp-ucode-tests/generators/client#__WORKDIR__#g' \
-      /tmp/hp-ucode-tests/generators/client/run/sing-box-c.json \
-      > tests/snapshots/client.generated.json
+  cp /tmp/hp-ucode-tests/generators/client/normalized.json tests/snapshots/client.generated.json
+  cp /tmp/hp-ucode-tests/generators/server/normalized.json tests/snapshots/server.generated.json
   ```

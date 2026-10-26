@@ -89,11 +89,11 @@ done
 python3 tests/i18n-coverage.py --fail-below 100
 ```
 
-ucode 测试（`parse_uri`、生成器 golden 快照 + `sing-box check`、kill switch、fw4）需要 ucode 和 sing-box ≥ 1.14，通常在路由器上运行：
+ucode 测试包括 `parse_uri`、生成器 golden 快照加 `sing-box check`、kill switch 和 fw4。它们需要 ucode 和 sing-box ≥ 1.14：
 
-```sh
-HP_TEST_HOST=root@192.168.1.1 tests/run.sh
-```
+- **CI**：`.github/workflows/test.yml` 在每次 push 到 main 和每个 PR 上，用 ImmortalWrt rootfs 容器跑完整套件（同时也跑表单快照）。推送前本地跑不了的部分，以 CI 结果为准。
+- **本机有 Docker**：用 `tests/README.md` 里“In CI / with Docker”一节的命令，环境和 CI 一致。
+- **路由器**：`HP_TEST_HOST=root@192.168.1.1 tests/run.sh`。
 
 当前环境跑不了某项测试时，在汇报里说明哪些没跑、为什么，不要声称“已验证”。
 
@@ -101,7 +101,8 @@ HP_TEST_HOST=root@192.168.1.1 tests/run.sh
 
 - **快照变化必须是有意的。** 先看 diff，确认每一处都符合预期再重新生成；重新生成的命令见 `tests/README.md`。
 - 新增分享链接格式 → 在 `tests/ucode/test_parse_uri.uc` 加用例。
-- 新增会进入生成器的选项 → 扩展 `tests/fixtures/generators/*.uci`，并保持 schema 合法。
+- 新增会进入生成器的选项 → 扩展 `tests/fixtures/generators/*.uci`，并保持 schema 合法；client / server 的 golden 快照（`tests/snapshots/*.generated.json`）随之更新。
+- 测试直接使用生产代码（必要时用 sed 改路径），不要再手写 mock 副本。
 - 修 bug 时尽量先补一个能复现的用例。
 - 不允许跳过、禁用或删除测试来换取通过。
 

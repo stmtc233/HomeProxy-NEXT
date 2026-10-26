@@ -1,0 +1,69 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # ImmortalWrt release whose ucode/uci/fw4/nft/uclient-fetch the suite runs
+  # against; pinned by digest so a re-tag cannot change the result.
+  ROOTFS_IMAGE: immortalwrt/rootfs:x86-64-openwrt-25.12.2@sha256:6c4d2c12586137d0834d646d386aab2e77ecc6c98130739bfa757aab3e8524d3
+  # The release feed above still ships sing-box 1.12, so the official static
+  # (musl) build is used instead.
+  SING_BOX_VERSION: 1.14.4
+  SING_BOX_SHA256: 8f7c5f0651238850d96a0e488e5473cd77ec1a0098f63942e943f475a12057ca
+
+jobs:
+  form-snapshots:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source tree
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Compare LuCI form snapshots
+        run: |
+          failed=0
+          for view in node client server; do
+            node tests/luci-form-snapshot.js . "$view" > "/tmp/$view.json"
+            if diff -u "tests/snapshots/$view.json" "/tmp/$view.json"; then
+              echo "PASS: $view form snapshot"
+            else
+              echo "::error::$view form snapshot changed (regenerate it only if the change is intended, see tests/README.md)"
+              failed=1
+            fi
+          done
+          exit $failed
+
+  ucode:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source tree
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Fetch sing-box
+        run: |
+          set -euo pipefail
+          name="sing-box-${SING_BOX_VERSION}-linux-amd64-musl"
+          curl -fsSL -o "/tmp/sing-box.tar.gz" \
+            "https://github.com/SagerNet/sing-box/releases/download/v${SING_BOX_VERSION}/${name}.tar.gz"
+          echo "${SING_BOX_SHA256}  /tmp/sing-box.tar.gz" | sha256sum -c -
+          tar -xzf "/tmp/sing-box.tar.gz" -C "/tmp"
+          mv "/tmp/${name}/sing-box" "/tmp/sing-box"
+
+      # --privileged: the fw4 and kill switch tests create network namespaces
+      - name: Run ucode tests in ImmortalWrt rootfs
+        run: |
+          docker run --rm --privileged \
+            -v "$PWD:/src:ro" \
+            -v "/tmp/sing-box:/usr/bin/sing-box:ro" \
+            "$ROOTFS_IMAGE" \
+            sh /src/tests/ci/ucode-in-rootfs.sh /src
