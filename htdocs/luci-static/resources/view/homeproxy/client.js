@@ -1340,7 +1340,7 @@ return view.extend({
 			_('Tag of an outbound for connecting to the dns server.'));
 		so.default = 'direct-out';
 		so.rmempty = false;
-		so.editable = true;
+		so.retain = true;
 		for (let t of [...dns_remote_types, 'dhcp'])
 			so.depends('type', t);
 		so.renderWidget = function(section_id, option_index, cfgvalue) {
