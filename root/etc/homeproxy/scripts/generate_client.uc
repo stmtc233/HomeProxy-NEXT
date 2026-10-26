@@ -151,6 +151,41 @@ const dashboard_enabled = uci.get(uciconfig, ucimain, 'dashboard') || '0',
 
 const direct_overrides = {};
 
+/* Outbound tags follow the node label (subscription nodes have md5 section names) */
+function build_outbound_tags() {
+	const tags = {};
+	const used = { 'direct-out': true, 'block-out': true, 'main-out': true, 'main-udp-out': true, 'any': true };
+
+	function assign(cfg) {
+		const name = cfg['.name'];
+		let label = trim(cfg.label || '');
+		if (isEmpty(label))
+			label = 'cfg-' + name + '-out';
+
+		/* labels from different subscriptions may clash, tags must be unique */
+		let tag = label;
+		for (let n = 2; used[tag]; n++)
+			tag = `${label} #${n}`;
+
+		used[tag] = true;
+		tags[name] = tag;
+	}
+
+	uci.foreach(uciconfig, ucinode, assign);
+	uci.foreach(uciconfig, uciroutingnode, (cfg) => {
+		if (cfg.node === 'urltest')
+			assign(cfg);
+	});
+
+	return tags;
+}
+
+const outbound_tags = build_outbound_tags();
+
+function node_tag(name) {
+	return outbound_tags[name] || ('cfg-' + name + '-out');
+}
+
 function parse_port(strport) {
 	if (type(strport) !== 'array' || isEmpty(strport))
 		return null;
@@ -197,7 +232,7 @@ function generate_endpoint(node) {
 
 	const endpoint = {
 		type: node.type,
-		tag: 'cfg-' + node['.name'] + '-out',
+		tag: node_tag(node['.name']),
 		address: node.wireguard_local_address,
 		mtu: strToInt(node.wireguard_mtu),
 		private_key: node.wireguard_private_key,
@@ -236,7 +271,7 @@ function generate_outbound(node) {
 
 	const outbound = {
 		type: node.type,
-		tag: 'cfg-' + node['.name'] + '-out',
+		tag: node_tag(node['.name']),
 		routing_mark: strToInt(self_mark),
 
 		server: realm ? null : node.address,
@@ -349,9 +384,9 @@ function get_outbound(cfg) {
 			if (isEmpty(node))
 				die(sprintf("%s's node is missing, please check your configuration.", cfg));
 			else if (node === 'urltest')
-				return 'cfg-' + cfg + '-out';
+				return node_tag(cfg);
 			else
-				return 'cfg-' + node + '-out';
+				return node_tag(node);
 		}
 	}
 }
@@ -399,7 +434,11 @@ function isDirectOutboundTag(tag) {
 	if (tag === 'direct-out')
 		return true;
 
-	const node_name = uci.get(uciconfig, tag, 'node') || tag;
+	const section = filter(keys(outbound_tags), (k) => outbound_tags[k] === tag)[0];
+	if (isEmpty(section))
+		return false;
+
+	const node_name = uci.get(uciconfig, section, 'node') || section;
 	const node = uci.get_all(uciconfig, node_name);
 	return !isEmpty(node) && node.type === 'direct';
 }
@@ -838,7 +877,7 @@ if (!isEmpty(main_node)) {
 		push(config.outbounds, {
 			type: 'urltest',
 			tag: 'main-out',
-			outbounds: map(main_urltest_nodes, (k) => `cfg-${k}-out`),
+			outbounds: map(main_urltest_nodes, (k) => node_tag(k)),
 			interval: strToTime(main_urltest_interval),
 			tolerance: strToInt(main_urltest_tolerance),
 			idle_timeout: (strToInt(main_urltest_interval) > 1800) ? `${main_urltest_interval * 2}s` : null,
@@ -863,7 +902,7 @@ if (!isEmpty(main_node)) {
 		push(config.outbounds, {
 			type: 'urltest',
 			tag: 'main-udp-out',
-			outbounds: map(main_udp_urltest_nodes, (k) => `cfg-${k}-out`),
+			outbounds: map(main_udp_urltest_nodes, (k) => node_tag(k)),
 			interval: strToTime(main_udp_urltest_interval),
 			tolerance: strToInt(main_udp_urltest_tolerance),
 			idle_timeout: (strToInt(main_udp_urltest_interval) > 1800) ? `${main_udp_urltest_interval * 2}s` : null,
@@ -886,10 +925,10 @@ if (!isEmpty(main_node)) {
 			continue;
 		if (urltest_node.type === 'wireguard') {
 			push(config.endpoints, generate_endpoint(urltest_node));
-			config.endpoints[length(config.endpoints)-1].tag = 'cfg-' + i + '-out';
+			config.endpoints[length(config.endpoints)-1].tag = node_tag(i);
 		} else {
 			push(config.outbounds, generate_outbound(urltest_node));
-			config.outbounds[length(config.outbounds)-1].tag = 'cfg-' + i + '-out';
+			config.outbounds[length(config.outbounds)-1].tag = node_tag(i);
 		}
 	}
 } else if (is_custom_mode) {
@@ -904,8 +943,8 @@ if (!isEmpty(main_node)) {
 			const cfg_urltest_nodes = expand_urltest_nodes(cfg.urltest_nodes);
 			push(config.outbounds, {
 				type: 'urltest',
-				tag: 'cfg-' + cfg['.name'] + '-out',
-				outbounds: map(cfg_urltest_nodes, (k) => `cfg-${k}-out`),
+				tag: node_tag(cfg['.name']),
+				outbounds: map(cfg_urltest_nodes, (k) => node_tag(k)),
 				url: cfg.urltest_url || 'https://www.gstatic.com/generate_204',
 				interval: strToTime(cfg.urltest_interval || '180s'),
 				tolerance: strToInt(cfg.urltest_tolerance || '50'),
