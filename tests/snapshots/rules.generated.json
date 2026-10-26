@@ -36,10 +36,6 @@
 				"server": "ds-main",
 				"tag": "_hp_eval_dr_match",
 				"ip_version": 6,
-				"query_type": [
-					"A",
-					"AAAA"
-				],
 				"network": "udp",
 				"protocol": [
 					"dns"
@@ -56,85 +52,27 @@
 				"domain_regex": [
 					"^regex\\.example\\.com$"
 				],
-				"port": [
-					53
-				],
-				"port_range": [
-					"5000:6000"
-				],
 				"source_ip_cidr": [
 					"192.168.1.0/24"
 				],
 				"source_ip_is_private": true,
-				"source_port": [
-					12345
-				],
-				"source_port_range": [
-					"10000:20000"
-				],
-				"process_name": [
-					"curl"
-				],
-				"process_path": [
-					"/usr/bin/curl"
-				],
-				"process_path_regex": [
-					"^/usr/bin/.*$"
-				],
-				"user": [
-					"nobody"
-				],
-				"rule_set": [
-					"rs-local"
-				],
-				"rule_set_ip_cidr_match_source": true,
-				"invert": true,
-				"query_client_subnet": "198.51.100.0/24",
-				"query_dnssec": true,
 				"source_mac_address": [
 					"00:11:22:33:44:55"
 				],
 				"source_hostname": [
 					"laptop"
-				]
-			},
-			{
-				"ip_version": 6,
-				"query_type": [
-					"A",
-					"AAAA"
 				],
-				"network": "udp",
-				"protocol": [
-					"dns"
+				"source_port": [
+					12345
 				],
-				"domain": [
-					"full.example.com"
-				],
-				"domain_suffix": [
-					"suffix.example.com"
-				],
-				"domain_keyword": [
-					"keyword"
-				],
-				"domain_regex": [
-					"^regex\\.example\\.com$"
+				"source_port_range": [
+					"10000:20000"
 				],
 				"port": [
 					53
 				],
 				"port_range": [
 					"5000:6000"
-				],
-				"source_ip_cidr": [
-					"192.168.1.0/24"
-				],
-				"source_ip_is_private": true,
-				"source_port": [
-					12345
-				],
-				"source_port_range": [
-					"10000:20000"
 				],
 				"process_name": [
 					"curl"
@@ -153,6 +91,76 @@
 				],
 				"rule_set_ip_cidr_match_source": true,
 				"invert": true,
+				"query_type": [
+					"A",
+					"AAAA"
+				],
+				"query_client_subnet": "198.51.100.0/24",
+				"query_dnssec": true
+			},
+			{
+				"ip_version": 6,
+				"network": "udp",
+				"protocol": [
+					"dns"
+				],
+				"domain": [
+					"full.example.com"
+				],
+				"domain_suffix": [
+					"suffix.example.com"
+				],
+				"domain_keyword": [
+					"keyword"
+				],
+				"domain_regex": [
+					"^regex\\.example\\.com$"
+				],
+				"source_ip_cidr": [
+					"192.168.1.0/24"
+				],
+				"source_ip_is_private": true,
+				"source_mac_address": [
+					"00:11:22:33:44:55"
+				],
+				"source_hostname": [
+					"laptop"
+				],
+				"source_port": [
+					12345
+				],
+				"source_port_range": [
+					"10000:20000"
+				],
+				"port": [
+					53
+				],
+				"port_range": [
+					"5000:6000"
+				],
+				"process_name": [
+					"curl"
+				],
+				"process_path": [
+					"/usr/bin/curl"
+				],
+				"process_path_regex": [
+					"^/usr/bin/.*$"
+				],
+				"user": [
+					"nobody"
+				],
+				"rule_set": [
+					"rs-local"
+				],
+				"rule_set_ip_cidr_match_source": true,
+				"invert": true,
+				"query_type": [
+					"A",
+					"AAAA"
+				],
+				"query_client_subnet": "198.51.100.0/24",
+				"query_dnssec": true,
 				"action": "route",
 				"server": "ds-main",
 				"disable_cache": true,
@@ -160,14 +168,6 @@
 				"rewrite_ttl": 60,
 				"timeout": "5s",
 				"client_subnet": "198.51.100.0/24",
-				"query_client_subnet": "198.51.100.0/24",
-				"query_dnssec": true,
-				"source_mac_address": [
-					"00:11:22:33:44:55"
-				],
-				"source_hostname": [
-					"laptop"
-				],
 				"match_response": "_hp_eval_dr_match",
 				"ip_cidr": [
 					"203.0.113.0/24"
@@ -283,11 +283,10 @@
 			},
 			{
 				"ip_version": 4,
+				"network": "udp",
 				"protocol": [
 					"quic"
 				],
-				"network": "udp",
-				"client": "chromium",
 				"domain": [
 					"full.example.com"
 				],
@@ -304,10 +303,12 @@
 					"192.168.1.0/24"
 				],
 				"source_ip_is_private": true,
-				"ip_cidr": [
-					"203.0.113.0/24"
+				"source_mac_address": [
+					"00:11:22:33:44:55"
 				],
-				"ip_is_private": true,
+				"source_hostname": [
+					"laptop"
+				],
 				"source_port": [
 					12345
 				],
@@ -337,14 +338,13 @@
 				],
 				"rule_set_ip_cidr_match_source": true,
 				"invert": true,
-				"action": "route",
-				"outbound": "direct-out",
-				"source_mac_address": [
-					"00:11:22:33:44:55"
+				"client": "chromium",
+				"ip_cidr": [
+					"203.0.113.0/24"
 				],
-				"source_hostname": [
-					"laptop"
-				]
+				"ip_is_private": true,
+				"action": "route",
+				"outbound": "direct-out"
 			},
 			{
 				"domain_suffix": [

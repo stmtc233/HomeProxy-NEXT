@@ -460,6 +460,34 @@ function get_ruleset(cfg) {
 	return rules;
 }
 
+/* match fields shared by routing_rule and dns_rule */
+function rule_match_fields(cfg) {
+	return {
+		ip_version: strToInt(cfg.ip_version),
+		network: cfg.network,
+		protocol: cfg.protocol,
+		domain: cfg.domain,
+		domain_suffix: cfg.domain_suffix,
+		domain_keyword: cfg.domain_keyword,
+		domain_regex: cfg.domain_regex,
+		source_ip_cidr: cfg.source_ip_cidr,
+		source_ip_is_private: strToBool(cfg.source_ip_is_private),
+		source_mac_address: cfg.source_mac_address,
+		source_hostname: cfg.source_hostname,
+		source_port: parse_port(cfg.source_port),
+		source_port_range: cfg.source_port_range,
+		port: parse_port(cfg.port),
+		port_range: cfg.port_range,
+		process_name: cfg.process_name,
+		process_path: cfg.process_path,
+		process_path_regex: cfg.process_path_regex,
+		user: cfg.user,
+		rule_set: get_ruleset(cfg.rule_set),
+		rule_set_ip_cidr_match_source: strToBool(cfg.rule_set_ip_cidr_match_source),
+		invert: strToBool(cfg.invert)
+	};
+}
+
 function isDirectOutboundTag(tag) {
 	if (isEmpty(tag) || tag === 'block-out')
 		return false;
@@ -707,28 +735,15 @@ if (!isEmpty(main_node)) {
 		if (cfg.enabled !== '1')
 			return;
 
-		const rule = {
-			ip_version: strToInt(cfg.ip_version),
+		const match_fields = {
+			...rule_match_fields(cfg),
 			query_type: parse_dnsquery(cfg.query_type),
-			network: cfg.network,
-			protocol: cfg.protocol,
-			domain: cfg.domain,
-			domain_suffix: cfg.domain_suffix,
-			domain_keyword: cfg.domain_keyword,
-			domain_regex: cfg.domain_regex,
-			port: parse_port(cfg.port),
-			port_range: cfg.port_range,
-			source_ip_cidr: cfg.source_ip_cidr,
-			source_ip_is_private: strToBool(cfg.source_ip_is_private),
-			source_port: parse_port(cfg.source_port),
-			source_port_range: cfg.source_port_range,
-			process_name: cfg.process_name,
-			process_path: cfg.process_path,
-			process_path_regex: cfg.process_path_regex,
-			user: cfg.user,
-			rule_set: get_ruleset(cfg.rule_set),
-			rule_set_ip_cidr_match_source: strToBool(cfg.rule_set_ip_cidr_match_source),
-			invert: strToBool(cfg.invert),
+			query_client_subnet: cfg.query_client_subnet,
+			query_dnssec: strToBool(cfg.query_dnssec)
+		};
+
+		const rule = {
+			...match_fields,
 			race: strToBool(cfg.race),
 			speculative: strToBool(cfg.speculative),
 			action: cfg.action,
@@ -753,35 +768,20 @@ if (!isEmpty(main_node)) {
 		if (cfg.match_response && cfg.match_response !== '0')
 			rule.match_response = (cfg.match_response === '1') ? true : cfg.match_response;
 
-		rule.query_client_subnet = cfg.query_client_subnet;
-		rule.query_dnssec = strToBool(cfg.query_dnssec);
 		rule.response_rcode = cfg.response_rcode;
 		rule.response_answer = cfg.response_answer;
 		rule.response_ns = cfg.response_ns;
 		rule.response_extra = cfg.response_extra;
-		rule.source_mac_address = cfg.source_mac_address;
-		rule.source_hostname = cfg.source_hostname;
 
 		const legacy_filter = !isEmpty(cfg.ip_cidr) || strToBool(cfg.ip_is_private) === true;
 		if (legacy_filter && !rule.match_response && cfg.action === 'route') {
 			const eval_tag = '_hp_eval_' + cfg['.name'];
-			const eval_rule = {
+			push(builtin_dns_rules, {
 				action: 'evaluate',
 				server: get_resolver(cfg.server),
-				tag: eval_tag
-			};
-			const eval_match_fields = [
-				'inbound', 'ip_version', 'query_type', 'network', 'protocol', 'auth_user',
-				'domain', 'domain_suffix', 'domain_keyword', 'domain_regex',
-				'port', 'port_range', 'source_ip_cidr', 'source_ip_is_private',
-				'source_port', 'source_port_range', 'process_name', 'process_path',
-				'process_path_regex', 'user', 'rule_set', 'rule_set_ip_cidr_match_source',
-				'invert', 'query_client_subnet', 'query_dnssec', 'source_mac_address',
-				'source_hostname'
-			];
-			for (let f in eval_match_fields)
-				eval_rule[f] = rule[f];
-			push(builtin_dns_rules, eval_rule);
+				tag: eval_tag,
+				...match_fields
+			});
 			rule.match_response = eval_tag;
 		}
 
@@ -1169,29 +1169,10 @@ if (!isEmpty(main_node)) {
 		}
 
 		const rule = {
-			ip_version: strToInt(cfg.ip_version),
-			protocol: cfg.protocol,
-			network: cfg.network,
+			...rule_match_fields(cfg),
 			client: cfg.client,
-			domain: cfg.domain,
-			domain_suffix: cfg.domain_suffix,
-			domain_keyword: cfg.domain_keyword,
-			domain_regex: cfg.domain_regex,
-			source_ip_cidr: cfg.source_ip_cidr,
-			source_ip_is_private: strToBool(cfg.source_ip_is_private),
 			ip_cidr: cfg.ip_cidr,
 			ip_is_private: strToBool(cfg.ip_is_private),
-			source_port: parse_port(cfg.source_port),
-			source_port_range: cfg.source_port_range,
-			port: parse_port(cfg.port),
-			port_range: cfg.port_range,
-			process_name: cfg.process_name,
-			process_path: cfg.process_path,
-			process_path_regex: cfg.process_path_regex,
-			user: cfg.user,
-			rule_set: get_ruleset(cfg.rule_set),
-			rule_set_ip_cidr_match_source: strToBool(cfg.rule_set_ip_cidr_match_source),
-			invert: strToBool(cfg.invert),
 			action: cfg.action,
 			outbound: rule_outbound,
 			override_address: rule_override_address,
@@ -1203,9 +1184,7 @@ if (!isEmpty(main_node)) {
 			tls_fragment_fallback_delay: strToMs(cfg.tls_fragment_fallback_delay),
 			tls_record_fragment: strToBool(cfg.tls_record_fragment),
 			tls_spoof: cfg.tls_spoof || null,
-			tls_spoof_method: cfg.tls_spoof_method || null,
-			source_mac_address: cfg.source_mac_address,
-			source_hostname: cfg.source_hostname
+			tls_spoof_method: cfg.tls_spoof_method || null
 		};
 		if (cfg.action === 'resolve') {
 			rule.server = get_resolver(cfg.resolve_server);
