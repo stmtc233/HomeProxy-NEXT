@@ -411,7 +411,7 @@ function renderNodeSettings(section, data, features, main_node, routing_mode) {
 			uci.set(data[0], 'config', 'main_node', section_id);
 
 			return this.map.save(null, true).then(() => {
-				ui.changes.apply(true);
+				hp.applyChanges(true);
 			});
 		}
 	}
@@ -1106,6 +1106,10 @@ return view.extend({
 		]);
 	},
 
+	handleSaveApply(ev, mode) {
+		return this.handleSave(ev).then(() => hp.applyChanges(mode == '0'));
+	},
+
 	render(data) {
 		let m, s, o, ss, so;
 		let main_node = uci.get(data[0], 'config', 'main_node');
@@ -1308,7 +1312,7 @@ return view.extend({
 		o.inputtitle = _('Save current settings');
 		o.onclick = function() {
 			return this.map.save(null, true).then(() => {
-				ui.changes.apply(true);
+				hp.applyChanges(true);
 			});
 		}
 

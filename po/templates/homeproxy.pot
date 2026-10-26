@@ -232,6 +232,14 @@ msgstr ""
 msgid "Apply"
 msgstr ""
 
+#: htdocs/luci-static/resources/homeproxy.js:453
+msgid "Apply request failed with status <code>%h</code>"
+msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy.js:445
+msgid "Applying configuration changes…"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/node.js:18
 msgid "Are you sure to allow insecure?"
 msgstr ""

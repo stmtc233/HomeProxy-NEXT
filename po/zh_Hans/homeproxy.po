@@ -249,6 +249,14 @@ msgstr "已应用"
 msgid "Apply"
 msgstr "应用"
 
+#: htdocs/luci-static/resources/homeproxy.js:453
+msgid "Apply request failed with status <code>%h</code>"
+msgstr "应用请求失败，状态码 <code>%h</code>"
+
+#: htdocs/luci-static/resources/homeproxy.js:445
+msgid "Applying configuration changes…"
+msgstr "正在应用配置更改…"
+
 #: htdocs/luci-static/resources/view/homeproxy/node.js:18
 msgid "Are you sure to allow insecure?"
 msgstr "确定要允许不安全连接吗？"

@@ -8,6 +8,7 @@
 'require dom';
 'require form';
 'require fs';
+'require homeproxy as hp';
 'require poll';
 'require rpc';
 'require uci';
@@ -302,7 +303,7 @@ function getRuntimeLog(o, name, _option_index, section_id, _in_table) {
 			'change': ui.createHandlerFn(this, (ev) => {
 				uci.set('homeproxy', section, 'log_level', ev.target.value);
 				return o.map.save(null, true).then(() => {
-					ui.changes.apply(true);
+					hp.applyChanges(true);
 				});
 			})
 		});
@@ -429,7 +430,7 @@ return view.extend({
 				'title': _('Save'),
 				'click': ui.createHandlerFn(this, () => {
 					return this.map.save(null, true).then(() => {
-						ui.changes.apply(true);
+						hp.applyChanges(true);
 					});
 				}, this.option)
 			}, [ _('Save') ]));

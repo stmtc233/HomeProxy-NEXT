@@ -82,6 +82,10 @@ return view.extend({
 		]);
 	},
 
+	handleSaveApply(ev, mode) {
+		return this.handleSave(ev).then(() => hp.applyChanges(mode == '0'));
+	},
+
 	render(data) {
 		let m, s, o, ss, so;
 
