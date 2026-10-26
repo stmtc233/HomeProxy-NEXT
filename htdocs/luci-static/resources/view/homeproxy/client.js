@@ -969,6 +969,15 @@ return view.extend({
 		so.depends('action', 'route');
 		so.depends('action', 'route-options');
 		so.modalonly = true;
+		so.validate = function(section_id, value) {
+			if (!section_id || value !== '1' || this.section.formvalue(section_id, 'action') !== 'route-options')
+				return true;
+
+			if (this.section.formvalue(section_id, 'tls_record_fragment') === '1')
+				return _('With Route options, TLS fragment and TLS record fragment cannot be enabled together.');
+
+			return true;
+		};
 
 		so = ss.taboption('field_other', form.Value, 'tls_fragment_fallback_delay', _('Fragment fallback delay'),
 			_('The fallback value in milliseconds used when TLS segmentation cannot automatically determine the wait time.'));

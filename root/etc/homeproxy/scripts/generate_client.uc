@@ -1199,6 +1199,12 @@ if (!isEmpty(main_node)) {
 			rule.method = cfg.reject_method;
 			rule.no_drop = strToBool(cfg.reject_no_drop);
 		}
+		/* route applies both fragment modes, route-options refuses the pair */
+		if (cfg.action === 'route-options' && rule.tls_fragment && rule.tls_record_fragment) {
+			warn(sprintf("homeproxy: routing rule '%s' enables both TLS fragment and TLS record fragment on route-options, keeping TLS record fragment only.", cfg['.name']));
+			rule.tls_fragment = null;
+			rule.tls_fragment_fallback_delay = null;
+		}
 		push(config.route.rules, rule);
 	});
 

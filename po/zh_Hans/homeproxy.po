@@ -4027,3 +4027,7 @@ msgstr "断网保护（Kill Switch）"
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Drop forwarded traffic to overseas destinations while the sing-box client is not running (crash, restart, reload or failed start), so nothing leaks out directly. Mainland China and private addresses stay reachable.<br/>Stopping the service from the init script lifts the block; if the client cannot start, internet access stays blocked until it is fixed or the service is stopped."
 msgstr "sing-box 客户端未运行（崩溃、重启、重载或启动失败）期间，丢弃转发到海外目的地的流量，避免流量直连泄露。大陆地址和内网地址仍可访问。<br/>通过 init 脚本停止服务会解除阻断；若客户端无法启动，在修复问题或停止服务之前，海外访问会一直被阻断。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "With Route options, TLS fragment and TLS record fragment cannot be enabled together."
+msgstr "使用“路由选项”动作时，TLS 分片与 TLS 记录分片不能同时启用。"

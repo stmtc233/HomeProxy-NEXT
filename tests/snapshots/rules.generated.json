@@ -371,6 +371,23 @@
 			},
 			{
 				"domain_suffix": [
+					"both.example.com"
+				],
+				"action": "route",
+				"outbound": "direct-out",
+				"tls_fragment": true,
+				"tls_fragment_fallback_delay": "300ms",
+				"tls_record_fragment": true
+			},
+			{
+				"domain_suffix": [
+					"both-options.example.com"
+				],
+				"action": "route-options",
+				"tls_record_fragment": true
+			},
+			{
+				"domain_suffix": [
 					"resolve.example.com"
 				],
 				"action": "resolve",

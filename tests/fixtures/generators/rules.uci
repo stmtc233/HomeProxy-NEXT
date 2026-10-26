@@ -99,6 +99,28 @@ config routing_rule 'rr_record_fragment'
 	option outbound 'direct-out'
 	option tls_record_fragment '1'
 
+# both fragment modes on a route action: sing-box applies them together
+config routing_rule 'rr_both_fragments'
+	option enabled '1'
+	option label 'rr-both-fragments'
+	list domain_suffix 'both.example.com'
+	option action 'route'
+	option outbound 'direct-out'
+	option tls_fragment '1'
+	option tls_fragment_fallback_delay '300'
+	option tls_record_fragment '1'
+
+# the same pair on route-options is rejected by sing-box, so a config saved
+# that way keeps tls_record_fragment and drops tls_fragment
+config routing_rule 'rr_both_fragments_options'
+	option enabled '1'
+	option label 'rr-both-fragments-options'
+	list domain_suffix 'both-options.example.com'
+	option action 'route-options'
+	option tls_fragment '1'
+	option tls_fragment_fallback_delay '300'
+	option tls_record_fragment '1'
+
 config routing_rule 'rr_resolve'
 	option enabled '1'
 	option label 'rr-resolve'
