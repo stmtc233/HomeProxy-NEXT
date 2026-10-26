@@ -118,8 +118,8 @@ assert_sub() {
 		FAILED=1
 	fi
 }
-assert_sub "client-sub: n_anytls expanded from subscription" '"cfg-n_anytls-out"'
-assert_sub "client-sub: n_ss expanded from subscription" '"cfg-n_ss-out"'
+assert_sub "client-sub: n_anytls expanded from subscription" '"tag": "anytls"'
+assert_sub "client-sub: n_ss expanded from subscription" '"tag": "ss"'
 
 run_case custom "$ROOT/tests/fixtures/generators/custom.uci" generate_client.uc sing-box-c.json
 run_case custom_no_default "$ROOT/tests/fixtures/generators/custom-no-default-outbound.uci" generate_client.uc sing-box-c.json
@@ -144,8 +144,8 @@ assert_json "custom/no-default: the hosts DNS server is emitted" '"hosts-marker.
 assert_json "custom/no-default: the dhcp DNS server is emitted" '"type": "dhcp"'
 assert_json "custom/no-default: the respond action is emitted" '"action": "respond"'
 assert_json "custom/no-default: the realm outbound carries its realm" '"realm_id": "hp-test"'
-assert_json "custom/no-default: the urltest group survived" '"cfg-Routing_Node_Proxy-out"'
-assert_json "custom/no-default: its member nodes survived" '"cfg-n_hk-out"'
+assert_json "custom/no-default: the urltest group survived" '"tag": "Routing_Node_Proxy"'
+assert_json "custom/no-default: its member nodes survived" '"tag": "hk"'
 assert_json "custom/no-default: the user rule-set survived" '"cfg-rs_cn-rule"'
 assert_json "custom/no-default: the user routing rule survived" 'routing-rule-marker.example.com'
 assert_json "custom/no-default: dns.final follows default_server" '"final": "default-dns"'

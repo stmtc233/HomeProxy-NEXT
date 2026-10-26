@@ -106,21 +106,21 @@
 			"type": "urltest",
 			"tag": "main-out",
 			"outbounds": [
-				"cfg-n_anytls-out",
-				"cfg-n_vless_reality_ws-out",
-				"cfg-n_vmess_http-out",
-				"cfg-n_trojan_grpc-out",
-				"cfg-n_ss-out",
-				"cfg-n_hy2-out",
-				"cfg-n_snell-out",
-				"cfg-n_http-out",
-				"cfg-n_socks-out",
-				"cfg-n_shadowtls-out"
+				"anytls",
+				"vless-reality-ws",
+				"vmess-http",
+				"trojan-grpc",
+				"ss",
+				"hy2",
+				"snell",
+				"http",
+				"socks",
+				"shadowtls"
 			]
 		},
 		{
 			"type": "anytls",
-			"tag": "cfg-n_anytls-out",
+			"tag": "anytls",
 			"server": "a.example.com",
 			"server_port": 443,
 			"password": "secret",
@@ -134,7 +134,7 @@
 		},
 		{
 			"type": "vless",
-			"tag": "cfg-n_vless_reality_ws-out",
+			"tag": "vless-reality-ws",
 			"server": "b.example.com",
 			"server_port": 443,
 			"uuid": "3af88561-9c69-4b19-8f7e-f08d580bc339",
@@ -163,7 +163,7 @@
 		},
 		{
 			"type": "vmess",
-			"tag": "cfg-n_vmess_http-out",
+			"tag": "vmess-http",
 			"server": "c.example.com",
 			"server_port": 80,
 			"uuid": "3af88561-9c69-4b19-8f7e-f08d580bc339",
@@ -179,7 +179,7 @@
 		},
 		{
 			"type": "trojan",
-			"tag": "cfg-n_trojan_grpc-out",
+			"tag": "trojan-grpc",
 			"server": "d.example.com",
 			"server_port": 443,
 			"password": "secret",
@@ -199,7 +199,7 @@
 		},
 		{
 			"type": "shadowsocks",
-			"tag": "cfg-n_ss-out",
+			"tag": "ss",
 			"server": "e.example.com",
 			"server_port": 8388,
 			"password": "secret",
@@ -217,7 +217,7 @@
 		},
 		{
 			"type": "hysteria2",
-			"tag": "cfg-n_hy2-out",
+			"tag": "hy2",
 			"server": "f.example.com",
 			"server_port": 443,
 			"server_ports": "20000:30000",
@@ -237,7 +237,7 @@
 		},
 		{
 			"type": "snell",
-			"tag": "cfg-n_snell-out",
+			"tag": "snell",
 			"server": "g.example.com",
 			"server_port": 443,
 			"psk": "psk123456789012",
@@ -249,7 +249,7 @@
 		},
 		{
 			"type": "http",
-			"tag": "cfg-n_http-out",
+			"tag": "http",
 			"server": "h.example.com",
 			"server_port": 8080,
 			"username": "u",
@@ -257,7 +257,7 @@
 		},
 		{
 			"type": "socks",
-			"tag": "cfg-n_socks-out",
+			"tag": "socks",
 			"server": "i.example.com",
 			"server_port": 1080,
 			"username": "u",
@@ -266,7 +266,7 @@
 		},
 		{
 			"type": "shadowtls",
-			"tag": "cfg-n_shadowtls-out",
+			"tag": "shadowtls",
 			"server": "j.example.com",
 			"server_port": 443,
 			"password": "secret",
