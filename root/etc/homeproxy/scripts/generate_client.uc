@@ -791,12 +791,12 @@ if (!isEmpty(main_node)) {
 		}
 
 		if ((rule.action === 'route' || rule.action === 'evaluate') && isEmpty(rule.server)) {
-			warn(sprintf("homeproxy: DNS rule '%s' has no server configured, skipping it.", cfg['.name']));
+			warn(sprintf("homeproxy: DNS rule '%s' has no server configured, skipping it.\n", cfg['.name']));
 			return;
 		}
 
 		if (rule.action === 'respond' && !length(filter(builtin_dns_rules, (r) => r.action === 'evaluate'))) {
-			warn(sprintf("homeproxy: DNS rule '%s' responds without a preceding evaluate rule, skipping it.", cfg['.name']));
+			warn(sprintf("homeproxy: DNS rule '%s' responds without a preceding evaluate rule, skipping it.\n", cfg['.name']));
 			return;
 		}
 
@@ -1201,7 +1201,7 @@ if (!isEmpty(main_node)) {
 		}
 		/* route applies both fragment modes, route-options refuses the pair */
 		if (cfg.action === 'route-options' && rule.tls_fragment && rule.tls_record_fragment) {
-			warn(sprintf("homeproxy: routing rule '%s' enables both TLS fragment and TLS record fragment on route-options, keeping TLS record fragment only.", cfg['.name']));
+			warn(sprintf("homeproxy: routing rule '%s' enables both TLS fragment and TLS record fragment on route-options, keeping TLS record fragment only.\n", cfg['.name']));
 			rule.tls_fragment = null;
 			rule.tls_fragment_fallback_delay = null;
 		}
@@ -1230,9 +1230,9 @@ if (!isEmpty(main_node)) {
 				push(rs_tag, t);
 			const fetch_ref = (cfg.type === 'remote') ? (cfg.url || '') : (cfg.path || '');
 			if (!match(fetch_ref, /\{tag\}/))
-				warn(sprintf("homeproxy: rule-set '%s' uses extra tags but its %s source lacks a {tag} placeholder.", cfg['.name'], cfg.type));
+				warn(sprintf("homeproxy: rule-set '%s' uses extra tags but its %s source lacks a {tag} placeholder.\n", cfg['.name'], cfg.type));
 			if (cfg.type === 'remote' && !isEmpty(cfg.initial_path) && !match(cfg.initial_path, /\{tag\}/))
-				warn(sprintf("homeproxy: rule-set '%s' uses extra tags but its initial_path lacks a {tag} placeholder.", cfg['.name']));
+				warn(sprintf("homeproxy: rule-set '%s' uses extra tags but its initial_path lacks a {tag} placeholder.\n", cfg['.name']));
 		}
 
 		const ruleset = {
