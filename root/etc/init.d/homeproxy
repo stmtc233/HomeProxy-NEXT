@@ -62,23 +62,35 @@ restore_upnp_mappings() {
 		&& /etc/init.d/miniupnpd restart >"/dev/null" 2>&1
 }
 
+# Digest of the *.conf files in a directory, to tell whether a dnsmasq
+# restart would change anything.
+dns_snippets_digest() {
+	local f
+	for f in "$1"/*.conf; do
+		[ -e "$f" ] || continue
+		echo "== ${f##*/}"
+		cat "$f"
+	done | md5sum
+}
+
 # Render the dnsmasq snippets that implement DNS-based routing for the current
 # routing_mode (the conf-dir include plus one snippet per mode). Shared by
-# start_service and refresh_lists; requires config_load to have run. Existing
-# snippets are dropped first so a routing_mode switch cannot leave a stale
-# snippet behind when start runs without a preceding stop.
+# start_service and refresh_lists; requires config_load to have run. The
+# snippets are rendered aside and only swapped in (with a dnsmasq restart)
+# when they differ from the live ones: a reload for a node or rule change
+# leaves them as they are, and restarting dnsmasq with the large gfwlist /
+# china_list snippets is slow.
 render_dns_snippets() {
 	local ipv6_support dns_port
 	config_get_bool ipv6_support "config" "ipv6_support" "0"
 	config_get dns_port "infra" "dns_port" "5333"
 
-	mkdir -p "$DNSMASQ_DIR" || log "Warning: failed to create ${DNSMASQ_DIR}."
-	rm -f "$DNSMASQ_DIR"/*.conf 2>"/dev/null"
-	echo -e "conf-dir=$DNSMASQ_DIR" > "$DNSMASQ_DIR/../dnsmasq-homeproxy.conf" \
-		|| log "Warning: failed to write the dnsmasq conf-dir file."
+	local staging="$RUN_DIR/dnsmasq-staging"
+	rm -rf "$staging"
+	mkdir -p "$staging" || log "Warning: failed to create ${staging}."
 	case "$routing_mode" in
 	"bypass_mainland_china"|"custom"|"global")
-		cat <<-EOF > "$DNSMASQ_DIR/redirect-dns.conf"
+		cat <<-EOF > "$staging/redirect-dns.conf"
 			no-poll
 			no-resolv
 			server=127.0.0.1#$dns_port
@@ -88,11 +100,11 @@ render_dns_snippets() {
 		local gfw_nftset_v6
 		[ "$ipv6_support" -eq "0" ] || gfw_nftset_v6=",6#inet#fw4#homeproxy_gfw_list_v6"
 		sed -r -e "s/(.*)/server=\/\1\/127.0.0.1#$dns_port\nnftset=\/\1\\/4#inet#fw4#homeproxy_gfw_list_v4$gfw_nftset_v6/g" \
-			"$HP_DIR/resources/gfw_list.txt" > "$DNSMASQ_DIR/gfw_list.conf"
+			"$HP_DIR/resources/gfw_list.txt" > "$staging/gfw_list.conf"
 		;;
 	"proxy_mainland_china")
 		sed -r -e "s/(.*)/server=\/\1\/127.0.0.1#$dns_port/g" \
-			"$HP_DIR/resources/china_list.txt" > "$DNSMASQ_DIR/china_list.conf"
+			"$HP_DIR/resources/china_list.txt" > "$staging/china_list.conf"
 		;;
 	esac
 
@@ -100,11 +112,71 @@ render_dns_snippets() {
 		local wan_nftset_v6
 		[ "$ipv6_support" -eq "0" ] || wan_nftset_v6=",6#inet#fw4#homeproxy_wan_proxy_addr_v6"
 		sed -r -e '/^\s*$/d' -e "s/(.*)/server=\/\1\/127.0.0.1#$dns_port\nnftset=\/\1\\/4#inet#fw4#homeproxy_wan_proxy_addr_v4$wan_nftset_v6/g" \
-			"$HP_DIR/resources/proxy_list.txt" > "$DNSMASQ_DIR/proxy_list.conf"
+			"$HP_DIR/resources/proxy_list.txt" > "$staging/proxy_list.conf"
 	fi
+
+	if [ "$(cat "$DNSMASQ_DIR/../dnsmasq-homeproxy.conf" 2>"/dev/null")" = "conf-dir=$DNSMASQ_DIR" ] \
+		&& [ "$(dns_snippets_digest "$staging")" = "$(dns_snippets_digest "$DNSMASQ_DIR")" ]; then
+		rm -rf "$staging"
+		return 0
+	fi
+
+	mkdir -p "$DNSMASQ_DIR" || log "Warning: failed to create ${DNSMASQ_DIR}."
+	rm -f "$DNSMASQ_DIR"/*.conf 2>"/dev/null"
+	mv "$staging"/*.conf "$DNSMASQ_DIR/" 2>"/dev/null" \
+		|| log "Warning: failed to install the dnsmasq snippets."
+	rm -rf "$staging"
+	echo -e "conf-dir=$DNSMASQ_DIR" > "$DNSMASQ_DIR/../dnsmasq-homeproxy.conf" \
+		|| log "Warning: failed to write the dnsmasq conf-dir file."
 
 	/etc/init.d/dnsmasq restart >"/dev/null" 2>&1 \
 		|| log "Warning: failed to restart dnsmasq, DNS-based routing may be stale."
+}
+
+# Drop the dnsmasq snippets; dnsmasq is only restarted when there were any.
+remove_dns_snippets() {
+	[ -e "$DNSMASQ_DIR/../dnsmasq-homeproxy.conf" ] || [ -d "$DNSMASQ_DIR" ] || return 0
+
+	rm -rf "$DNSMASQ_DIR/../dnsmasq-homeproxy.conf" "$DNSMASQ_DIR"
+	/etc/init.d/dnsmasq restart >"/dev/null" 2>&1 \
+		|| log "Warning: failed to restart dnsmasq after removing the homeproxy snippets."
+}
+
+# Keep the subscription auto-update entry in root's crontab in line with
+# the wanted line (empty: no entry); cron is only restarted on a change.
+sync_autoupdate_cron() {
+	local want="$1"
+
+	[ "$(grep "#${CONF}_autosetup" "/etc/crontabs/root" 2>"/dev/null")" != "$want" ] || return 0
+
+	sed -i "/#${CONF}_autosetup/d" "/etc/crontabs/root" 2>"/dev/null" \
+		|| log "Warning: failed to drop the previous auto-update cron entry."
+	if [ -n "$want" ]; then
+		echo "$want" >> "/etc/crontabs/root" \
+			|| log "Warning: failed to install the auto-update cron entry."
+	fi
+	/etc/init.d/cron restart >"/dev/null" 2>&1 || log "Warning: failed to restart cron."
+}
+
+fw4_snippets_digest() {
+	local f
+	for f in forward input post; do
+		echo "== $f"
+		cat "$RUN_DIR/fw4_$f.nft" 2>"/dev/null"
+	done | md5sum
+}
+
+# Take every homeproxy rule and object out of fw4. The rules homeproxy adds to
+# fw4's own chains (and the jumps into its chains) only go away with a reload
+# on blank snippets; after that nothing references the homeproxy chains and
+# sets any more, so a single nft batch removes them.
+unload_firewall() {
+	: > "$RUN_DIR/fw4_forward.nft"
+	: > "$RUN_DIR/fw4_input.nft"
+	: > "$RUN_DIR/fw4_post.nft"
+	rm -f "$RUN_DIR/fw4_applied"
+	fw4 reload >"/dev/null" 2>&1 || log "Warning: fw4 reload failed while unloading the homeproxy rules."
+	hp_fw4_remove_all
 }
 
 # (Re)render the fw4 snippets and reload the firewall. The nft sets that carry
@@ -114,6 +186,8 @@ apply_firewall() {
 	local outbound_node="$1"
 
 	mkdir -p "$RUN_DIR" || { log "Error: failed to create ${RUN_DIR}."; return 1; }
+	local old_digest="$(fw4_snippets_digest)"
+
 	# Truncate first: firewall_pre.uc only writes a file when it has content,
 	# so a mode/server switch would otherwise keep the previous rules.
 	: > "$RUN_DIR/fw4_forward.nft"
@@ -124,8 +198,32 @@ apply_firewall() {
 	if [ "$outbound_node" != "nil" ]; then
 		utpl -S "$HP_DIR/scripts/firewall_post.ut" > "$RUN_DIR/fw4_post.nft" 2>"/dev/null" || log "Error: firewall post-script failed."
 	fi
-	fw4 reload >"/dev/null" 2>&1 || log "Error: fw4 reload failed."
-	restore_upnp_mappings
+
+	# A node, DNS or routing rule change renders the same snippets; the fw4
+	# reload (and the miniupnpd restart after it) would then change nothing.
+	if [ "$(fw4_snippets_digest)" != "$old_digest" ] || [ ! -e "$RUN_DIR/fw4_applied" ] \
+		|| ! hp_fw4_loaded "$RUN_DIR/fw4_post.nft"; then
+		# fw4 only flushes its table on reload: a set keeps its elements and
+		# a redefinition merges the new ones into them, so entries dropped
+		# from a list (or a LAN ACL) would stay. Start from a clean table.
+		if [ -n "$(hp_fw4_present)" ]; then
+			local f
+			for f in forward input post; do
+				mv "$RUN_DIR/fw4_$f.nft" "$RUN_DIR/fw4_$f.nft.new"
+			done
+			unload_firewall
+			for f in forward input post; do
+				mv "$RUN_DIR/fw4_$f.nft.new" "$RUN_DIR/fw4_$f.nft"
+			done
+		fi
+
+		if fw4 reload >"/dev/null" 2>&1; then
+			: > "$RUN_DIR/fw4_applied"
+		else
+			log "Error: fw4 reload failed."
+		fi
+		restore_upnp_mappings
+	fi
 
 	# After fw4 reload on purpose: it keeps the armed/disarmed state of an
 	# existing table, so a restart stays blocked until the guard sees sing-box.
@@ -160,16 +258,37 @@ killswitch_wanted() {
 
 # `restart` is stop + start, but the kill switch has to tell it apart from a
 # plain stop (which lifts the block), so leave a note for stop_service.
+# HP_RESTARTING also tells stop_service to leave the firewall, dnsmasq and
+# cron to start_service, which only touches what actually changed.
 restart() {
 	mkdir -p "$RUN_DIR"
 	: > "$RUN_DIR/ks_restarting"
+	HP_RESTARTING=1
 	trap '' TERM
 	stop "$@"
 	start "$@"
 	trap TERM
 }
 
+# What a plain stop takes down besides the sing-box instances.
+teardown_network() {
+	sync_autoupdate_cron ""
+	unload_firewall
+	restore_upnp_mappings
+	remove_dns_snippets
+}
+
 start_service() {
+	start_homeproxy "$@" && return 0
+
+	# Across a restart the firewall and dnsmasq were left in place by
+	# stop_service; a start that gives up must not keep steering traffic at
+	# a sing-box that is not coming back.
+	[ -z "$HP_RESTARTING" ] || teardown_network
+	return 1
+}
+
+start_homeproxy() {
 	config_load "$CONF"
 
 	local sb_ver sb_major sb_minor
@@ -228,7 +347,9 @@ start_service() {
 		# keeps the previous sing-box-c.json when it fails, so an existing file
 		# only proves that some older config is valid - the service would then
 		# silently keep running the old nodes/routing while reporting success.
-		if ! ucode -S "$HP_DIR/scripts/generate_client.uc" 2>>"$LOG_PATH"; then
+		# The generator runs `sing-box check` itself before it moves the file
+		# into place. A reload has generated it already (HP_CLIENT_READY).
+		if [ -z "$HP_CLIENT_READY" ] && ! ucode -S "$HP_DIR/scripts/generate_client.uc" 2>>"$LOG_PATH"; then
 			log "Error: failed to generate client configuration."
 			return 1
 		fi
@@ -236,21 +357,15 @@ start_service() {
 		if [ ! -e "$RUN_DIR/sing-box-c.json" ]; then
 			log "Error: client configuration was not generated."
 			return 1
-		elif ! "$PROG" check --config "$RUN_DIR/sing-box-c.json" 2>>"$LOG_PATH"; then
-			log "Error: wrong client configuration detected."
-			return 1
 		fi
 
-		local auto_update auto_update_time
+		local auto_update auto_update_time autoupdate_cron
 		config_get_bool auto_update "subscription" "auto_update" "0"
 		if [ "$auto_update" = "1" ]; then
 			config_get auto_update_time "subscription" "auto_update_time" "2"
-			sed -i "/#${CONF}_autosetup/d" "/etc/crontabs/root" 2>"/dev/null" \
-				|| log "Warning: failed to drop the previous auto-update cron entry."
-			echo -e "0 $auto_update_time * * * $HP_DIR/scripts/update_crond.sh #${CONF}_autosetup" >> "/etc/crontabs/root" \
-				|| log "Warning: failed to install the auto-update cron entry."
-			/etc/init.d/cron restart >"/dev/null" 2>&1 || log "Warning: failed to restart cron."
+			autoupdate_cron="0 $auto_update_time * * * $HP_DIR/scripts/update_crond.sh #${CONF}_autosetup"
 		fi
+		sync_autoupdate_cron "$autoupdate_cron"
 
 		render_dns_snippets
 
@@ -346,19 +461,20 @@ start_service() {
 		procd_set_param respawn
 
 		procd_close_instance
+	else
+		# server only: what a restart left behind from the client goes now
+		sync_autoupdate_cron ""
+		remove_dns_snippets
 	fi
 
 	if [ "$server_enabled" = "1" ]; then
-		if ! ucode -S "$HP_DIR/scripts/generate_server.uc" 2>>"$LOG_PATH"; then
+		if [ -z "$HP_SERVER_READY" ] && ! ucode -S "$HP_DIR/scripts/generate_server.uc" 2>>"$LOG_PATH"; then
 			log "Error: failed to generate server configuration."
 			return 1
 		fi
 
 		if [ ! -e "$RUN_DIR/sing-box-s.json" ]; then
 			log "Error: server configuration was not generated."
-			return 1
-		elif ! "$PROG" check --config "$RUN_DIR/sing-box-s.json" 2>>"$LOG_PATH"; then
-			log "Error: wrong server configuration detected."
 			return 1
 		fi
 
@@ -455,7 +571,7 @@ start_service() {
 
 	apply_firewall "$outbound_node"
 
-	log "sing-box $(sing-box version -n 2>/dev/null || echo "unknown") started."
+	log "sing-box ${sb_ver} started."
 }
 
 stop_service() {
@@ -477,11 +593,6 @@ stop_service() {
 		"$KILLSWITCH" remove
 	fi
 
-	sed -i "/#${CONF}_autosetup/d" "/etc/crontabs/root" 2>"/dev/null" \
-		|| log "Warning: failed to drop the auto-update cron entry."
-	/etc/init.d/cron restart >"/dev/null" 2>&1 || log "Warning: failed to restart cron."
-
-	config_load "$CONF"
 	local table_mark tproxy_mark tun_mark tun_name
 	config_get table_mark "infra" "table_mark" "100"
 	config_get tproxy_mark "infra" "tproxy_mark" "101"
@@ -502,30 +613,16 @@ stop_service() {
 	ip -6 route del default dev "$tun_name" table "$table_mark" 2>"/dev/null"
 	while ip -6 rule del fwmark "$tun_mark" table "$table_mark" 2>"/dev/null"; do :; done
 
-	# Flush and delete every fw4 object homeproxy owns. Deleting one at a
-	# time matters: `nft -f` batches are atomic, so a single object that
-	# does not exist in the current proxy mode would roll back the rest.
-	local fw4_name
-	for fw4_name in $HP_FW4_CHAINS; do
-		nft flush chain inet fw4 "$fw4_name" 2>"/dev/null"
-		nft delete chain inet fw4 "$fw4_name" 2>"/dev/null"
-	done
-	for fw4_name in $HP_FW4_SETS; do
-		nft flush set inet fw4 "$fw4_name" 2>"/dev/null"
-		nft delete set inet fw4 "$fw4_name" 2>"/dev/null"
-	done
-	: > "$RUN_DIR/fw4_forward.nft"
-	: > "$RUN_DIR/fw4_input.nft"
-	: > "$RUN_DIR/fw4_post.nft"
-	fw4 reload >"/dev/null" 2>&1 || log "Warning: fw4 reload failed during stop."
-	restore_upnp_mappings
-
-	rm -rf "$DNSMASQ_DIR/../dnsmasq-homeproxy.conf" "$DNSMASQ_DIR"
-	/etc/init.d/dnsmasq restart >"/dev/null" 2>&1 \
-		|| log "Warning: failed to restart dnsmasq after removing the homeproxy snippets."
-
-	rm -f "$RUN_DIR/sing-box-c.json" "$RUN_DIR/sing-box-c.log" \
-		"$RUN_DIR/sing-box-s.json" "$RUN_DIR/sing-box-s.log"
+	# A restart/reload goes straight on to start_service, which reloads fw4,
+	# restarts dnsmasq or touches cron only when their rendered content
+	# changed. Tearing them down here would cost two fw4 reloads and dnsmasq
+	# restarts per reload even when only a node changed. The generated
+	# configs stay as well: a reload has already produced the new ones.
+	if [ -z "$HP_RESTARTING" ]; then
+		teardown_network
+		rm -f "$RUN_DIR/sing-box-c.json" "$RUN_DIR/sing-box-c.log" \
+			"$RUN_DIR/sing-box-s.json" "$RUN_DIR/sing-box-s.log"
+	fi
 
 	log "Service stopped."
 }
@@ -553,15 +650,15 @@ reload_service() {
 		config_get outbound_node "routing" "default_outbound" "nil"
 	fi
 
+	# The generators run `sing-box check` before they replace the config, so
+	# a failure leaves the running service untouched. start_service reuses
+	# what is generated here instead of generating and checking it again.
 	if [ "$outbound_node" != "nil" ]; then
 		if ! ucode -S "$HP_DIR/scripts/generate_client.uc" 2>>"$LOG_PATH"; then
 			log "Error: failed to generate client configuration, reload aborted."
 			return 1
 		fi
-		if ! "$PROG" check --config "$RUN_DIR/sing-box-c.json" 2>>"$LOG_PATH"; then
-			log "Error: new client config is invalid, reload aborted."
-			return 1
-		fi
+		HP_CLIENT_READY=1
 	fi
 
 	local server_enabled
@@ -571,15 +668,13 @@ reload_service() {
 			log "Error: failed to generate server configuration, reload aborted."
 			return 1
 		fi
-		if ! "$PROG" check --config "$RUN_DIR/sing-box-s.json" 2>>"$LOG_PATH"; then
-			log "Error: new server config is invalid, reload aborted."
-			return 1
-		fi
+		HP_SERVER_READY=1
 	fi
 
 	# only now: an aborted reload must not leave the note behind
 	mkdir -p "$RUN_DIR"
 	: > "$RUN_DIR/ks_restarting"
+	HP_RESTARTING=1
 	stop
 	start
 }

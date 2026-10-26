@@ -31,6 +31,9 @@ done
 echo "== fw4 chain/set inventory =="
 sh "$ROOT/tests/ucode/test_fw4_names.sh" "$ROOT" || FAILED=1
 
+echo "== fw4 reload/cleanup helpers =="
+sh "$ROOT/tests/ucode/test_fw4_cleanup.sh" "$ROOT" "$WORK/fw4_cleanup" || FAILED=1
+
 echo "== kill switch =="
 sh "$ROOT/tests/ucode/test_killswitch.sh" "$ROOT" "$WORK/killswitch" || FAILED=1
 
