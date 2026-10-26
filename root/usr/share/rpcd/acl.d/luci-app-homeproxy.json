@@ -23,7 +23,8 @@
 			"file": {
 				"/tmp/homeproxy_certificate.tmp": [ "write" ],
 				"/tmp/homeproxy_import.tmp": [ "write" ],
-				"/etc/homeproxy/scripts/update_subscriptions.uc": [ "exec" ]
+				"/etc/homeproxy/scripts/update_subscriptions.uc": [ "exec" ],
+				"/etc/init.d/homeproxy": [ "exec" ]
 			},
 			"ubus": {
 				"luci.homeproxy": [

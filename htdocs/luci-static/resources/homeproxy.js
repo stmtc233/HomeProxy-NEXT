@@ -8,6 +8,7 @@
 'require baseclass';
 'require form';
 'require fs';
+'require request';
 'require rpc';
 'require uci';
 'require ui';
@@ -421,6 +422,44 @@ return baseclass.extend({
 			default:
 				return null;
 		};
+	},
+
+	/*
+	 * Apply the staged changes. ui.changes.apply() always holds off for
+	 * apply_holdoff seconds (4 by default) before it confirms, then shows the
+	 * result for apply_display seconds (1.5) before it reloads the page:
+	 * about 5.5 s per apply, while homeproxy reloads in the background anyway.
+	 * That wait backs the rollback for changes which cut the browser off the
+	 * device; homeproxy settings do not (LAN and private addresses always
+	 * bypass the proxy). So when only homeproxy has pending changes, apply
+	 * them unchecked and reload right away. Anything else pending (network,
+	 * firewall, ...) goes through the regular checked flow.
+	 */
+	applyChanges(checked) {
+		return L.resolveDefault(uci.changes(), null).then((changes) => {
+			const configs = Object.keys(changes || {});
+			if (!configs.length || configs.some((c) => c !== 'homeproxy'))
+				return ui.changes.apply(checked);
+
+			ui.changes.displayStatus('notice spinning',
+				E('p', _('Applying configuration changes…')));
+
+			return request.request(L.url('admin/uci/apply_unchecked'), {
+				method: 'post',
+				query: { sid: L.env.sessionid, token: L.env.token }
+			}).then((r) => {
+				if (r.status !== 204) {
+					ui.changes.displayStatus(false);
+					ui.addNotification(null, E('p', _('Apply request failed with status <code>%h</code>')
+						.format(r.responseText || r.statusText || r.status)));
+					return;
+				}
+
+				document.dispatchEvent(new CustomEvent('uci-applied'));
+				ui.changes.setIndicator(0);
+				window.location = window.location.href.split('#')[0];
+			});
+		});
 	},
 
 	loadDefaultLabel(uciconfig, ucisection) {

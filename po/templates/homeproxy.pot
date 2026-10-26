@@ -232,6 +232,14 @@ msgstr ""
 msgid "Apply"
 msgstr ""
 
+#: htdocs/luci-static/resources/homeproxy.js:453
+msgid "Apply request failed with status <code>%h</code>"
+msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy.js:445
+msgid "Applying configuration changes…"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/node.js:18
 msgid "Are you sure to allow insecure?"
 msgstr ""
@@ -2314,6 +2322,22 @@ msgid ""
 "Return expired cache immediately and refresh in background (sing-box 1.14)."
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/client.js:200
+msgid "Restart"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js:61
+msgid "Restart failed (exit code %d), see the HomeProxy log on the Service Status page."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js:66
+msgid "Restart failed: %s"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js:198
+msgid "Restart the HomeProxy service"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/server.js:919
 msgid "Reuse address"
 msgstr ""
@@ -2907,6 +2931,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1360
 msgid "The response code."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js:64
+msgid "The restart is taking a while and goes on in the background."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:815
