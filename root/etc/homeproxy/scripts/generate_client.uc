@@ -1308,5 +1308,14 @@ if (system('/usr/bin/sing-box check --config ' + client_tmp) !== 0) {
 	system('rm -f ' + client_tmp);
 	exit(1);
 }
-system('mv -f ' + client_tmp + ' ' + RUN_DIR + '/sing-box-c.json');
-system('chmod 600 ' + RUN_DIR + '/sing-box-c.json');
+/*
+ * Overwrite an existing config in place: the jailed sing-box has the file
+ * bind-mounted, so after a rename a reload by SIGHUP would re-read the old
+ * inode. In-place also keeps the owner the jailed process reads it as.
+ */
+const client_conf = RUN_DIR + '/sing-box-c.json';
+if (access(client_conf))
+	system(`cat ${client_tmp} > ${client_conf} && rm -f ${client_tmp}`);
+else
+	system(`mv -f ${client_tmp} ${client_conf}`);
+system('chmod 600 ' + client_conf);

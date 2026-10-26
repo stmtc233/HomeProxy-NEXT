@@ -256,6 +256,41 @@ killswitch_wanted() {
 	[ "$kill_switch" = "1" ] && [ "$(client_outbound_node)" != "nil" ]
 }
 
+# The inputs of what start_service sets up without comparing it first (it
+# does compare the sing-box configs, fw4 / dnsmasq snippets and cron): the ip
+# rules, the TUN device and the procd instance definitions (jail, mounts,
+# env). While these stay the same, a reload only has to hand the running
+# sing-box its new config. Requires config_load.
+restart_fingerprint() {
+	local routing_mode proxy_mode main_udp_node ipv6_support dashboard server_enabled kill_switch
+	local table_mark tproxy_mark tun_mark tun_name jail=0
+	config_get routing_mode "config" "routing_mode" "bypass_mainland_china"
+	config_get proxy_mode "config" "proxy_mode" "redirect_tproxy"
+	config_get main_udp_node "config" "main_udp_node" "nil"
+	config_get_bool ipv6_support "config" "ipv6_support" "0"
+	config_get dashboard "config" "dashboard" "0"
+	config_get_bool server_enabled "server" "enabled" "0"
+	config_get_bool kill_switch "config" "kill_switch" "0"
+	config_get table_mark "infra" "table_mark" "100"
+	config_get tproxy_mark "infra" "tproxy_mark" "101"
+	config_get tun_mark "infra" "tun_mark" "102"
+	config_get tun_name "infra" "tun_name" "singtun0"
+	[ -x "/sbin/ujail" ] && jail=1
+	grep -Eq '"type": "(wireguard|tun)"' "$RUN_DIR/sing-box-c.json" 2>"/dev/null" && jail="$jail-off"
+	local client=on udp=on
+	[ "$(client_outbound_node)" != "nil" ] || client=off
+	[ "$main_udp_node" != "nil" ] || udp=off
+
+	echo "$routing_mode $proxy_mode client=$client udp=$udp ipv6=$ipv6_support" \
+		"dashboard=$dashboard server=$server_enabled ks=$kill_switch" \
+		"marks=$table_mark/$tproxy_mark/$tun_mark tun=$tun_name jail=$jail kernel=$(uname -r)"
+}
+
+instance_pid() {
+	ubus call service list "{\"name\":\"$CONF\"}" 2>"/dev/null" \
+		| jsonfilter -e "@['$CONF'].instances['$1'].pid" 2>"/dev/null"
+}
+
 # `restart` is stop + start, but the kill switch has to tell it apart from a
 # plain stop (which lifts the block), so leave a note for stop_service.
 # HP_RESTARTING also tells stop_service to leave the firewall, dnsmasq and
@@ -272,6 +307,7 @@ restart() {
 
 # What a plain stop takes down besides the sing-box instances.
 teardown_network() {
+	rm -f "$RUN_DIR/restart.fingerprint"
 	sync_autoupdate_cron ""
 	unload_firewall
 	restore_upnp_mappings
@@ -284,7 +320,7 @@ start_service() {
 	# Across a restart the firewall and dnsmasq were left in place by
 	# stop_service; a start that gives up must not keep steering traffic at
 	# a sing-box that is not coming back.
-	[ -z "$HP_RESTARTING" ] || teardown_network
+	[ -z "$HP_RESTARTING$HP_INPLACE" ] || teardown_network
 	return 1
 }
 
@@ -305,9 +341,10 @@ start_homeproxy() {
 		return 1
 	fi
 
-	local routing_mode proxy_mode
+	local routing_mode proxy_mode ipv6_support
 	config_get routing_mode "config" "routing_mode" "bypass_mainland_china"
 	config_get proxy_mode "config" "proxy_mode" "redirect_tproxy"
+	config_get_bool ipv6_support "config" "ipv6_support" "0"
 
 	local outbound_node
 	if [ "$routing_mode" != "custom" ]; then
@@ -369,9 +406,12 @@ start_homeproxy() {
 
 		render_dns_snippets
 
-		local table_mark
+		# A reload in place keeps the ip rules and the TUN device: what they
+		# are built from is part of the restart fingerprint, which matched.
+		local table_mark net_mode="$proxy_mode"
 		config_get table_mark "infra" "table_mark" "100"
-		case "$proxy_mode" in
+		[ -z "$HP_INPLACE" ] || net_mode="unchanged"
+		case "$net_mode" in
 		"redirect_tproxy")
 			local outbound_udp_node
 			config_get outbound_udp_node "config" "main_udp_node" "nil"
@@ -570,6 +610,7 @@ start_homeproxy() {
 	[ -e "$RUN_DIR/sing-box-s.json" ] && chmod 600 "$RUN_DIR/sing-box-s.json" 2>"/dev/null"
 
 	apply_firewall "$outbound_node"
+	restart_fingerprint > "$RUN_DIR/restart.fingerprint"
 
 	log "sing-box ${sb_ver} started."
 }
@@ -650,6 +691,10 @@ reload_service() {
 		config_get outbound_node "routing" "default_outbound" "nil"
 	fi
 
+	local old_client old_server
+	old_client="$(md5sum < "$RUN_DIR/sing-box-c.json" 2>"/dev/null")"
+	old_server="$(md5sum < "$RUN_DIR/sing-box-s.json" 2>"/dev/null")"
+
 	# The generators run `sing-box check` before they replace the config, so
 	# a failure leaves the running service untouched. start_service reuses
 	# what is generated here instead of generating and checking it again.
@@ -669,6 +714,36 @@ reload_service() {
 			return 1
 		fi
 		HP_SERVER_READY=1
+	fi
+
+	# Nothing but the sing-box configs (and maybe the fw4 / dnsmasq snippets,
+	# which start_service compares itself) changed: keep sing-box running and
+	# let it reload the new config on SIGHUP. It checks the config first and
+	# keeps the old one on error. No stop, so no gap without firewall rules
+	# and no restarted process.
+	if [ "$(restart_fingerprint)" = "$(cat "$RUN_DIR/restart.fingerprint" 2>"/dev/null")" ]; then
+		local client_pid server_pid
+		client_pid="$(instance_pid sing-box-c)"
+		server_pid="$(instance_pid sing-box-s)"
+		if { [ "$outbound_node" = "nil" ] || [ -n "$client_pid" ]; } \
+			&& { [ "$server_enabled" = "0" ] || [ -n "$server_pid" ]; }; then
+			HP_INPLACE=1
+			start || return 1
+
+			# Only to the process that was already running: a restarted one
+			# (new pid) has read the new config, and a SIGHUP that lands before
+			# it set up its handler would kill it.
+			if [ -n "$client_pid" ] && [ "$(instance_pid sing-box-c)" = "$client_pid" ] \
+				&& [ "$(md5sum < "$RUN_DIR/sing-box-c.json")" != "$old_client" ]; then
+				procd_send_signal "$CONF" "sing-box-c" HUP
+			fi
+			if [ -n "$server_pid" ] && [ "$(instance_pid sing-box-s)" = "$server_pid" ] \
+				&& [ "$(md5sum < "$RUN_DIR/sing-box-s.json")" != "$old_server" ]; then
+				procd_send_signal "$CONF" "sing-box-s" HUP
+			fi
+			log "Service reloaded in place."
+			return 0
+		fi
 	fi
 
 	# only now: an aborted reload must not leave the note behind

@@ -7,7 +7,7 @@
 
 'use strict';
 
-import { writefile } from 'fs';
+import { access, writefile } from 'fs';
 import { cursor } from 'uci';
 
 import {
@@ -138,5 +138,14 @@ if (system('/usr/bin/sing-box check --config ' + server_tmp) !== 0) {
 	system('rm -f ' + server_tmp);
 	exit(1);
 }
-system('mv -f ' + server_tmp + ' ' + RUN_DIR + '/sing-box-s.json');
-system('chmod 600 ' + RUN_DIR + '/sing-box-s.json');
+/*
+ * Overwrite an existing config in place: the jailed sing-box has the file
+ * bind-mounted, so after a rename a reload by SIGHUP would re-read the old
+ * inode. In-place also keeps the owner the jailed process reads it as.
+ */
+const server_conf = RUN_DIR + '/sing-box-s.json';
+if (access(server_conf))
+	system(`cat ${server_tmp} > ${server_conf} && rm -f ${server_tmp}`);
+else
+	system(`mv -f ${server_tmp} ${server_conf}`);
+system('chmod 600 ' + server_conf);
