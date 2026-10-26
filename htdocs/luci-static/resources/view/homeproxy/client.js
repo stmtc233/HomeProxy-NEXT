@@ -1063,79 +1063,7 @@ return view.extend({
 		so.depends('action', 'resolve');
 		so.modalonly = true;
 
-		so = ss.taboption('field_host', form.DynamicList, 'domain', _('Domain name'),
-			_('Match full domain.'));
-		so.datatype = 'hostname';
-		so.modalonly = true;
-
-		so = ss.taboption('field_host', form.DynamicList, 'domain_suffix', _('Domain suffix'),
-			_('Match domain suffix.'));
-		so.modalonly = true;
-
-		so = ss.taboption('field_host', form.DynamicList, 'domain_keyword', _('Domain keyword'),
-			_('Match domain using keyword.'));
-		so.modalonly = true;
-
-		so = ss.taboption('field_host', form.DynamicList, 'domain_regex', _('Domain regex'),
-			_('Match domain using regular expression.'));
-		so.modalonly = true;
-
-		so = ss.taboption('field_host', form.DynamicList, 'source_ip_cidr', _('Source IP CIDR'),
-			_('Match source IP CIDR.'));
-		so.datatype = 'or(cidr, ipaddr)';
-		so.modalonly = true;
-
-		so = ss.taboption('field_host', form.Flag, 'source_ip_is_private', _('Match private source IP'));
-		so.modalonly = true;
-
-		so = ss.taboption('field_host', form.DynamicList, 'ip_cidr', _('IP CIDR'),
-			_('Match IP CIDR.'));
-		so.datatype = 'or(cidr, ipaddr)';
-		so.modalonly = true;
-
-		so = ss.taboption('field_host', form.Flag, 'ip_is_private', _('Match private IP'));
-		so.modalonly = true;
-
-		so = ss.taboption('field_host', form.DynamicList, 'source_mac_address', _('Source MAC address'),
-			_('Match LAN device by MAC address.'));
-		so.datatype = 'macaddr';
-		so.modalonly = true;
-
-		so = ss.taboption('field_host', form.DynamicList, 'source_hostname', _('Source hostname'),
-			_('Match LAN device hostname via neighbor resolution; enable find_neighbor.'));
-		so.modalonly = true;
-
-		so = ss.taboption('field_port', form.DynamicList, 'source_port', _('Source port'),
-			_('Match source port.'));
-		so.datatype = 'port';
-		so.modalonly = true;
-
-		so = ss.taboption('field_port', form.DynamicList, 'source_port_range', _('Source port range'),
-			_('Match source port range. Format as START:/:END/START:END.'));
-		so.validate = hp.validatePortRange;
-		so.modalonly = true;
-
-		so = ss.taboption('field_port', form.DynamicList, 'port', _('Port'),
-			_('Match port.'));
-		so.datatype = 'port';
-		so.modalonly = true;
-
-		so = ss.taboption('field_port', form.DynamicList, 'port_range', _('Port range'),
-			_('Match port range. Format as START:/:END/START:END.'));
-		so.validate = hp.validatePortRange;
-		so.modalonly = true;
-
-		so = ss.taboption('fields_process', form.DynamicList, 'process_name', _('Process name'),
-			_('Match process name.'));
-		so.modalonly = true;
-
-		so = ss.taboption('fields_process', form.DynamicList, 'process_path', _('Process path'),
-			_('Match process path.'));
-		so.modalonly = true;
-
-		so = ss.taboption('fields_process', form.DynamicList, 'process_path_regex', _('Process path (regex)'),
-			_('Match process path using regular expression.'));
-		so.modalonly = true;
+		hp.renderRuleMatchFields(ss);
 
 		s.tab('dns', _('DNS Settings'));
 		o = s.taboption('dns', form.SectionValue, '_dns', form.NamedSection, 'dns', 'homeproxy');
@@ -1720,89 +1648,22 @@ return view.extend({
 		so.depends('action', 'predefined');
 		so.modalonly = true;
 
-		so = ss.taboption('field_host', form.DynamicList, 'domain', _('Domain name'),
-			_('Match full domain.'));
-		so.datatype = 'hostname';
-		so.modalonly = true;
+		hp.renderRuleMatchFields(ss, {
+			ip_cidr_description: _('Match IP CIDR with the evaluated response (needs match_response; old rules are auto-wrapped in 1.14).'),
+			ip_is_private_description: _('Match private IP with the evaluated response (needs match_response).'),
+			extra_host_fields: (section) => {
+				let o;
 
-		so = ss.taboption('field_host', form.DynamicList, 'domain_suffix', _('Domain suffix'),
-			_('Match domain suffix.'));
-		so.modalonly = true;
+				o = section.taboption('field_host', form.Value, 'query_client_subnet', _('Query EDNS client subnet'),
+					_('Match the EDNS Client Subnet in the query (1.14).'));
+				o.datatype = 'or(cidr, ipaddr)';
+				o.modalonly = true;
 
-		so = ss.taboption('field_host', form.DynamicList, 'domain_keyword', _('Domain keyword'),
-			_('Match domain using keyword.'));
-		so.modalonly = true;
-
-		so = ss.taboption('field_host', form.DynamicList, 'domain_regex', _('Domain regex'),
-			_('Match domain using regular expression.'));
-		so.modalonly = true;
-
-		so = ss.taboption('field_host', form.DynamicList, 'source_ip_cidr', _('Source IP CIDR'),
-			_('Match source IP CIDR.'));
-		so.datatype = 'or(cidr, ipaddr)';
-		so.modalonly = true;
-
-		so = ss.taboption('field_host', form.Flag, 'source_ip_is_private', _('Match private source IP'));
-		so.modalonly = true;
-
-		so = ss.taboption('field_host', form.DynamicList, 'ip_cidr', _('IP CIDR'),
-			_('Match IP CIDR with the evaluated response (needs match_response; old rules are auto-wrapped in 1.14).'));
-		so.datatype = 'or(cidr, ipaddr)';
-		so.modalonly = true;
-
-		so = ss.taboption('field_host', form.Flag, 'ip_is_private', _('Match private IP'),
-			_('Match private IP with the evaluated response (needs match_response).'));
-		so.modalonly = true;
-
-		so = ss.taboption('field_host', form.DynamicList, 'source_mac_address', _('Source MAC address'),
-			_('Match LAN device by MAC address.'));
-		so.datatype = 'macaddr';
-		so.modalonly = true;
-
-		so = ss.taboption('field_host', form.DynamicList, 'source_hostname', _('Source hostname'),
-			_('Match LAN device hostname via neighbor resolution; enable find_neighbor.'));
-		so.modalonly = true;
-
-		so = ss.taboption('field_host', form.Value, 'query_client_subnet', _('Query EDNS client subnet'),
-			_('Match the EDNS Client Subnet in the query (1.14).'));
-		so.datatype = 'or(cidr, ipaddr)';
-		so.modalonly = true;
-
-		so = ss.taboption('field_host', form.Flag, 'query_dnssec', _('Match DNSSEC OK'),
-			_('Match queries with the DNSSEC OK bit set (1.14).'));
-		so.modalonly = true;
-
-		so = ss.taboption('field_port', form.DynamicList, 'source_port', _('Source port'),
-			_('Match source port.'));
-		so.datatype = 'port';
-		so.modalonly = true;
-
-		so = ss.taboption('field_port', form.DynamicList, 'source_port_range', _('Source port range'),
-			_('Match source port range. Format as START:/:END/START:END.'));
-		so.validate = hp.validatePortRange;
-		so.modalonly = true;
-
-		so = ss.taboption('field_port', form.DynamicList, 'port', _('Port'),
-			_('Match port.'));
-		so.datatype = 'port';
-		so.modalonly = true;
-
-		so = ss.taboption('field_port', form.DynamicList, 'port_range', _('Port range'),
-			_('Match port range. Format as START:/:END/START:END.'));
-		so.validate = hp.validatePortRange;
-		so.modalonly = true;
-
-		so = ss.taboption('fields_process', form.DynamicList, 'process_name', _('Process name'),
-			_('Match process name.'));
-		so.modalonly = true;
-
-		so = ss.taboption('fields_process', form.DynamicList, 'process_path', _('Process path'),
-			_('Match process path.'));
-		so.modalonly = true;
-
-		so = ss.taboption('fields_process', form.DynamicList, 'process_path_regex', _('Process path (regex)'),
-			_('Match process path using regular expression.'));
-		so.modalonly = true;
+				o = section.taboption('field_host', form.Flag, 'query_dnssec', _('Match DNSSEC OK'),
+					_('Match queries with the DNSSEC OK bit set (1.14).'));
+				o.modalonly = true;
+			}
+		});
 
 		s.tab('ruleset', _('Rule Set'));
 		o = s.taboption('ruleset', form.SectionValue, '_ruleset', form.GridSection, 'ruleset');

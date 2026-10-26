@@ -307,6 +307,92 @@ return baseclass.extend({
 		return o;
 	},
 
+	/* Host/IP, port and process match fields shared by routing and DNS rules */
+	renderRuleMatchFields(section, options) {
+		options = options || {};
+		let o;
+
+		o = section.taboption('field_host', form.DynamicList, 'domain', _('Domain name'),
+			_('Match full domain.'));
+		o.datatype = 'hostname';
+		o.modalonly = true;
+
+		o = section.taboption('field_host', form.DynamicList, 'domain_suffix', _('Domain suffix'),
+			_('Match domain suffix.'));
+		o.modalonly = true;
+
+		o = section.taboption('field_host', form.DynamicList, 'domain_keyword', _('Domain keyword'),
+			_('Match domain using keyword.'));
+		o.modalonly = true;
+
+		o = section.taboption('field_host', form.DynamicList, 'domain_regex', _('Domain regex'),
+			_('Match domain using regular expression.'));
+		o.modalonly = true;
+
+		o = section.taboption('field_host', form.DynamicList, 'source_ip_cidr', _('Source IP CIDR'),
+			_('Match source IP CIDR.'));
+		o.datatype = 'or(cidr, ipaddr)';
+		o.modalonly = true;
+
+		o = section.taboption('field_host', form.Flag, 'source_ip_is_private', _('Match private source IP'));
+		o.modalonly = true;
+
+		o = section.taboption('field_host', form.DynamicList, 'ip_cidr', _('IP CIDR'),
+			options.ip_cidr_description || _('Match IP CIDR.'));
+		o.datatype = 'or(cidr, ipaddr)';
+		o.modalonly = true;
+
+		o = section.taboption('field_host', form.Flag, 'ip_is_private', _('Match private IP'),
+			options.ip_is_private_description);
+		o.modalonly = true;
+
+		o = section.taboption('field_host', form.DynamicList, 'source_mac_address', _('Source MAC address'),
+			_('Match LAN device by MAC address.'));
+		o.datatype = 'macaddr';
+		o.modalonly = true;
+
+		o = section.taboption('field_host', form.DynamicList, 'source_hostname', _('Source hostname'),
+			_('Match LAN device hostname via neighbor resolution; enable find_neighbor.'));
+		o.modalonly = true;
+
+		if (options.extra_host_fields)
+			options.extra_host_fields(section);
+
+		o = section.taboption('field_port', form.DynamicList, 'source_port', _('Source port'),
+			_('Match source port.'));
+		o.datatype = 'port';
+		o.modalonly = true;
+
+		o = section.taboption('field_port', form.DynamicList, 'source_port_range', _('Source port range'),
+			_('Match source port range. Format as START:/:END/START:END.'));
+		o.validate = this.validatePortRange;
+		o.modalonly = true;
+
+		o = section.taboption('field_port', form.DynamicList, 'port', _('Port'),
+			_('Match port.'));
+		o.datatype = 'port';
+		o.modalonly = true;
+
+		o = section.taboption('field_port', form.DynamicList, 'port_range', _('Port range'),
+			_('Match port range. Format as START:/:END/START:END.'));
+		o.validate = this.validatePortRange;
+		o.modalonly = true;
+
+		o = section.taboption('fields_process', form.DynamicList, 'process_name', _('Process name'),
+			_('Match process name.'));
+		o.modalonly = true;
+
+		o = section.taboption('fields_process', form.DynamicList, 'process_path', _('Process path'),
+			_('Match process path.'));
+		o.modalonly = true;
+
+		o = section.taboption('fields_process', form.DynamicList, 'process_path_regex', _('Process path (regex)'),
+			_('Match process path using regular expression.'));
+		o.modalonly = true;
+
+		return o;
+	},
+
 	calcStringMD5(e) {
 		let h = (a, b) => {
 			let c, d, e, f, g;
