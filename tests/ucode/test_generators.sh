@@ -138,7 +138,7 @@ assert_json() {
 }
 
 assert_json "custom/no-default: a global domain resolver is declared" '"default_domain_resolver"'
-assert_json "custom/no-default: the user DNS server survived" '"cfg-DNS_Server_Proxy-dns"'
+assert_json "custom/no-default: the user DNS server survived" '"tag": "DNS_Server_Proxy"'
 assert_json "custom/no-default: the user DNS rule survived" 'dns-rule-marker.example.com'
 assert_json "custom/no-default: the hosts DNS server is emitted" '"hosts-marker.example.com"'
 assert_json "custom/no-default: the dhcp DNS server is emitted" '"type": "dhcp"'
@@ -146,7 +146,7 @@ assert_json "custom/no-default: the respond action is emitted" '"action": "respo
 assert_json "custom/no-default: the realm outbound carries its realm" '"realm_id": "hp-test"'
 assert_json "custom/no-default: the urltest group survived" '"tag": "Routing_Node_Proxy"'
 assert_json "custom/no-default: its member nodes survived" '"tag": "hk"'
-assert_json "custom/no-default: the user rule-set survived" '"cfg-rs_cn-rule"'
+assert_json "custom/no-default: the user rule-set survived" '"tag": "rs-cn"'
 assert_json "custom/no-default: the user routing rule survived" 'routing-rule-marker.example.com'
 assert_json "custom/no-default: dns.final follows default_server" '"final": "default-dns"'
 

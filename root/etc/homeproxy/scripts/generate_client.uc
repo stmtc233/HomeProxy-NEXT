@@ -151,16 +151,21 @@ const dashboard_enabled = uci.get(uciconfig, ucimain, 'dashboard') || '0',
 
 const direct_overrides = {};
 
-/* Outbound tags follow the node label (subscription nodes have md5 section names) */
-function build_outbound_tags() {
+/*
+ * Tags follow the section label (subscription nodes have md5 section names).
+ * Sections without a label keep the old 'cfg-<name>-<suffix>' form.
+ */
+function build_tags(sections, reserved, suffix) {
 	const tags = {};
-	const used = { 'direct-out': true, 'block-out': true, 'main-out': true, 'main-udp-out': true, 'any': true };
+	const used = {};
+	for (let t in reserved)
+		used[t] = true;
 
-	function assign(cfg) {
+	for (let cfg in sections) {
 		const name = cfg['.name'];
 		let label = trim(cfg.label || '');
 		if (isEmpty(label))
-			label = 'cfg-' + name + '-out';
+			label = 'cfg-' + name + '-' + suffix;
 
 		/* labels from different subscriptions may clash, tags must be unique */
 		let tag = label;
@@ -171,19 +176,46 @@ function build_outbound_tags() {
 		tags[name] = tag;
 	}
 
-	uci.foreach(uciconfig, ucinode, assign);
-	uci.foreach(uciconfig, uciroutingnode, (cfg) => {
-		if (cfg.node === 'urltest')
-			assign(cfg);
-	});
-
 	return tags;
 }
 
-const outbound_tags = build_outbound_tags();
+function uci_sections(section_type, cond) {
+	const sections = [];
+	uci.foreach(uciconfig, section_type, (cfg) => {
+		if (!cond || cond(cfg))
+			push(sections, cfg);
+	});
+	return sections;
+}
+
+const outbound_tags = build_tags(
+	[...uci_sections(ucinode), ...uci_sections(uciroutingnode, (cfg) => cfg.node === 'urltest')],
+	['direct-out', 'block-out', 'main-out', 'main-udp-out', 'any'],
+	'out'
+);
+
+const dns_tags = build_tags(
+	uci_sections(ucidnsserver),
+	['default-dns', 'system-dns', 'main-dns', 'china-dns'],
+	'dns'
+);
+
+/* extra tags are used verbatim (they fill the {tag} placeholder), labels give way to them */
+let ruleset_reserved = ['direct-domain', 'proxy-domain', 'geoip-cn', 'geosite-cn'];
+for (let cfg in uci_sections(uciruleset))
+	ruleset_reserved = [...ruleset_reserved, ...(cfg.extra_tags || [])];
+const ruleset_tags = build_tags(uci_sections(uciruleset), ruleset_reserved, 'rule');
 
 function node_tag(name) {
 	return outbound_tags[name] || ('cfg-' + name + '-out');
+}
+
+function dns_tag(name) {
+	return dns_tags[name] || ('cfg-' + name + '-dns');
+}
+
+function ruleset_tag(name) {
+	return ruleset_tags[name] || ('cfg-' + name + '-rule');
 }
 
 function parse_port(strport) {
@@ -414,7 +446,7 @@ function get_resolver(cfg) {
 	case 'system-dns':
 		return cfg;
 	default:
-		return 'cfg-' + cfg + '-dns';
+		return dns_tag(cfg);
 	}
 }
 
@@ -424,7 +456,7 @@ function get_ruleset(cfg) {
 
 	let rules = [];
 	for (let i in cfg)
-		push(rules, isEmpty(i) ? null : 'cfg-' + i + '-rule');
+		push(rules, isEmpty(i) ? null : ruleset_tag(i));
 	return rules;
 }
 
@@ -629,11 +661,11 @@ if (!isEmpty(main_node)) {
 		if (outbound === 'direct-out' && isEmpty(self_mark))
 			outbound = null;
 
-		const dns_tag = 'cfg-' + cfg['.name'] + '-dns';
+		const server_tag = dns_tag(cfg['.name']);
 
 		if (cfg.type === 'hosts') {
 			push(config.dns.servers, {
-				tag: dns_tag,
+				tag: server_tag,
 				type: 'hosts',
 				path: isEmpty(cfg.hosts_path) ? null : cfg.hosts_path,
 				predefined: parse_hosts_predefined(cfg.hosts_predefined)
@@ -643,7 +675,7 @@ if (!isEmpty(main_node)) {
 
 		if (cfg.type === 'dhcp') {
 			push(config.dns.servers, {
-				tag: dns_tag,
+				tag: server_tag,
 				type: 'dhcp',
 				interface: cfg.dhcp_interface,
 				detour: outbound
@@ -652,7 +684,7 @@ if (!isEmpty(main_node)) {
 		}
 
 		push(config.dns.servers, {
-			tag: dns_tag,
+			tag: server_tag,
 			type: cfg.type,
 			server: cfg.server,
 			server_port: strToInt(cfg.server_port),
@@ -1206,11 +1238,11 @@ if (!isEmpty(main_node)) {
 			return null;
 
 		const extra_tags = cfg.extra_tags || [];
-		let rs_tag = 'cfg-' + cfg['.name'] + '-rule';
+		let rs_tag = ruleset_tag(cfg['.name']);
 		if (length(extra_tags) && cfg.type !== 'inline') {
 			rs_tag = [rs_tag];
 			for (let t in extra_tags)
-				push(rs_tag, 'cfg-' + t + '-rule');
+				push(rs_tag, t);
 			const fetch_ref = (cfg.type === 'remote') ? (cfg.url || '') : (cfg.path || '');
 			if (!match(fetch_ref, /\{tag\}/))
 				warn(sprintf("homeproxy: rule-set '%s' uses extra tags but its %s source lacks a {tag} placeholder.", cfg['.name'], cfg.type));
