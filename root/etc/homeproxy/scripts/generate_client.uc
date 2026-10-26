@@ -14,7 +14,7 @@ import { cursor } from 'uci';
 
 import {
 	isEmpty, parseURL, strToBool, strToInt, strToTime, strToMs,
-	removeBlankAttrs, validation, buildTLSObject, buildTransportObject,
+	removeBlankAttrs, validation, buildTLSObject, buildTransportObject, buildHysteria2Realm,
 	HP_DIR, RUN_DIR
 } from 'homeproxy';
 
@@ -231,14 +231,18 @@ function generate_outbound(node) {
 	if (type(node) !== 'object' || isEmpty(node))
 		return null;
 
+	/* a realm replaces server, server_port and server_ports */
+	const realm = buildHysteria2Realm(node);
+
 	const outbound = {
 		type: node.type,
 		tag: 'cfg-' + node['.name'] + '-out',
 		routing_mark: strToInt(self_mark),
 
-		server: node.address,
-		server_port: strToInt(node.port),
-		server_ports: node.hysteria_hopping_port,
+		server: realm ? null : node.address,
+		server_port: realm ? null : strToInt(node.port),
+		server_ports: realm ? null : node.hysteria_hopping_port,
+		realm: realm,
 
 		username: (node.type !== 'ssh') ? node.username : null,
 		user: (node.type === 'ssh') ? node.username : null,
@@ -254,8 +258,8 @@ function generate_outbound(node) {
 		idle_session_check_interval: strToTime(node.anytls_idle_session_check_interval),
 		idle_session_timeout: strToTime(node.anytls_idle_session_timeout),
 		min_idle_session: strToInt(node.anytls_min_idle_session),
-		hop_interval: strToTime(node.hysteria_hop_interval),
-		hop_interval_max: strToTime(node.hysteria_hop_interval_max),
+		hop_interval: realm ? null : strToTime(node.hysteria_hop_interval),
+		hop_interval_max: realm ? null : strToTime(node.hysteria_hop_interval_max),
 		up_mbps: strToInt(node.hysteria_up_mbps),
 		down_mbps: strToInt(node.hysteria_down_mbps),
 		obfs: node.hysteria_obfs_type ? {
@@ -421,6 +425,31 @@ function http_client_for(detour) {
 	return tag;
 }
 
+/* "domain ip [ip ...]" entries -> { domain: ip | [ip, ...] } */
+function parse_hosts_predefined(entries) {
+	if (type(entries) !== 'array' || isEmpty(entries))
+		return null;
+
+	const predefined = {};
+	for (let entry in entries) {
+		const fields = filter(split(trim(entry), /[ \t,]+/), (v) => !isEmpty(v));
+		if (length(fields) < 2)
+			continue;
+
+		const domain = shift(fields);
+		predefined[domain] = [...(predefined[domain] || []), ...fields];
+	}
+
+	if (isEmpty(predefined))
+		return null;
+
+	for (let domain in predefined)
+		if (length(predefined[domain]) === 1)
+			predefined[domain] = predefined[domain][0];
+
+	return predefined;
+}
+
 function parse_headers(headers) {
 	if (isEmpty(headers))
 		return null;
@@ -561,8 +590,30 @@ if (!isEmpty(main_node)) {
 		if (outbound === 'direct-out' && isEmpty(self_mark))
 			outbound = null;
 
+		const dns_tag = 'cfg-' + cfg['.name'] + '-dns';
+
+		if (cfg.type === 'hosts') {
+			push(config.dns.servers, {
+				tag: dns_tag,
+				type: 'hosts',
+				path: isEmpty(cfg.hosts_path) ? null : cfg.hosts_path,
+				predefined: parse_hosts_predefined(cfg.hosts_predefined)
+			});
+			return;
+		}
+
+		if (cfg.type === 'dhcp') {
+			push(config.dns.servers, {
+				tag: dns_tag,
+				type: 'dhcp',
+				interface: cfg.dhcp_interface,
+				detour: outbound
+			});
+			return;
+		}
+
 		push(config.dns.servers, {
-			tag: 'cfg-' + cfg['.name'] + '-dns',
+			tag: dns_tag,
 			type: cfg.type,
 			server: cfg.server,
 			server_port: strToInt(cfg.server_port),
@@ -670,6 +721,11 @@ if (!isEmpty(main_node)) {
 
 		if ((rule.action === 'route' || rule.action === 'evaluate') && isEmpty(rule.server)) {
 			warn(sprintf("homeproxy: DNS rule '%s' has no server configured, skipping it.", cfg['.name']));
+			return;
+		}
+
+		if (rule.action === 'respond' && !length(filter(builtin_dns_rules, (r) => r.action === 'evaluate'))) {
+			warn(sprintf("homeproxy: DNS rule '%s' responds without a preceding evaluate rule, skipping it.", cfg['.name']));
 			return;
 		}
 

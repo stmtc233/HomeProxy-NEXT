@@ -7,7 +7,8 @@
 
 'use strict';
 
-import { access, error, lstat, popen, readfile, writefile } from 'fs';
+import { access, error, lstat, popen, readfile, writefile, unlink } from 'fs';
+import { cursor } from 'uci';
 
 import { isBinary, isValidPEM } from '/etc/homeproxy/scripts/homeproxy.uc';
 
@@ -27,6 +28,42 @@ const RUN_DIR = '/var/run/homeproxy';
    methods below (the update path also validates the type against it to keep
    path traversal out). */
 const RESOURCE_TYPES = ['china_ip4', 'china_ip6', 'gfw_list', 'china_list', 'geoip_cn', 'geosite_cn'];
+
+/* Configuration backup: infra holds internal ports/marks and migration is a
+   one-shot flag, neither belongs in a portable backup. */
+const BACKUP_FORMAT = 'homeproxy-backup';
+const BACKUP_SKIP = ['infra', 'migration'];
+const BACKUP_TMPFILE = '/tmp/homeproxy_import.tmp';
+const BACKUP_NAME_RE = /^[A-Za-z0-9_]+$/;
+const MAIN_NODE_OPTIONS = ['main_node', 'main_udp_node', 'main_urltest_nodes', 'main_udp_urltest_nodes'];
+
+function backupIsTrue(v) {
+	return (v === true || v === 1 || v === '1' || v === 'true');
+}
+
+/* Nodes and subscriptions live in the `node` sections and the `subscription`
+   section; everything pointing at them must go when those are left out. */
+function backupIsNodeSection(name, type) {
+	return (type === 'node' || name === 'subscription');
+}
+
+function backupStripNodeRefs(section, node_names) {
+	const isNodeRef = (v) => (v in node_names) || substr(v, 0, 4) === 'sub_';
+
+	if (section.name === 'config') {
+		for (let opt in MAIN_NODE_OPTIONS)
+			delete section.options[opt];
+	} else if (section.type === 'routing_node') {
+		const opts = section.options;
+		if (type(opts.node) === 'string' && opts.node !== 'urltest' && isNodeRef(opts.node))
+			delete opts.node;
+		if (type(opts.urltest_nodes) === 'array') {
+			opts.urltest_nodes = filter(opts.urltest_nodes, (v) => !isNodeRef(v));
+			if (!length(opts.urltest_nodes))
+				delete opts.urltest_nodes;
+		}
+	}
+}
 
 const methods = {
 	acllist_read: {
@@ -124,6 +161,171 @@ const methods = {
 				return { result: false, error: 'illegal cerificate filename' };
 				break;
 			}
+		}
+	},
+
+	config_export: {
+		args: { include_nodes: true },
+		call: function(req) {
+			const include_nodes = backupIsTrue(req.args?.include_nodes);
+			const uci = cursor();
+			uci.load('homeproxy');
+
+			let node_names = {};
+			uci.foreach('homeproxy', 'node', (s) => {
+				node_names[s['.name']] = true;
+			});
+
+			let sections = [];
+			uci.foreach('homeproxy', null, (s) => {
+				const name = s['.name'], sectype = s['.type'];
+
+				if (name in BACKUP_SKIP)
+					return;
+				if (!include_nodes && backupIsNodeSection(name, sectype))
+					return;
+
+				let options = {};
+				for (let k, v in s) {
+					if (substr(k, 0, 1) === '.')
+						continue;
+					options[k] = v;
+				}
+
+				const section = { name, type: sectype, options };
+				if (!include_nodes)
+					backupStripNodeRefs(section, node_names);
+				push(sections, section);
+			});
+
+			return {
+				result: true,
+				backup: {
+					format: BACKUP_FORMAT,
+					version: 1,
+					created: time(),
+					include_nodes,
+					sections
+				}
+			};
+		}
+	},
+
+	config_import: {
+		args: { include_nodes: true },
+		call: function(req) {
+			const fail = (msg) => {
+				unlink(BACKUP_TMPFILE);
+				return { result: false, error: msg };
+			};
+
+			const filestat = lstat(BACKUP_TMPFILE);
+			if (!filestat || filestat.type !== 'file' || filestat.size <= 0)
+				return fail('empty backup file');
+
+			let backup;
+			try {
+				backup = json(readfile(BACKUP_TMPFILE));
+			} catch (e) {
+				backup = null;
+			}
+			unlink(BACKUP_TMPFILE);
+
+			if (type(backup) !== 'object' || backup.format !== BACKUP_FORMAT || type(backup.sections) !== 'array')
+				return { result: false, error: 'not a homeproxy backup file' };
+
+			/* Only take nodes when the user asks for it and the file carries them */
+			const import_nodes = backupIsTrue(req.args?.include_nodes) && backupIsTrue(backup.include_nodes);
+
+			/* Validate and normalise every section before touching the config */
+			let sections = [], seen = {};
+			for (let s in backup.sections) {
+				if (type(s) !== 'object' || type(s.name) !== 'string' || type(s.type) !== 'string' ||
+				    type(s.options) !== 'object')
+					return { result: false, error: 'malformed section entry' };
+				if (!match(s.name, BACKUP_NAME_RE) || !match(s.type, BACKUP_NAME_RE))
+					return { result: false, error: 'illegal section name or type' };
+				if (s.name in BACKUP_SKIP || s.name in seen)
+					continue;
+				seen[s.name] = true;
+				if (!import_nodes && backupIsNodeSection(s.name, s.type))
+					continue;
+
+				let options = {};
+				for (let k, v in s.options) {
+					if (!match(k, BACKUP_NAME_RE))
+						return { result: false, error: 'illegal option name' };
+
+					if (type(v) === 'array') {
+						v = map(v, (e) => sprintf('%s', e));
+						if (!length(v))
+							continue;
+					} else if (type(v) in ['string', 'int', 'double', 'bool'])
+						v = (type(v) === 'bool') ? (v ? '1' : '0') : sprintf('%s', v);
+					else
+						return { result: false, error: 'illegal option value' };
+
+					options[k] = v;
+				}
+
+				push(sections, { name: s.name, type: s.type, options });
+			}
+
+			if (!length(sections))
+				return { result: false, error: 'no usable section found' };
+
+			const uci = cursor();
+			uci.load('homeproxy');
+
+			let node_names = {};
+			let old_main = {};
+			let to_delete = [];
+
+			uci.foreach('homeproxy', null, (s) => {
+				const name = s['.name'], sectype = s['.type'];
+
+				if (sectype === 'node')
+					node_names[name] = true;
+				if (name in BACKUP_SKIP)
+					return;
+				if (!import_nodes && backupIsNodeSection(name, sectype))
+					return;
+
+				push(to_delete, name);
+			});
+
+			if (!import_nodes) {
+				/* Keep the node selection of this device; the file's one may point at nodes we do not have */
+				for (let opt in MAIN_NODE_OPTIONS) {
+					const v = uci.get('homeproxy', 'config', opt);
+					if (v != null)
+						old_main[opt] = v;
+				}
+				/* ...and the file's own nodes, which are not imported either */
+				for (let s in backup.sections)
+					if (s.type === 'node')
+						node_names[s.name] = true;
+				for (let s in sections)
+					backupStripNodeRefs(s, node_names);
+			}
+
+			for (let name in to_delete)
+				uci.delete('homeproxy', name);
+
+			for (let s in sections) {
+				uci.set('homeproxy', s.name, s.type);
+				for (let k, v in s.options)
+					uci.set('homeproxy', s.name, k, v);
+			}
+
+			if (!import_nodes && uci.get('homeproxy', 'config')) {
+				for (let k, v in old_main)
+					uci.set('homeproxy', 'config', k, v);
+			}
+
+			uci.commit('homeproxy');
+
+			return { result: true, sections: length(sections), include_nodes: import_nodes };
 		}
 	},
 

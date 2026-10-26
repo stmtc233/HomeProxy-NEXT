@@ -473,6 +473,181 @@
 					}
 				},
 				{
+					"kind": "Flag",
+					"name": "hysteria_realm",
+					"title": "Realm (1.14)",
+					"description": "Register this server with a Hysteria Realm rendezvous service so clients can reach it through NAT without a fixed address. TLS is required.",
+					"depends": [
+						[
+							"type",
+							"hysteria2"
+						]
+					],
+					"values": [],
+					"props": {
+						"modalonly": true
+					}
+				},
+				{
+					"kind": "Value",
+					"name": "hysteria_realm_server_url",
+					"title": "Realm service URL",
+					"description": "URL of the Hysteria Realm rendezvous service, e.g. <code>https://realm.example.com</code>.",
+					"depends": [
+						{
+							"type": "hysteria2",
+							"hysteria_realm": "1"
+						}
+					],
+					"values": [],
+					"props": {
+						"modalonly": true,
+						"rmempty": false
+					}
+				},
+				{
+					"kind": "Value",
+					"name": "hysteria_realm_id",
+					"title": "Realm ID",
+					"description": "Slot identifier registered by the server (1-64 characters: letters, digits, <code>_</code> and <code>-</code>). Clients must use the same ID.",
+					"depends": [
+						{
+							"type": "hysteria2",
+							"hysteria_realm": "1"
+						}
+					],
+					"values": [],
+					"props": {
+						"modalonly": true,
+						"rmempty": false
+					}
+				},
+				{
+					"kind": "Value",
+					"name": "hysteria_realm_token",
+					"title": "Realm token",
+					"description": "Bearer token of the realm service.",
+					"depends": [
+						{
+							"type": "hysteria2",
+							"hysteria_realm": "1"
+						}
+					],
+					"values": [],
+					"props": {
+						"modalonly": true,
+						"password": true
+					}
+				},
+				{
+					"kind": "DynamicList",
+					"name": "hysteria_realm_stun_servers",
+					"title": "STUN servers",
+					"description": "STUN servers used to discover the public address, as <code>host</code> or <code>host:port</code>.",
+					"depends": [
+						{
+							"type": "hysteria2",
+							"hysteria_realm": "1"
+						}
+					],
+					"values": [],
+					"props": {
+						"datatype": "or(host, hostport)",
+						"modalonly": true,
+						"placeholder": "stun.example.com:3478",
+						"rmempty": false
+					}
+				},
+				{
+					"kind": "ListValue",
+					"name": "hysteria_realm_ip_version",
+					"title": "Realm IP version",
+					"description": "Restrict STUN, hole punching and the QUIC path to one IP version.",
+					"depends": [
+						{
+							"type": "hysteria2",
+							"hysteria_realm": "1"
+						}
+					],
+					"values": [
+						[
+							"",
+							"Both"
+						],
+						[
+							"4",
+							"IPv4"
+						],
+						[
+							"6",
+							"IPv6"
+						]
+					],
+					"props": {
+						"modalonly": true
+					}
+				},
+				{
+					"kind": "Flag",
+					"name": "hysteria_realm_port_mapping",
+					"title": "Port mapping",
+					"description": "Keep a UDP port mapping on the local gateway via UPnP or NAT-PMP to help hole punching. IPv4 only.",
+					"depends": [
+						{
+							"type": "hysteria2",
+							"hysteria_realm": "1",
+							"hysteria_realm_ip_version": ""
+						},
+						{
+							"type": "hysteria2",
+							"hysteria_realm": "1",
+							"hysteria_realm_ip_version": "4"
+						}
+					],
+					"values": [],
+					"props": {
+						"modalonly": true
+					}
+				},
+				{
+					"kind": "Value",
+					"name": "hysteria_realm_port_mapping_timeout",
+					"title": "Port mapping timeout",
+					"description": "Timeout for gateway discovery and mapping operations, in seconds.",
+					"depends": [
+						{
+							"type": "hysteria2",
+							"hysteria_realm": "1",
+							"hysteria_realm_port_mapping": "1"
+						}
+					],
+					"values": [],
+					"props": {
+						"datatype": "uinteger",
+						"modalonly": true,
+						"placeholder": "10"
+					}
+				},
+				{
+					"kind": "Value",
+					"name": "hysteria_realm_port_mapping_lifetime",
+					"title": "Port mapping lifetime",
+					"description": "Lease lifetime of the mapping, in seconds.",
+					"depends": [
+						{
+							"type": "hysteria2",
+							"hysteria_realm": "1",
+							"hysteria_realm_port_mapping": "1"
+						}
+					],
+					"values": [],
+					"props": {
+						"datatype": "uinteger",
+						"modalonly": true,
+						"placeholder": "600"
+					}
+				},
+				{
 					"kind": "ListValue",
 					"name": "snell_version",
 					"title": "Snell version",

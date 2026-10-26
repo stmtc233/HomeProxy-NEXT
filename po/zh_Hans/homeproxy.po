@@ -3791,3 +3791,211 @@ msgstr "手动"
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Unknown subscription"
 msgstr "未知订阅"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Backup and restore"
+msgstr "备份与恢复"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Export configuration"
+msgstr "导出配置"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Export"
+msgstr "导出"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Include nodes and subscriptions"
+msgstr "包含节点和订阅"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Download the HomeProxy configuration as a JSON file. Leave the option off to share the settings without your nodes and subscription URLs."
+msgstr "将 HomeProxy 配置下载为 JSON 文件。取消勾选则不导出节点与订阅链接，方便分享设置。"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Failed to export the configuration: %s"
+msgstr "导出配置失败：%s"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Import configuration"
+msgstr "导入配置"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Import nodes and subscriptions"
+msgstr "导入节点和订阅"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Restore the configuration from a file exported here. Without the option above the current nodes and subscriptions are kept."
+msgstr "从此处导出的文件恢复配置。未勾选上方选项时，保留当前的节点和订阅。"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Not a valid HomeProxy backup file."
+msgstr "不是有效的 HomeProxy 备份文件。"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "The current configuration will be replaced by the content of %s."
+msgstr "当前配置将被 %s 的内容替换。"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Nodes and subscriptions will be replaced as well."
+msgstr "节点和订阅也将被替换。"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "The nodes and subscriptions in the file will be ignored, the current ones are kept."
+msgstr "文件中的节点和订阅将被忽略，保留当前的节点和订阅。"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "The file contains no nodes or subscriptions, the current ones are kept."
+msgstr "文件不含节点和订阅，保留当前的节点和订阅。"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Failed to import the configuration: %s"
+msgstr "导入配置失败：%s"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Successfully imported %d sections."
+msgstr "成功导入 %d 个配置段。"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Reload page"
+msgstr "刷新页面"
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Failed to read the file."
+msgstr "读取文件失败。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "DHCP"
+msgstr "DHCP"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Hosts"
+msgstr "Hosts"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Interface"
+msgstr "接口"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Interface to fetch the DNS servers from (DHCP). Leave empty to use the default interface."
+msgstr "获取 DNS 服务器所用的接口 (DHCP)。留空则使用默认接口。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Hosts files"
+msgstr "Hosts 文件"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Hosts files to read. Leave empty to use <code>/etc/hosts</code>."
+msgstr "要读取的 hosts 文件。留空则使用 <code>/etc/hosts</code>。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Predefined hosts"
+msgstr "预定义 hosts"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "One entry per line in the form <code>domain ip [ip ...]</code>, e.g. <code>nas.lan 192.168.1.10</code>."
+msgstr "每行一条，格式为 <code>域名 ip [ip ...]</code>，例如 <code>nas.lan 192.168.1.10</code>。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "domain followed by at least one IP address"
+msgstr "域名后跟至少一个 IP 地址"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "valid IP address"
+msgstr "有效的 IP 地址"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "A Respond rule must come after an enabled Evaluate rule."
+msgstr "Respond 规则必须位于已启用的 Evaluate 规则之后。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Respond (1.14)"
+msgstr "Respond 响应 (1.14)"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Realm (1.14)"
+msgstr "Realm (1.14)"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Register this server with a Hysteria Realm rendezvous service so clients can reach it through NAT without a fixed address. TLS is required."
+msgstr "将此服务器注册到 Hysteria Realm 会合服务，客户端无需固定地址即可穿透 NAT 连接。需要启用 TLS。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Reach the server through a Hysteria Realm rendezvous service (STUN + UDP hole punching) instead of a fixed address and port. Set the TLS SNI if the server certificate does not match the host of the service URL."
+msgstr "通过 Hysteria Realm 会合服务（STUN + UDP 打洞）连接服务器，无需固定地址和端口。若服务器证书与服务 URL 的主机名不一致，请设置 TLS SNI。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Realm service URL"
+msgstr "Realm 服务 URL"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "URL of the Hysteria Realm rendezvous service, e.g. <code>https://realm.example.com</code>."
+msgstr "Hysteria Realm 会合服务的 URL，例如 <code>https://realm.example.com</code>。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Realm ID"
+msgstr "Realm ID"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Slot identifier registered by the server (1-64 characters: letters, digits, <code>_</code> and <code>-</code>). Clients must use the same ID."
+msgstr "服务器注册的槽位标识（1-64 个字符：字母、数字、<code>_</code> 和 <code>-</code>）。客户端必须使用相同的 ID。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "1-64 characters of letters, digits, "_" or "-", not starting with "_" or "-""
+msgstr "1-64 个字母、数字、"_" 或 "-"，且不以 "_" 或 "-" 开头"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Realm token"
+msgstr "Realm 令牌"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Bearer token of the realm service."
+msgstr "Realm 服务的 Bearer 令牌。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "STUN servers"
+msgstr "STUN 服务器"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "STUN servers used to discover the public address, as <code>host</code> or <code>host:port</code>."
+msgstr "用于探测公网地址的 STUN 服务器，格式为 <code>host</code> 或 <code>host:port</code>。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Realm IP version"
+msgstr "Realm IP 版本"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Restrict STUN, hole punching and the QUIC path to one IP version."
+msgstr "将 STUN、打洞和 QUIC 路径限制为单一 IP 版本。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Port mapping"
+msgstr "端口映射"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Keep a UDP port mapping on the local gateway via UPnP or NAT-PMP to help hole punching. IPv4 only."
+msgstr "通过 UPnP 或 NAT-PMP 在本地网关上保持 UDP 端口映射，以提高打洞成功率。仅限 IPv4。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Port mapping timeout"
+msgstr "端口映射超时"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Timeout for gateway discovery and mapping operations, in seconds."
+msgstr "网关发现与映射操作的超时时间，单位为秒。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Port mapping lifetime"
+msgstr "端口映射租期"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Lease lifetime of the mapping, in seconds."
+msgstr "映射的租约时长，单位为秒。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Kill switch"
+msgstr "断网保护（Kill Switch）"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Drop forwarded traffic to overseas destinations while the sing-box client is not running (crash, restart, reload or failed start), so nothing leaks out directly. Mainland China and private addresses stay reachable.<br/>Stopping the service from the init script lifts the block; if the client cannot start, internet access stays blocked until it is fixed or the service is stopped."
+msgstr "sing-box 客户端未运行（崩溃、重启、重载或启动失败）期间，丢弃转发到海外目的地的流量，避免流量直连泄露。大陆地址和内网地址仍可访问。<br/>通过 init 脚本停止服务会解除阻断；若客户端无法启动，在修复问题或停止服务之前，海外访问会一直被阻断。"

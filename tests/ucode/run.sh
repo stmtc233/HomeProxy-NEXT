@@ -31,6 +31,9 @@ done
 echo "== fw4 chain/set inventory =="
 sh "$ROOT/tests/ucode/test_fw4_names.sh" "$ROOT" || FAILED=1
 
+echo "== kill switch =="
+sh "$ROOT/tests/ucode/test_killswitch.sh" "$ROOT" "$WORK/killswitch" || FAILED=1
+
 echo "== firewall template rendering =="
 sh "$ROOT/tests/ucode/test_firewall_template.sh" "$ROOT" || FAILED=1
 
