@@ -20,6 +20,34 @@ to_upper() {
 	echo -e "$1" | tr "[a-z]" "[A-Z]"
 }
 
+WGET="wget --timeout=10 -q"
+
+# Tried in order; the URL pins the commit, so every mirror serves the same file.
+MIRRORS="fastly.jsdelivr.net gcore.jsdelivr.net cdn.jsdelivr.net raw.githubusercontent.com"
+
+# download_list <listtype> <repo> <sha> <file> <output>
+download_list() {
+	local listtype="$1" listrepo="$2" list_sha="$3" listname="$4" output="$5"
+	local mirror url
+
+	for mirror in $MIRRORS; do
+		if [ "$mirror" = "raw.githubusercontent.com" ]; then
+			url="https://$mirror/$listrepo/$list_sha/$listname"
+		else
+			url="https://$mirror/gh/$listrepo@$list_sha/$listname"
+		fi
+
+		if $WGET "$url" -O "$output" && [ -s "$output" ]; then
+			log "[$(to_upper "$listtype")] Downloaded from $mirror."
+			return 0
+		fi
+		rm -f "$output"
+		log "[$(to_upper "$listtype")] Download from $mirror failed."
+	done
+
+	return 1
+}
+
 check_list_update() {
 	local listtype="$1"
 	local listrepo="$2"
@@ -27,7 +55,6 @@ check_list_update() {
 	local listname="$4"
 	local lock="$RUN_DIR/update_resources-$listtype.lock"
 	local github_token="$(uci -q get homeproxy.config.github_token)"
-	local wget="wget --timeout=10 -q"
 
 	exec 200>"$lock"
 	if ! flock -n 200 &> "/dev/null"; then
@@ -38,9 +65,9 @@ check_list_update() {
 	local api_url="https://api.github.com/repos/$listrepo/commits?sha=$listref&path=$listname&per_page=1"
 	local list_info
 	if [ -n "$github_token" ]; then
-		list_info="$($wget --header="Authorization: Bearer $github_token" -O- "$api_url")"
+		list_info="$($WGET --header="Authorization: Bearer $github_token" -O- "$api_url")"
 	else
-		list_info="$($wget -O- "$api_url")"
+		list_info="$($WGET -O- "$api_url")"
 	fi
 	local wget_exit=$?
 
@@ -69,9 +96,8 @@ check_list_update() {
 		log "[$(to_upper "$listtype")] Local version: $local_list_disp, latest version: ${list_ver%% *}."
 	fi
 
-	if ! $wget "https://fastly.jsdelivr.net/gh/$listrepo@$list_sha/$listname" -O "$RUN_DIR/$listname" || [ ! -s "$RUN_DIR/$listname" ]; then
-		rm -f "$RUN_DIR/$listname"
-		log "[$(to_upper "$listtype")] Download failed."
+	if ! download_list "$listtype" "$listrepo" "$list_sha" "$listname" "$RUN_DIR/$listname"; then
+		log "[$(to_upper "$listtype")] Download failed on every mirror."
 		return 1
 	fi
 

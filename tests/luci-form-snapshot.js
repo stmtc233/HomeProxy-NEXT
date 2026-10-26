@@ -206,4 +206,7 @@ function main() {
 	process.stdout.write(JSON.stringify(rendered, null, '\t') + '\n');
 }
 
-main();
+if (require.main === module)
+	main();
+
+module.exports = { loadLuciModule };

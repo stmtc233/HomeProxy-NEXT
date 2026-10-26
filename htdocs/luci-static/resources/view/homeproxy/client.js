@@ -19,13 +19,6 @@
 'require tools.firewall as fwtool';
 'require tools.widgets as widgets';
 
-const callServiceList = rpc.declare({
-	object: 'service',
-	method: 'list',
-	params: ['name'],
-	expect: { '': {} }
-});
-
 const callReadDomainList = rpc.declare({
 	object: 'luci.homeproxy',
 	method: 'acllist_read',
@@ -39,16 +32,6 @@ const callWriteDomainList = rpc.declare({
 	params: ['type', 'content'],
 	expect: { '': {} }
 });
-
-function getServiceStatus() {
-	return L.resolveDefault(callServiceList('homeproxy'), {}).then((res) => {
-		let isRunning = false;
-		try {
-			isRunning = res['homeproxy']['instances']['sing-box-c']['running'];
-		} catch (e) { }
-		return isRunning;
-	});
-}
 
 /*
  * The init script waits for the WAN and regenerates everything, which can
@@ -65,17 +48,6 @@ function restartService() {
 		else
 			ui.addNotification(null, E('p', _('Restart failed: %s').format(err)));
 	});
-}
-
-function renderStatus(isRunning, version) {
-	let spanTemp = '<em><span style="color:%s"><strong>%s (sing-box v%s) %s</strong></span></em>';
-	let renderHTML;
-	if (isRunning)
-		renderHTML = spanTemp.format('green', _('HomeProxy NEXT'), version, _('RUNNING'));
-	else
-		renderHTML = spanTemp.format('red', _('HomeProxy NEXT'), version, _('NOT RUNNING'));
-
-	return renderHTML;
 }
 
 let stubValidator = {
@@ -184,9 +156,9 @@ return view.extend({
 
 		s = m.section(form.TypedSection);
 		s.render = function () {
-			const updateStatus = () => L.resolveDefault(getServiceStatus()).then((res) => {
+			const updateStatus = () => hp.getServiceStatus('sing-box-c').then((res) => {
 				let view = document.getElementById('service_status');
-				view.innerHTML = renderStatus(res, features.version);
+				view.innerHTML = hp.renderStatus(_('HomeProxy NEXT'), features.version, res);
 			});
 			poll.add(updateStatus);
 

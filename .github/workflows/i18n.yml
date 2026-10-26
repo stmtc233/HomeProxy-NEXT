@@ -48,7 +48,7 @@ jobs:
           done
           for f in htdocs/luci-static/resources/homeproxy.js \
             htdocs/luci-static/resources/view/homeproxy/*.js \
-            tests/luci-form-snapshot.js; do
+            tests/luci-form-snapshot.js tests/frontend-md5.js tests/frontend-status.js; do
             [ -f "$f" ] || continue
             node --check "$f"
           done

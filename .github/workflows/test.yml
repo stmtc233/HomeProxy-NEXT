@@ -43,6 +43,12 @@ jobs:
           done
           exit $failed
 
+      - name: Check frontend MD5 against a reference implementation
+        run: node tests/frontend-md5.js .
+
+      - name: Check the service status helpers
+        run: node tests/frontend-status.js .
+
   ucode:
     runs-on: ubuntu-latest
     steps:
