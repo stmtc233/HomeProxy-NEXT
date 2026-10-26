@@ -44,7 +44,7 @@ echo "== parse_uri unit tests =="
 rm -rf "$WORK/parse_uri"
 mkdir -p "$WORK/parse_uri"
 cp "$ROOT/root/etc/homeproxy/scripts/parse_uri.uc" "$WORK/parse_uri/"
-cp "$ROOT/tests/ucode/mocks/homeproxy.uc" "$WORK/parse_uri/"
+cp "$ROOT/root/etc/homeproxy/scripts/homeproxy.uc" "$WORK/parse_uri/"
 cp "$ROOT/tests/ucode/test_parse_uri.uc" "$WORK/parse_uri/"
 
 if ( cd "$WORK/parse_uri" && ucode test_parse_uri.uc ); then
