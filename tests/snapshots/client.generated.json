@@ -10,7 +10,7 @@
 			{
 				"tag": "default-dns",
 				"type": "udp",
-				"server": "202.96.128.86"
+				"server": "223.5.5.5"
 			},
 			{
 				"tag": "system-dns",
