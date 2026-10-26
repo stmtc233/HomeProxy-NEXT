@@ -51,9 +51,14 @@ run_case() {
 
 	# the WAN DNS lookup is stubbed out so the output (and the golden) does not
 	# depend on the upstream DNS of the host running the suite
-	sed -e "s#const uci = cursor();#const uci = cursor('$dir/config');#" \
-	    -e "s#ubus.call('network.interface', 'status', {'interface': 'wan'})#null#" \
+	wan_stub="s#ubus.call('network.interface', 'status', {'interface': 'wan'})#null#"
+	sed -e "s#const uci = cursor();#const uci = cursor('$dir/config');#" -e "$wan_stub" \
 	    "$ROOT/root/etc/homeproxy/scripts/$generator" > "$dir/scripts/$generator"
+
+	mkdir -p "$dir/scripts/client"
+	for module in "$ROOT/root/etc/homeproxy/scripts/client/"*.uc; do
+		sed -e "$wan_stub" "$module" > "$dir/scripts/client/${module##*/}"
+	done
 
 	if ! ( cd "$dir/scripts" && ucode "$generator" ); then
 		echo "FAIL: $name: $generator exited non-zero"

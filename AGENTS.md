@@ -32,7 +32,9 @@
 | --- | --- | --- |
 | `htdocs/luci-static/resources/view/homeproxy/{client,node,server,status}.js` | LuCI JS | 四个设置页面（客户端 / 节点 / 服务端 / 状态） |
 | `htdocs/luci-static/resources/homeproxy.js` | LuCI JS | 前端共享模块：TLS / 传输层表单、校验器、证书上传等 |
-| `root/etc/homeproxy/scripts/generate_client.uc` | ucode | UCI → `sing-box-c.json`（客户端配置生成，最核心的文件） |
+| `root/etc/homeproxy/scripts/generate_client.uc` | ucode | 客户端配置生成入口：按固定顺序拼装各部分，`sing-box check` 后写出 `sing-box-c.json` |
+| `root/etc/homeproxy/scripts/client/context.uc` | ucode | 一次性读取 UCI，生成 `ctx`：配置项、各类 tag 映射、需要 uci 的查询（`ctx.get_outbound()` 等），以及共享状态（`direct_overrides`、`http_clients`） |
+| `root/etc/homeproxy/scripts/client/{dns,inbounds,outbounds,route}.uc` | ucode | 各自导出 `build(ctx)`，生成配置中对应的一节；`common.uc` 放纯解析函数和 `rule_match_fields()` |
 | `root/etc/homeproxy/scripts/generate_server.uc` | ucode | UCI → `sing-box-s.json` |
 | `root/etc/homeproxy/scripts/homeproxy.uc` | ucode | 后端共享模块：命令执行、wget、URL/Base64 解析、TLS/传输层对象构建、校验 |
 | `root/etc/homeproxy/scripts/parse_uri.uc` | ucode | 分享链接解析（每个协议一个函数） |
@@ -53,6 +55,8 @@
 
 - 缩进用 **Tab**，沿用所在文件的风格和命名。
 - ucode 文件以 `'use strict';` 开头；ucode **不做变量提升**，使用前必须先声明（r12 和 r18 都栽在这里）。
+- `client/` 下的模块用相对路径引用上级模块（`'../homeproxy.uc'`）：裸模块名是相对**当前文件所在目录**解析的。新增配置项读进 `context.uc` 的 `ctx`，不要在各 `build()` 里直接 `uci.get` 全局设置。
+- 拼装顺序有依赖：`outbounds` 必须在 `route` 之前构建（后者读取前者记录的直连节点 override）。
 - `init.d` 和 `scripts/*.sh` 在路由器上由 busybox `/bin/sh` 执行，只能写 **POSIX sh**，不要用 bash 语法。
 - LuCI 视图用 `'require ...'` 引入依赖，用到 `ui` 等模块时别漏了 require。
 - 注释保持克制：只解释“为什么”，不复述代码在做什么。新文件保留 SPDX 许可头。

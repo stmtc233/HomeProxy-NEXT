@@ -19,7 +19,7 @@ for file in "$ROOT"/root/etc/homeproxy/scripts/*.uc "$ROOT"/root/usr/share/rpcd/
 		FAILED=1
 	fi
 done
-for module in homeproxy parse_uri; do
+for module in homeproxy parse_uri $(cd "$ROOT/root/etc/homeproxy/scripts" && for f in client/*.uc; do f="${f%.uc}"; echo "${f%%/*}.${f#*/}"; done); do
 	if ! ucode -L "$ROOT/root/etc/homeproxy/scripts" -e "import * as m from \"$module\";" 2> "/tmp/hp-ucode-syntax.err"; then
 		echo "FAIL: module $module"
 		head -8 "/tmp/hp-ucode-syntax.err"
