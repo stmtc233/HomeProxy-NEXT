@@ -482,6 +482,31 @@ return baseclass.extend({
 		return L.resolveDefault(callGetSingBoxFeatures(), {});
 	},
 
+	/* true / false for the procd instance, null when rpcd did not answer (restart, expired session) */
+	getServiceStatus(instance) {
+		const callServiceList = rpc.declare({
+			object: 'service',
+			method: 'list',
+			params: ['name'],
+			expect: { '': {} }
+		});
+
+		return L.resolveDefault(callServiceList('homeproxy'), null).then((res) =>
+			res ? (res.homeproxy?.instances?.[instance]?.running === true) : null);
+	},
+
+	renderStatus(name, version, running) {
+		let color, state;
+		if (running == null)
+			[ color, state ] = [ '#d08000', _('STATUS UNKNOWN') ];
+		else if (running)
+			[ color, state ] = [ 'green', _('RUNNING') ];
+		else
+			[ color, state ] = [ 'red', _('NOT RUNNING') ];
+
+		return '<em><span style="color:%s"><strong>%s (sing-box v%s) %s</strong></span></em>'.format(color, name, version, state);
+	},
+
 	generateRand(type, length) {
 		let byteArr;
 		if (['base64', 'hex'].includes(type))

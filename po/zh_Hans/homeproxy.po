@@ -4031,3 +4031,7 @@ msgstr "sing-box 客户端未运行（崩溃、重启、重载或启动失败）
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "With Route options, TLS fragment and TLS record fragment cannot be enabled together."
 msgstr "使用“路由选项”动作时，TLS 分片与 TLS 记录分片不能同时启用。"
+
+#: htdocs/luci-static/resources/homeproxy.js
+msgid "STATUS UNKNOWN"
+msgstr "状态未知"

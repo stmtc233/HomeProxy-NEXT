@@ -27,13 +27,15 @@ for target in node client server; do
 	fi
 done
 
-echo "== frontend MD5 =="
-if node "$ROOT/tests/frontend-md5.js" "$ROOT"; then
-	echo "PASS: frontend MD5"
-else
-	echo "FAIL: frontend MD5"
-	FAILED=1
-fi
+for check in md5 status; do
+	echo "== frontend $check =="
+	if node "$ROOT/tests/frontend-$check.js" "$ROOT"; then
+		echo "PASS: frontend $check"
+	else
+		echo "FAIL: frontend $check"
+		FAILED=1
+	fi
+done
 
 echo "== ucode tests =="
 if command -v ucode > "/dev/null" 2>&1 && command -v sing-box > "/dev/null" 2>&1; then

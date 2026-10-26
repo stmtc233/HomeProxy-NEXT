@@ -3809,3 +3809,7 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "With Route options, TLS fragment and TLS record fragment cannot be enabled together."
 msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy.js
+msgid "STATUS UNKNOWN"
+msgstr ""
