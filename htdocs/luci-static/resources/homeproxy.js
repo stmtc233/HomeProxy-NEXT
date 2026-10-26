@@ -409,16 +409,8 @@ return baseclass.extend({
 		p = a => { let b = '', d = ''; for (let c = 0; c <= 3; c++) d = a >>> 8 * c & 255, d = '0' + d.toString(16), b += d.substr(d.length - 2, 2); return b; };
 
 		let f = [], q, r, s, t, a, b, c, d;
-		e = (() => {
-			e = e.replace(/\r\n/g, '\n');
-			let b = '';
-			for (let d = 0; d < e.length; d++) {
-				let c = e.charCodeAt(d);
-				b += c < 128 ? String.fromCharCode(c) : c < 2048 ? String.fromCharCode(c >> 6 | 192) + String.fromCharCode(c & 63 | 128) :
-					String.fromCharCode(c >> 12 | 224) + String.fromCharCode(c >> 6 & 63 | 128) + String.fromCharCode(c & 63 | 128);
-			}
-			return b;
-		})();
+		/* UTF-8 bytes as a binary string; surrogate pairs (emoji) must become one 4-byte sequence */
+		e = Array.from(new TextEncoder().encode(e.replace(/\r\n/g, '\n')), (c) => String.fromCharCode(c)).join('');
 		f = (() => {
 			let c = e.length, a = c + 8, d = 16 * ((a - a % 64) / 64 + 1), b = Array(d - 1), f = 0, g = 0;
 			for (; g < c;) a = (g - g % 4) / 4, f = g % 4 * 8, b[a] |= e.charCodeAt(g) << f, g++;
