@@ -5,7 +5,7 @@
 
 include $(TOPDIR)/rules.mk
 
-LUCI_TITLE:=The modern ImmortalWrt proxy platform for ARM64/AMD64 (sing-box 1.14)
+LUCI_TITLE:=HomeProxy NEXT - a lean sing-box 1.14 proxy for ImmortalWrt
 # Pure ucode/JS payload with no compiled code, so the package itself is arch
 # independent. The real arch constraint comes from the +sing-box dependency,
 # which the feed builds for every architecture Go supports (aarch64, arm,

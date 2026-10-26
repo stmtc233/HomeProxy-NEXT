@@ -19,6 +19,9 @@ run_case() {
 	mkdir -p "$dir/config" "$dir/run" "$dir/scripts" "$dir/resources" "$dir/ruleset"
 	: > "$dir/resources/direct_list.txt"
 	: > "$dir/resources/proxy_list.txt"
+	for list in direct_list proxy_list; do
+		[ -f "${fixture%.uci}.$list.txt" ] && cp "${fixture%.uci}.$list.txt" "$dir/resources/$list.txt"
+	done
 
 	if [ "$local_rs" = "1" ]; then
 		printf '%s' '{"version":1,"rules":[{"domain_suffix":["example.com"]}]}' > "$dir/rs-src.json"
@@ -46,8 +49,16 @@ run_case() {
 	    -e "s#^export const RUN_DIR = '/var/run/homeproxy';#export const RUN_DIR = '$dir/run';#" \
 	    "$ROOT/root/etc/homeproxy/scripts/homeproxy.uc" > "$dir/scripts/homeproxy.uc"
 
-	sed -e "s#const uci = cursor();#const uci = cursor('$dir/config');#" \
+	# the WAN DNS lookup is stubbed out so the output (and the golden) does not
+	# depend on the upstream DNS of the host running the suite
+	wan_stub="s#ubus.call('network.interface', 'status', {'interface': 'wan'})#null#"
+	sed -e "s#const uci = cursor();#const uci = cursor('$dir/config');#" -e "$wan_stub" \
 	    "$ROOT/root/etc/homeproxy/scripts/$generator" > "$dir/scripts/$generator"
+
+	mkdir -p "$dir/scripts/client"
+	for module in "$ROOT/root/etc/homeproxy/scripts/client/"*.uc; do
+		sed -e "$wan_stub" "$module" > "$dir/scripts/client/${module##*/}"
+	done
 
 	if ! ( cd "$dir/scripts" && ucode "$generator" ); then
 		echo "FAIL: $name: $generator exited non-zero"
@@ -72,21 +83,28 @@ run_case() {
 
 run_case client "$ROOT/tests/fixtures/generators/client.uci" generate_client.uc sing-box-c.json
 
-CLIENT_GOLDEN="$ROOT/tests/snapshots/client.generated.json"
-CLIENT_OUT="$WORK/client/run/sing-box-c.json"
-if [ ! -f "$CLIENT_GOLDEN" ]; then
-	echo "FAIL: client: golden snapshot $CLIENT_GOLDEN is missing"
-	FAILED=1
-elif sed "s#$WORK/client#__WORKDIR__#g" "$CLIENT_OUT" > "$WORK/client/normalized.json" \
-	&& cmp -s "$CLIENT_GOLDEN" "$WORK/client/normalized.json"; then
-	echo "PASS: client generator matches the golden snapshot"
-else
-	echo "FAIL: client generator output differs from the golden snapshot (normalized output: $WORK/client/normalized.json)"
-	if command -v diff > "/dev/null" 2>&1; then
-		diff -u "$CLIENT_GOLDEN" "$WORK/client/normalized.json" | head -40
+check_golden() {
+	name="$1"
+	outfile="$2"
+	golden="$ROOT/tests/snapshots/$name.generated.json"
+	normalized="$WORK/$name/normalized.json"
+
+	sed "s#$WORK/$name#__WORKDIR__#g" "$WORK/$name/run/$outfile" > "$normalized"
+	if [ ! -f "$golden" ]; then
+		echo "FAIL: $name: golden snapshot $golden is missing (normalized output: $normalized)"
+		FAILED=1
+	elif cmp -s "$golden" "$normalized"; then
+		echo "PASS: $name generator matches the golden snapshot"
+	else
+		echo "FAIL: $name generator output differs from the golden snapshot (normalized output: $normalized)"
+		if command -v diff > "/dev/null" 2>&1; then
+			diff -u "$golden" "$normalized" | head -40
+		fi
+		FAILED=1
 	fi
-	FAILED=1
-fi
+}
+
+check_golden client sing-box-c.json
 
 if grep -q '"detour": "direct-out"' "$WORK/client/run/sing-box-c.json"; then
 	echo "FAIL: client: a remote rule-set would still be downloaded directly"
@@ -165,6 +183,15 @@ assert_json "custom/labels: dns.final points at the DNS label" '"final": "üåê Ë
 assert_json "custom/labels: extra rule-set tags are kept verbatim" '"geosite"$'
 assert_json "custom/labels: a rule-set label clashing with an extra tag is suffixed" '"tag": "geosite #2"'
 
+run_case rules "$ROOT/tests/fixtures/generators/rules.uci" generate_client.uc sing-box-c.json
+check_golden rules sing-box-c.json
+
+for name in global-tun bypass-direct custom-extras; do
+	run_case "$name" "$ROOT/tests/fixtures/generators/$name.uci" generate_client.uc sing-box-c.json
+	check_golden "$name" sing-box-c.json
+done
+
 run_case server "$ROOT/tests/fixtures/generators/server.uci" generate_server.uc sing-box-s.json
+check_golden server sing-box-s.json
 
 exit $FAILED

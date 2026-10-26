@@ -1204,14 +1204,14 @@ msgstr "劫持"
 #: htdocs/luci-static/resources/view/homeproxy/client.js:101
 #: htdocs/luci-static/resources/view/homeproxy/status.js:282
 #: root/usr/share/luci/menu.d/luci-app-homeproxy.json:3
-msgid "HomeProxy"
-msgstr "HomeProxy"
+msgid "HomeProxy NEXT"
+msgstr "HomeProxy NEXT"
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:58
 #: htdocs/luci-static/resources/view/homeproxy/server.js:60
 #: htdocs/luci-static/resources/view/homeproxy/server.js:129
-msgid "HomeProxy Server"
-msgstr "HomeProxy 服务端"
+msgid "HomeProxy NEXT Server"
+msgstr "HomeProxy NEXT 服务端"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:556
 msgid "Hop interval"
@@ -2998,8 +2998,8 @@ msgstr "可接受的最低 TLS 版本。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:102
 #: htdocs/luci-static/resources/view/homeproxy/server.js:130
-msgid "The modern ImmortalWrt proxy platform for ARM64/AMD64."
-msgstr "为 ARM64/AMD64 设计的现代 ImmortalWrt 代理平台。"
+msgid "A lean sing-box 1.14 proxy for ImmortalWrt: fewer features, each one done well."
+msgstr "基于 sing-box 1.14 的精简代理：化繁为简，够用就好，把现有功能做好。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:502
 #: htdocs/luci-static/resources/view/homeproxy/server.js:914
@@ -4027,3 +4027,7 @@ msgstr "断网保护（Kill Switch）"
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Drop forwarded traffic to overseas destinations while the sing-box client is not running (crash, restart, reload or failed start), so nothing leaks out directly. Mainland China and private addresses stay reachable.<br/>Stopping the service from the init script lifts the block; if the client cannot start, internet access stays blocked until it is fixed or the service is stopped."
 msgstr "sing-box 客户端未运行（崩溃、重启、重载或启动失败）期间，丢弃转发到海外目的地的流量，避免流量直连泄露。大陆地址和内网地址仍可访问。<br/>通过 init 脚本停止服务会解除阻断；若客户端无法启动，在修复问题或停止服务之前，海外访问会一直被阻断。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "With Route options, TLS fragment and TLS record fragment cannot be enabled together."
+msgstr "使用“路由选项”动作时，TLS 分片与 TLS 记录分片不能同时启用。"

@@ -1167,13 +1167,13 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/client.js:101
 #: htdocs/luci-static/resources/view/homeproxy/status.js:282
 #: root/usr/share/luci/menu.d/luci-app-homeproxy.json:3
-msgid "HomeProxy"
+msgid "HomeProxy NEXT"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:58
 #: htdocs/luci-static/resources/view/homeproxy/server.js:60
 #: htdocs/luci-static/resources/view/homeproxy/server.js:129
-msgid "HomeProxy Server"
+msgid "HomeProxy NEXT Server"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:556
@@ -2895,7 +2895,7 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:102
 #: htdocs/luci-static/resources/view/homeproxy/server.js:130
-msgid "The modern ImmortalWrt proxy platform for ARM64/AMD64."
+msgid "A lean sing-box 1.14 proxy for ImmortalWrt: fewer features, each one done well."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:502
@@ -3804,4 +3804,8 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Drop forwarded traffic to overseas destinations while the sing-box client is not running (crash, restart, reload or failed start), so nothing leaks out directly. Mainland China and private addresses stay reachable.<br/>Stopping the service from the init script lifts the block; if the client cannot start, internet access stays blocked until it is fixed or the service is stopped."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "With Route options, TLS fragment and TLS record fragment cannot be enabled together."
 msgstr ""

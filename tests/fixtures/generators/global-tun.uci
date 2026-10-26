@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# Coverage fixture for the non-custom paths the other fixtures leave out:
+# global mode, redirect + tun with every tun/UDP option, a WireGuard main
+# node (endpoint), a dedicated direct UDP node carrying an override, a custom
+# NTP server, a bound interface and the dashboard. The keys are test-only.
+
+config homeproxy 'config'
+	option routing_mode 'global'
+	option proxy_mode 'redirect_tun'
+	option ipv6_support '1'
+	option log_level 'info'
+	option main_node 'n_wg'
+	option main_udp_node 'n_udp_direct'
+	option dns_server 'tls://1.1.1.1'
+	option block_https_rr '0'
+	option tun_dns_mode 'native'
+	option tun_dns_address '172.19.0.2'
+	option udp_mapping 'endpoint_independent'
+	option udp_filtering 'address_dependent'
+	option udp_nat_max '4096'
+	option dashboard '1'
+	option dashboard_listen '[::1]:9191'
+	option dashboard_secret 'test-secret'
+	option dashboard_url 'https://example.com/dashboard.zip'
+
+config homeproxy 'infra'
+	option mixed_port '5330'
+	option dns_port '5333'
+	option redirect_port '5331'
+	option self_mark '100'
+	option tun_name 'singtun0'
+	option tun_addr4 '172.19.0.1/30'
+	option tun_addr6 'fdfe:dcba:9876::1/126'
+	option tun_mtu '1500'
+	option udp_timeout '300'
+	option ntp_server 'time.example.com'
+
+config homeproxy 'control'
+	option bind_interface 'eth1'
+
+config node 'n_wg'
+	option label 'wg'
+	option type 'wireguard'
+	option address 'wg.example.com'
+	option port '51820'
+	list wireguard_local_address '10.0.0.2/32'
+	list wireguard_local_address 'fd00::2/128'
+	option wireguard_private_key 'IDTYSQiGLnnkIWRPNr6QJP+eYxdX6xeUbfp3VPl/100='
+	option wireguard_peer_public_key 'sJzNCbWwYeXOeCaWk5r+VEpKDWfeKE3P7ccbVmWF9nw='
+	option wireguard_mtu '1408'
+	list wireguard_reserved '1'
+	list wireguard_reserved '2'
+	list wireguard_reserved '3'
+	option wireguard_persistent_keepalive_interval '25'
+	option udp_fragment '1'
+
+config node 'n_udp_direct'
+	option label 'udp-direct'
+	option type 'direct'
+	option override_address '198.51.100.7'
+	option override_port '4433'

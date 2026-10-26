@@ -27,9 +27,7 @@ jobs:
       - name: Check zh_Hans translation coverage
         run: python3 tests/i18n-coverage.py --fail-below 100
 
-      # The full suite (tests/run.sh) needs ucode + sing-box 1.14 + ubus and
-      # therefore runs on a target, not on the runner; see tests/README.md.
-      # These checks are the part that does not need a device.
+      # The form snapshots and the ucode suite run in test.yml.
       - name: Syntax checks (shell / javascript)
         run: |
           set -e
@@ -40,7 +38,7 @@ jobs:
           for f in \
             root/etc/init.d/homeproxy \
             root/etc/homeproxy/scripts/*.sh \
-            tests/*.sh tests/ucode/*.sh; do
+            tests/*.sh tests/ucode/*.sh tests/ci/*.sh; do
             [ -f "$f" ] || continue
             sh -n "$f"
           done

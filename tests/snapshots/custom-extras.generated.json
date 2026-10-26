@@ -1,0 +1,207 @@
+{
+	"log": {
+		"disabled": false,
+		"level": "error",
+		"output": "__WORKDIR__/run/sing-box-c.log",
+		"timestamp": true
+	},
+	"dns": {
+		"servers": [
+			{
+				"tag": "default-dns",
+				"type": "udp",
+				"server": "223.5.5.5",
+				"detour": "direct-out"
+			},
+			{
+				"tag": "system-dns",
+				"type": "local",
+				"detour": "direct-out"
+			},
+			{
+				"tag": "ds-doh",
+				"type": "https",
+				"server": "1.1.1.1",
+				"server_port": 443,
+				"path": "/dns-query",
+				"headers": {
+					"X-Test": "1"
+				},
+				"tls": {
+					"enabled": true,
+					"server_name": "cloudflare-dns.com"
+				},
+				"detour": "wg"
+			},
+			{
+				"tag": "ds-hosts",
+				"type": "hosts",
+				"path": "/etc/hosts"
+			}
+		],
+		"rules": [
+		],
+		"strategy": "prefer_ipv6",
+		"disable_expire": true,
+		"client_subnet": "198.51.100.0/24",
+		"final": "ds-doh"
+	},
+	"inbounds": [
+		{
+			"type": "direct",
+			"tag": "dns-in",
+			"listen": "127.0.0.1",
+			"listen_port": 5333
+		},
+		{
+			"type": "mixed",
+			"tag": "mixed-in",
+			"listen": "::",
+			"listen_port": 5330,
+			"udp_timeout": "120s",
+			"set_system_proxy": false
+		},
+		{
+			"type": "redirect",
+			"tag": "redirect-in",
+			"listen": "::",
+			"listen_port": 5331
+		},
+		{
+			"type": "tun",
+			"tag": "tun-in",
+			"interface_name": "singtun0",
+			"address": [
+				"172.19.0.1/30",
+				"fdfe:dcba:9876::1/126"
+			],
+			"mtu": 9000,
+			"auto_route": false,
+			"endpoint_independent_nat": true,
+			"udp_timeout": "120s",
+			"stack": "gvisor"
+		}
+	],
+	"endpoints": [
+		{
+			"type": "wireguard",
+			"tag": "wg",
+			"address": [
+				"10.0.0.2/32"
+			],
+			"private_key": "qKjjYlTKsxzuuThqBRUQ6ON4T7fo52Q/VsBtJrqdNUc=",
+			"peers": [
+				{
+					"address": "wg.example.com",
+					"port": 51820,
+					"allowed_ips": [
+						"0.0.0.0/0",
+						"::/0"
+					],
+					"public_key": "zoKstuivPm2HhlAcg6Uui1hKUtVsvn/HDQUXeEyCVxg=",
+					"pre_shared_key": "IDTYSQiGLnnkIWRPNr6QJP+eYxdX6xeUbfp3VPl/100="
+				}
+			],
+			"system": false,
+			"bind_interface": "eth2",
+			"detour": "ss",
+			"domain_resolver": {
+				"server": "ds-doh",
+				"strategy": "ipv4_only"
+			}
+		}
+	],
+	"outbounds": [
+		{
+			"type": "direct",
+			"tag": "direct-out",
+			"routing_mark": 100
+		},
+		{
+			"type": "block",
+			"tag": "block-out"
+		},
+		{
+			"type": "shadowsocks",
+			"tag": "ss",
+			"routing_mark": 100,
+			"server": "ss.example.com",
+			"server_port": 8388,
+			"password": "secret",
+			"method": "aes-128-gcm",
+			"bind_interface": "eth1",
+			"domain_resolver": {
+				"server": "ds-doh",
+				"strategy": "ipv4_only"
+			}
+		}
+	],
+	"route": {
+		"rules": [
+			{
+				"inbound": "dns-in",
+				"action": "hijack-dns"
+			},
+			{
+				"action": "sniff"
+			},
+			{
+				"action": "resolve",
+				"strategy": "prefer_ipv4"
+			},
+			{
+				"rule_set": [
+					"rs-remote"
+				],
+				"action": "route",
+				"outbound": "wg"
+			}
+		],
+		"rule_set": [
+			{
+				"type": "remote",
+				"tag": "rs-remote",
+				"format": "binary",
+				"url": "https://example.com/remote.srs",
+				"update_interval": "12h",
+				"http_client": "hp-wg",
+				"initial_path": "/etc/homeproxy/ruleset/remote.srs"
+			}
+		],
+		"auto_detect_interface": true,
+		"default_domain_resolver": {
+			"server": "ds-doh"
+		},
+		"find_neighbor": true,
+		"final": "ss"
+	},
+	"services": [
+		{
+			"type": "api",
+			"listen": "0.0.0.0",
+			"listen_port": 9090,
+			"dashboard": {
+				"enabled": true,
+				"path": "__WORKDIR__/run/dashboard/web",
+				"http_client": "hp-ss"
+			}
+		}
+	],
+	"http_clients": [
+		{
+			"tag": "hp-wg",
+			"detour": "wg"
+		},
+		{
+			"tag": "hp-ss",
+			"detour": "ss"
+		}
+	],
+	"experimental": {
+		"cache_file": {
+			"enabled": true,
+			"path": "/etc/homeproxy/cache.db"
+		}
+	},
+	"$schema": "https://sing-box.sagernet.org/schema.json"
+}

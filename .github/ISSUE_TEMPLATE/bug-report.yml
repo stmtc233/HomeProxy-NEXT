@@ -28,9 +28,9 @@ body:
   - type: textarea
     id: luciconfig
     attributes:
-      label: HomeProxy configuration
+      label: HomeProxy NEXT configuration
       description: |
-        The HomeProxy configuration file where the error occurred (use command below).
+        The HomeProxy NEXT configuration file where the error occurred (use command below).
         ```cat /etc/config/homeproxy```
     validations:
       required: true
@@ -47,9 +47,9 @@ body:
   - type: textarea
     id: lucilog
     attributes:
-      label: HomeProxy log
+      label: HomeProxy NEXT log
       description: |
-        The HomeProxy log file where the error occurred (use command below).
+        The HomeProxy NEXT log file where the error occurred (use command below).
         ```cat /var/run/homeproxy/homeproxy.log```
     validations:
       required: false
@@ -101,13 +101,13 @@ body:
       label: Terms
       description: Please check the following before submitting the issue.
       options:
-        - label: I confirm that the HomeProxy I installed is from official source, like GitHub artifacts or official ImmortalWrt opkg feeds.
+        - label: I confirm that the HomeProxy NEXT I installed comes from the GitHub releases or build artifacts of this repository.
           required: true
-        - label: I confirm that the Homeproxy I installed does not contain Clash mode support.
+        - label: I confirm that the HomeProxy NEXT I installed does not contain Clash mode support.
           required: true
         - label: I confirm that the version of OpenWrt/ImmortalWrt I installed is >= 24.10.
           required: true
-        - label: I confirm that I have installed the latest version of HomeProxy and sing-box.
+        - label: I confirm that I have installed the latest version of HomeProxy NEXT and sing-box (>= 1.14).
           required: true
         - label: I confirm that I have read the sing-box documentation, understand the meaning of all the configuration items I added.
           required: true

@@ -1,0 +1,2 @@
+direct.example.com
+lan.example.org
