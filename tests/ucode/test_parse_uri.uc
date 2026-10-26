@@ -163,5 +163,26 @@ expect_fields('trojan-punctuation-password', parse_uri('trojan://pa!ss~1@m.examp
 	password: 'pa!ss~1', tls: '1', tls_sni: 'm.example.com'
 });
 
+/* Emoji node names, as most subscriptions use them: percent-encoded, raw and inside base64 */
+expect_fields('emoji-label-encoded', parse_uri('trojan://pass@m.example.com:443?sni=m.example.com#%F0%9F%87%AD%F0%9F%87%B0%20%E9%A6%99%E6%B8%AF%2001', FEATURES, LOG), {
+	label: '🇭🇰 香港 01', type: 'trojan', address: 'm.example.com'
+});
+
+expect_fields('emoji-label-raw', parse_uri('trojan://pass@m.example.com:443?sni=m.example.com#🇭🇰 香港 01 | 🔥x2', FEATURES, LOG), {
+	label: '🇭🇰 香港 01 | 🔥x2', type: 'trojan', address: 'm.example.com'
+});
+
+expect_fields('emoji-label-vless', parse_uri('vless://3af88561-9c69-4b19-8f7e-f08d580bc339@n.example.com:443?security=tls&sni=n.example.com#%F0%9F%87%BA%F0%9F%87%B8%20US%20%F0%9F%9A%80', FEATURES, LOG), {
+	label: '🇺🇸 US 🚀', type: 'vless', address: 'n.example.com'
+});
+
+expect_fields('emoji-label-ss', parse_uri('ss://YWVzLTEyOC1nY206cGFzcw==@i.example.com:8388#%F0%9F%87%B9%F0%9F%87%BC%20%E5%8F%B0%E6%B9%BE', FEATURES, LOG), {
+	label: '🇹🇼 台湾', type: 'shadowsocks', address: 'i.example.com'
+});
+
+expect_fields('emoji-label-vmess', parse_uri('vmess://eyJ2IjoiMiIsInBzIjoi8J+Hr/Cfh7Ug5pel5pysIDAyIOKciO+4jyIsImFkZCI6InAuZXhhbXBsZS5jb20iLCJwb3J0IjoiNDQzIiwiaWQiOiIzYWY4ODU2MS05YzY5LTRiMTktOGY3ZS1mMDhkNTgwYmMzMzkiLCJhaWQiOiIwIiwibmV0IjoidGNwIiwidGxzIjoidGxzIiwic25pIjoicC5leGFtcGxlLmNvbSJ9', FEATURES, LOG), {
+	label: '🇯🇵 日本 02 ✈️', type: 'vmess', address: 'p.example.com'
+});
+
 printf('%d checks, %d failures\n', checks, failures);
 exit(failures === 0 ? 0 : 1);

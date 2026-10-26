@@ -1,0 +1,147 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# Regression fixture for label-based tags.
+#
+# Outbound, DNS server and rule-set tags are taken from the section label
+# instead of the UCI section name (subscription nodes are named by md5, so
+# the old cfg-<md5>-out tags could not be told apart). Covered here:
+#   - non-ASCII labels with spaces and emoji (flags, variation selector)
+#   - the same label on two nodes (two subscriptions), suffixed " #2"
+#   - a label equal to a built-in tag (main-out, default-dns), suffixed " #2"
+#   - an empty label, falling back to cfg-<name>-<suffix>
+#   - rule-set extra tags kept verbatim, a clashing label gives way
+
+config homeproxy 'config'
+	option routing_mode 'custom'
+	option proxy_mode 'redirect_tproxy'
+	option ipv6_support '0'
+	option log_level 'error'
+
+config homeproxy 'routing'
+	option default_outbound 'rn_auto'
+	option default_outbound_dns 'default-dns'
+	option sniff_override '1'
+
+config homeproxy 'dns'
+	option default_server 'ds_google'
+
+config homeproxy 'infra'
+	option mixed_port '5330'
+	option dns_port '5333'
+	option redirect_port '5331'
+	option tproxy_port '5332'
+	option self_mark '100'
+	option ntp_server 'nil'
+
+config node '0f3c2a1b9d8e7f60a1b2c3d4e5f60718'
+	option label '🇭🇰 香港 01'
+	option type 'trojan'
+	option address 'hk1.example.com'
+	option port '443'
+	option password 'secret'
+	option tls '1'
+	option tls_sni 'hk1.example.com'
+
+# Same label from another subscription
+config node '9a8b7c6d5e4f30211203f4e5d6c7b8a9'
+	option label '🇭🇰 香港 01'
+	option type 'trojan'
+	option address 'hk2.example.com'
+	option port '443'
+	option password 'secret'
+	option tls '1'
+	option tls_sni 'hk2.example.com'
+
+config node 'n_builtin'
+	option label 'main-out'
+	option type 'trojan'
+	option address 'builtin.example.com'
+	option port '443'
+	option password 'secret'
+	option tls '1'
+	option tls_sni 'builtin.example.com'
+
+config node 'n_nolabel'
+	option type 'trojan'
+	option address 'nolabel.example.com'
+	option port '443'
+	option password 'secret'
+	option tls '1'
+	option tls_sni 'nolabel.example.com'
+
+config routing_node 'rn_auto'
+	option enabled '1'
+	option label '🚀 自动选择'
+	option node 'urltest'
+	list urltest_nodes '0f3c2a1b9d8e7f60a1b2c3d4e5f60718'
+	list urltest_nodes '9a8b7c6d5e4f30211203f4e5d6c7b8a9'
+	list urltest_nodes 'n_builtin'
+	list urltest_nodes 'n_nolabel'
+
+config routing_node 'rn_hk'
+	option enabled '1'
+	option label 'HK'
+	option node '0f3c2a1b9d8e7f60a1b2c3d4e5f60718'
+
+config dns_server 'ds_google'
+	option enabled '1'
+	option label '🌐 谷歌 DNS ✈️'
+	option type 'tls'
+	option server '8.8.8.8'
+	option outbound 'rn_auto'
+
+config dns_server 'ds_builtin'
+	option enabled '1'
+	option label 'default-dns'
+	option type 'udp'
+	option server '1.1.1.1'
+	option outbound 'rn_hk'
+
+config dns_server 'ds_nolabel'
+	option enabled '1'
+	option type 'udp'
+	option server '9.9.9.9'
+	option outbound 'direct-out'
+
+config dns_rule 'dr_geosite'
+	option enabled '1'
+	option label 'dr-geosite'
+	option mode 'default'
+	list rule_set 'rs_geosite'
+	option action 'route'
+	option server 'ds_builtin'
+
+config dns_rule 'dr_nolabel'
+	option enabled '1'
+	option label 'dr-nolabel'
+	option mode 'default'
+	list domain_suffix 'nolabel-dns.example.com'
+	option action 'route'
+	option server 'ds_nolabel'
+
+# Two tags sharing one source: {tag} expands to 'geoip' and 'geosite'
+config ruleset 'rs_multi'
+	option enabled '1'
+	option label 'geoip'
+	option type 'remote'
+	option format 'binary'
+	option url 'https://example.com/{tag}.srs'
+	list extra_tags 'geosite'
+	option outbound 'rn_auto'
+
+# Its label clashes with the extra tag above
+config ruleset 'rs_geosite'
+	option enabled '1'
+	option label 'geosite'
+	option type 'remote'
+	option format 'binary'
+	option url 'https://example.com/geosite-cn.srs'
+	option outbound 'rn_auto'
+
+config routing_rule 'rr_hk'
+	option enabled '1'
+	option label 'rr-hk'
+	option mode 'default'
+	list rule_set 'rs_multi'
+	option action 'route'
+	option outbound 'rn_hk'

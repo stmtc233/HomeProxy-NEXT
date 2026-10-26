@@ -138,7 +138,7 @@ assert_json() {
 }
 
 assert_json "custom/no-default: a global domain resolver is declared" '"default_domain_resolver"'
-assert_json "custom/no-default: the user DNS server survived" '"cfg-DNS_Server_Proxy-dns"'
+assert_json "custom/no-default: the user DNS server survived" '"tag": "DNS_Server_Proxy"'
 assert_json "custom/no-default: the user DNS rule survived" 'dns-rule-marker.example.com'
 assert_json "custom/no-default: the hosts DNS server is emitted" '"hosts-marker.example.com"'
 assert_json "custom/no-default: the dhcp DNS server is emitted" '"type": "dhcp"'
@@ -146,9 +146,24 @@ assert_json "custom/no-default: the respond action is emitted" '"action": "respo
 assert_json "custom/no-default: the realm outbound carries its realm" '"realm_id": "hp-test"'
 assert_json "custom/no-default: the urltest group survived" '"tag": "Routing_Node_Proxy"'
 assert_json "custom/no-default: its member nodes survived" '"tag": "hk"'
-assert_json "custom/no-default: the user rule-set survived" '"cfg-rs_cn-rule"'
+assert_json "custom/no-default: the user rule-set survived" '"tag": "rs-cn"'
 assert_json "custom/no-default: the user routing rule survived" 'routing-rule-marker.example.com'
 assert_json "custom/no-default: dns.final follows default_server" '"final": "default-dns"'
+
+run_case custom_labels "$ROOT/tests/fixtures/generators/custom-labels.uci" generate_client.uc sing-box-c.json
+CUSTOM_OUT="$WORK/custom_labels/run/sing-box-c.json"
+assert_json "custom/labels: a node is tagged by its label" '"tag": "🇭🇰 香港 01"'
+assert_json "custom/labels: a duplicate label is suffixed" '"tag": "🇭🇰 香港 01 #2"'
+assert_json "custom/labels: a label equal to a built-in tag is suffixed" '"tag": "main-out #2"'
+assert_json "custom/labels: a node without label keeps the section name" '"tag": "cfg-n_nolabel-out"'
+assert_json "custom/labels: the urltest group is tagged by its label" '"tag": "🚀 自动选择"'
+assert_json "custom/labels: a routing rule points at the node label" '"outbound": "🇭🇰 香港 01"'
+assert_json "custom/labels: a DNS server is tagged by its label" '"tag": "🌐 谷歌 DNS ✈️"'
+assert_json "custom/labels: a DNS label equal to a built-in tag is suffixed" '"tag": "default-dns #2"'
+assert_json "custom/labels: a DNS server without label keeps the section name" '"tag": "cfg-ds_nolabel-dns"'
+assert_json "custom/labels: dns.final points at the DNS label" '"final": "🌐 谷歌 DNS ✈️"'
+assert_json "custom/labels: extra rule-set tags are kept verbatim" '"geosite"$'
+assert_json "custom/labels: a rule-set label clashing with an extra tag is suffixed" '"tag": "geosite #2"'
 
 run_case server "$ROOT/tests/fixtures/generators/server.uci" generate_server.uc sing-box-s.json
 
