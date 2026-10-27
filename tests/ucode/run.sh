@@ -37,6 +37,9 @@ sh "$ROOT/tests/ucode/test_fw4_cleanup.sh" "$ROOT" "$WORK/fw4_cleanup" || FAILED
 echo "== shared defaults =="
 sh "$ROOT/tests/ucode/test_defaults.sh" "$ROOT" || FAILED=1
 
+echo "== preset rule-sets =="
+sh "$ROOT/tests/ucode/test_preset_rulesets.sh" "$ROOT" "$WORK/preset_rulesets" || FAILED=1
+
 echo "== kill switch =="
 sh "$ROOT/tests/ucode/test_killswitch.sh" "$ROOT" "$WORK/killswitch" || FAILED=1
 

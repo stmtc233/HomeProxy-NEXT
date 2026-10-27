@@ -171,6 +171,15 @@ assert_json "custom/no-default: the user rule-set survived" '"tag": "rs-cn"'
 assert_json "custom/no-default: the user routing rule survived" 'routing-rule-marker.example.com'
 assert_json "custom/no-default: dns.final follows default_server" '"final": "default-dns"'
 
+# the shipped config in the custom mode with its preset rule-sets enabled
+sed -e "s/option routing_mode .*/option routing_mode 'custom'/" -e "/^config ruleset/,/^$/s/option enabled '0'/option enabled '1'/" \
+	"$ROOT/root/etc/config/homeproxy" > "$WORK/shipped-presets.uci"
+run_case shipped_presets "$WORK/shipped-presets.uci" generate_client.uc sing-box-c.json
+CUSTOM_OUT="$WORK/shipped_presets/run/sing-box-c.json"
+assert_json "shipped presets: GeoIP CN is offered" '"tag": "GeoIP CN"'
+assert_json "shipped presets: GeoSite CN is offered" '"tag": "GeoSite CN"'
+assert_json "shipped presets: the resource file seeds the rule-set" '"initial_path": "/etc/homeproxy/resources/geosite_cn.srs"'
+
 run_case custom_labels "$ROOT/tests/fixtures/generators/custom-labels.uci" generate_client.uc sing-box-c.json
 CUSTOM_OUT="$WORK/custom_labels/run/sing-box-c.json"
 assert_json "custom/labels: a node is tagged by its label" '"tag": "🇭🇰 香港 01"'
