@@ -7,10 +7,10 @@
 
 'use strict';
 
-import { access, error, lstat, popen, readfile, writefile, unlink } from 'fs';
+import { access, error, lstat, popen, readfile, rename, writefile, unlink } from 'fs';
 import { cursor } from 'uci';
 
-import { isBinary, isValidPEM } from '/etc/homeproxy/scripts/homeproxy.uc';
+import { isBinary, isValidPEM, listPlugins, PLUGIN_NAME_RE } from '/etc/homeproxy/scripts/homeproxy.uc';
 
 /* Kanged from ucode/luci */
 function shellquote(s) {
@@ -36,6 +36,20 @@ const BACKUP_SKIP = ['infra', 'migration'];
 const BACKUP_TMPFILE = '/tmp/homeproxy_import.tmp';
 const BACKUP_NAME_RE = /^[A-Za-z0-9_]+$/;
 const MAIN_NODE_OPTIONS = ['main_node', 'main_udp_node', 'main_urltest_nodes', 'main_udp_urltest_nodes'];
+
+/* Custom plugins: the files are the state (<name>.uc on, <name>.uc.disabled
+   off), so editing them over SSH and on the plugin page stay in sync. */
+const PLUGIN_DIR = `${HP_DIR}/custom`;
+const PLUGIN_MAX_SIZE = 256 * 1024;
+
+function pluginFile(name) {
+	if (!match(name, PLUGIN_NAME_RE))
+		return null;
+	for (let p in listPlugins(PLUGIN_DIR))
+		if (p.name === name)
+			return `${PLUGIN_DIR}/${p.file}`;
+	return '';
+}
 
 function backupIsTrue(v) {
 	return (v === true || v === 1 || v === '1' || v === 'true');
@@ -66,6 +80,101 @@ function backupStripNodeRefs(section, node_names) {
 }
 
 const methods = {
+	plugin_list: {
+		call: function() {
+			const status = {};
+			for (let kind in ['client', 'server']) {
+				const raw = readfile(`${RUN_DIR}/plugins-${kind}.json`);
+				try {
+					status[kind] = raw ? json(raw) : null;
+				} catch (e) {
+					status[kind] = null;
+				}
+			}
+
+			return { plugins: listPlugins(PLUGIN_DIR), status };
+		}
+	},
+
+	plugin_read: {
+		args: { name: 'name' },
+		call: function(req) {
+			const file = pluginFile(req.args?.name);
+			if (!file)
+				return { content: null, error: (file === null) ? 'illegal name' : 'no such plugin' };
+
+			return { content: readfile(file) };
+		}
+	},
+
+	plugin_write: {
+		args: { name: 'name', content: 'content' },
+		call: function(req) {
+			const name = req.args?.name;
+			let file = pluginFile(name);
+			if (file === null)
+				return { result: false, error: 'illegal name' };
+
+			let content = req.args?.content;
+			if (type(content) !== 'string' || length(content) > PLUGIN_MAX_SIZE)
+				return { result: false, error: 'content missing or too large' };
+			content = replace(content, /\r\n?/g, '\n');
+			if (!match(content, /\n$/))
+				content += '\n';
+
+			/* compile only (nothing runs): a syntax error is shown right away
+			   instead of being found at the next start */
+			system(`mkdir -p ${PLUGIN_DIR}`);
+			const tmp = `${PLUGIN_DIR}/.${name}.tmp`;
+			writefile(tmp, content);
+			try {
+				loadfile(tmp);
+			} catch (e) {
+				unlink(tmp);
+				return { result: false, error: replace(e.message, tmp, `${name}.uc`) };
+			}
+
+			/* a new plugin starts enabled */
+			if (!file)
+				file = `${PLUGIN_DIR}/${name}.uc`;
+			if (!rename(tmp, file)) {
+				unlink(tmp);
+				return { result: false, error: error() };
+			}
+
+			return { result: true };
+		}
+	},
+
+	plugin_remove: {
+		args: { name: 'name' },
+		call: function(req) {
+			const file = pluginFile(req.args?.name);
+			if (!file)
+				return { result: false, error: (file === null) ? 'illegal name' : 'no such plugin' };
+
+			return unlink(file) ? { result: true } : { result: false, error: error() };
+		}
+	},
+
+	plugin_set_enabled: {
+		args: { name: 'name', enabled: true },
+		call: function(req) {
+			const name = req.args?.name;
+			const file = pluginFile(name);
+			if (!file)
+				return { result: false, error: (file === null) ? 'illegal name' : 'no such plugin' };
+
+			const target = `${PLUGIN_DIR}/${name}.uc${req.args?.enabled ? '' : '.disabled'}`;
+			if (file === target)
+				return { result: true };
+			if (access(target))
+				return { result: false, error: 'both an enabled and a disabled copy exist' };
+
+			return rename(file, target) ? { result: true } : { result: false, error: error() };
+		}
+	},
+
 	acllist_read: {
 		args: { type: 'type' },
 		call: function(req) {

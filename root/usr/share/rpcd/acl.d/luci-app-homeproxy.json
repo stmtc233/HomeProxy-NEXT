@@ -13,6 +13,8 @@
 					"acllist_read",
 					"config_export",
 					"connection_check",
+					"plugin_list",
+					"plugin_read",
 					"resources_get_version",
 					"singbox_get_features"
 				]
@@ -32,6 +34,9 @@
 					"certificate_write",
 					"config_import",
 					"log_clean",
+					"plugin_remove",
+					"plugin_set_enabled",
+					"plugin_write",
 					"resources_update",
 					"singbox_generator"
 				]

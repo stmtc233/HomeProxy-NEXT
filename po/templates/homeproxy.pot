@@ -78,6 +78,14 @@ msgstr ""
 msgid "Action"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Actions"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Active on the %s"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1149
 msgid "Add a DNS rule"
 msgstr ""
@@ -88,6 +96,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:416
 msgid "Add a node"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Add a plugin"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:453
@@ -368,6 +380,10 @@ msgstr ""
 msgid "Certificate path"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Changed, not applied yet"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/status.js:57
 msgid "Check"
 msgstr ""
@@ -454,6 +470,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:639
 msgid "Conservative"
+msgstr ""
+
+#: root/usr/share/luci/menu.d/luci-app-homeproxy.json
+msgid "Custom Plugins"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:255
@@ -568,6 +588,14 @@ msgstr ""
 msgid "Default timeout per DNS query in seconds (sing-box default: 10)."
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Delete"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Delete the plugin %s?"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:412
 #: htdocs/luci-static/resources/view/homeproxy/client.js:514
 #: htdocs/luci-static/resources/view/homeproxy/client.js:732
@@ -671,6 +699,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:309
 msgid "Disabled"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Disabled, still active until applied"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:892
@@ -796,8 +828,16 @@ msgstr ""
 msgid "Early data is sent in path instead of header by default."
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Edit"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1297
 msgid "Edit nodes"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Edit plugin %s"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:628
@@ -892,6 +932,10 @@ msgstr ""
 msgid "Error"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Error on the %s: %s"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1240
 msgid "Evaluate (1.14)"
 msgstr ""
@@ -962,8 +1006,20 @@ msgstr ""
 msgid "Extra tags"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Failed to change plugin %s: %s"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Failed to delete plugin %s: %s"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/server.js:86
 msgid "Failed to generate %s, error: %s."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Failed to read plugin %s: %s"
 msgstr ""
 
 #: htdocs/luci-static/resources/homeproxy.js:261
@@ -972,6 +1028,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/status.js:140
 msgid "Fatal"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "File"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1460
@@ -1802,6 +1862,10 @@ msgstr ""
 msgid "NS"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Name"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:310
 #: htdocs/luci-static/resources/view/homeproxy/node.js:750
 msgid "Native"
@@ -1831,6 +1895,14 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/node.js:828
 #: htdocs/luci-static/resources/view/homeproxy/server.js:431
 msgid "No additional encryption support: It's basically duplicate encryption."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "No client() or server() function"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "No plugins yet."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1498
@@ -1864,6 +1936,10 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/server.js:402
 #: htdocs/luci-static/resources/view/homeproxy/server.js:417
 msgid "None"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Not applied yet"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:602
@@ -2023,6 +2099,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:676
 msgid "Plugin opts"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Plugins run in the order of their names, e.g. 10-first, 20-second."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:935
@@ -2256,6 +2336,14 @@ msgstr ""
 msgid "Reject"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Reload failed (exit code %d), see the HomeProxy log on the Service Status page."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Reload failed: %s"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1498
 msgid "Remote"
 msgstr ""
@@ -2354,6 +2442,10 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/client.js:860
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1272
 msgid "Rewrite TTL in DNS responses."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Rolled back on the %s: the config failed sing-box check"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:718
@@ -2502,6 +2594,10 @@ msgid ""
 "gateway unless you need sing-box to own TUN DNS."
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Small ucode scripts that change the generated sing-box configuration, kept in <code>/etc/homeproxy/custom/</code>, which upgrades leave alone. <code>name.uc</code> is enabled, <code>name.uc.disabled</code> disabled; files edited over SSH show up here as well. Changes take effect after Apply (or <code>/etc/init.d/homeproxy reload</code>).<br/>A plugin runs as root with full access to the router; only add code you understand."
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/server.js:185
 msgid "Snell (1.14)"
 msgstr ""
@@ -2615,6 +2711,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:638
 msgid "Standard (default)"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Status"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1010
@@ -2825,6 +2925,10 @@ msgid ""
 "forward 443 to this port for challenge to succeed."
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "The client config failed sing-box check with the plugins applied, so it runs without them:"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:644
 msgid ""
 "The default rule uses the following matching logic:<br/><code>(domain || "
@@ -2917,6 +3021,10 @@ msgstr ""
 msgid "The path to the server certificate, in PEM format."
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "The plugins changed since the last run. Apply to regenerate the configuration."
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/server.js:200
 msgid "The port must be unique."
 msgstr ""
@@ -2929,12 +3037,20 @@ msgstr ""
 msgid "The pre-shared key (password) above must be 12-255 bytes for v6."
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "The reload is taking a while and goes on in the background."
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1360
 msgid "The response code."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:64
 msgid "The restart is taking a while and goes on in the background."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "The server config failed sing-box check with the plugins applied, so it runs without them:"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:815
@@ -3290,9 +3406,17 @@ msgstr ""
 msgid "ZeroSSL"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "a name of letters, digits, - and _ (up to 64)"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1176
 #: htdocs/luci-static/resources/view/homeproxy/server.js:811
 msgid "certificate"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "client"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:764
@@ -3370,6 +3494,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:679
 msgid "quic-go / uquic chrome"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "server"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/status.js:285

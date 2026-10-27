@@ -141,6 +141,9 @@ else
 	echo "SKIP: /bin/uclient-fetch not installed on this host"
 fi
 
+echo "== rpcd plugin methods =="
+sh "$ROOT/tests/ucode/test_rpcd_plugins.sh" "$ROOT" "$WORK/rpcd_plugins" || FAILED=1
+
 echo "== generator regression tests =="
 sh "$ROOT/tests/ucode/test_generators.sh" "$ROOT" "$WORK/generators" || FAILED=1
 

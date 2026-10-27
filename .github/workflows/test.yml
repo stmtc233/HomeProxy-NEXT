@@ -55,6 +55,9 @@ jobs:
       - name: Check form defaults against the backend fallbacks
         run: node tests/frontend-defaults.js .
 
+      - name: Check the plugin page status logic
+        run: node tests/frontend-plugins.js .
+
   ucode:
     runs-on: ubuntu-latest
     steps:
