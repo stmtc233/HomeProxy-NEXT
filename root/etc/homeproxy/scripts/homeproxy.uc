@@ -4,7 +4,7 @@
  * Copyright (C) 2023 ImmortalWrt.org
  */
 
-import { mkstemp } from 'fs';
+import { access, lsdir, mkstemp, stat, writefile } from 'fs';
 import { urldecode_params } from 'luci.http';
 
 export const HP_DIR = '/etc/homeproxy';
@@ -572,6 +572,132 @@ export function isValidPEM(content, is_private_key) {
 
 	if (!start || i < length(lines) - 1 || !match(lines[i], end))
 		return false;
+
+	return true;
+};
+
+/*
+ * Custom plugins: /etc/homeproxy/custom/<name>.uc (enabled) or
+ * <name>.uc.disabled. The directory belongs to the user, so upgrades leave
+ * it alone. A plugin is a script that returns an object with client() and/or
+ * server(); each gets the finished sing-box config and changes it in place
+ * (or returns a new one) right before `sing-box check`.
+ */
+export const PLUGIN_DIR = HP_DIR + '/custom';
+export const PLUGIN_NAME_RE = /^[A-Za-z0-9_-]{1,64}$/;
+
+export function listPlugins(dir) {
+	dir = dir || PLUGIN_DIR;
+
+	const plugins = [];
+	for (let file in (lsdir(dir) || [])) {
+		const m = match(file, /^([A-Za-z0-9_-]{1,64})\.uc(\.disabled)?$/);
+		const st = m ? stat(`${dir}/${file}`) : null;
+		if (st?.type === 'file')
+			push(plugins, { name: m[1], file: file, enabled: !m[2], mtime: st.mtime, size: st.size });
+	}
+
+	return sort(plugins, (a, b) => (a.file < b.file) ? -1 : (a.file > b.file) ? 1 : 0);
+};
+
+function cloneJSON(obj) {
+	return json(sprintf('%J', obj));
+};
+
+/* the first lines of an error message, without colours, for the status file */
+function shortError(msg) {
+	msg = replace(`${msg}`, /\x1b\[[0-9;]*m/g, '');
+	return substr(trim(join('\n', slice(split(msg, '\n'), 0, 8))), 0, 1000);
+};
+
+export function applyPlugins(kind, config, ctx, dir) {
+	dir = dir || PLUGIN_DIR;
+
+	const results = {};
+	for (let p in listPlugins(dir)) {
+		if (!p.enabled)
+			continue;
+
+		const res = results[p.name] = { mtime: p.mtime };
+		let hooks;
+		try {
+			hooks = loadfile(`${dir}/${p.file}`)();
+		} catch (e) {
+			res.status = 'error';
+			res.error = shortError(e.message);
+			warn(`homeproxy: custom plugin '${p.name}' failed to load, skipped: ${res.error}\n`);
+			continue;
+		}
+
+		if (type(hooks?.[kind]) !== 'function') {
+			res.status = 'unused';
+			continue;
+		}
+
+		const backup = cloneJSON(config);
+		try {
+			const ret = hooks[kind](config, ctx);
+			if (type(ret) === 'object')
+				config = ret;
+			res.status = 'applied';
+		} catch (e) {
+			config = backup;
+			res.status = 'error';
+			res.error = shortError(e.message);
+			warn(`homeproxy: custom plugin '${p.name}' failed in ${kind}(), skipped: ${res.error}\n`);
+		}
+	}
+
+	return { config, results };
+};
+
+function checkConfig(file, config) {
+	writefile(file, sprintf('%.J\n', config));
+	const res = executeCommand('/usr/bin/sing-box', 'check', '--config', shellQuote(file));
+	return { ok: res.exitcode === 0, output: trim(`${res.stdout ?? ''}${res.stderr ?? ''}`) };
+};
+
+/*
+ * Run the plugins of `kind` over the generated config, `sing-box check` it
+ * and write it to `file` (mode 600). When the plugins break the check, the
+ * config without them is used instead, so a plugin that an upgrade left
+ * behind cannot keep the service down. The outcome per plugin goes to
+ * RUN_DIR/plugins-<kind>.json for the plugin page. False: nothing written.
+ */
+export function writeConfig(kind, file, config, ctx) {
+	const base = removeBlankAttrs(config);
+	const run = applyPlugins(kind, cloneJSON(base), ctx);
+	const applied = length(filter(values(run.results), (r) => r.status === 'applied')) > 0;
+	const status = { time: time(), plugins: run.results };
+	const tmp = file + '.tmp';
+
+	system('mkdir -p ' + shellQuote(RUN_DIR));
+	let check = checkConfig(tmp, applied ? removeBlankAttrs(run.config) : base);
+	if (!check.ok && applied) {
+		warn(`homeproxy: the ${kind} config fails sing-box check with the custom plugins, using it without them:\n${check.output}\n`);
+		status.fallback = true;
+		status.check_error = shortError(check.output);
+		check = checkConfig(tmp, base);
+	}
+	writefile(`${RUN_DIR}/plugins-${kind}.json`, sprintf('%J\n', status));
+
+	if (length(check.output))
+		warn(check.output + '\n');
+	if (!check.ok) {
+		system('rm -f ' + shellQuote(tmp));
+		return false;
+	}
+
+	/*
+	 * Overwrite an existing config in place: the jailed sing-box has the file
+	 * bind-mounted, so after a rename a reload by SIGHUP would re-read the old
+	 * inode. In-place also keeps the owner the jailed process reads it as.
+	 */
+	if (access(file))
+		system(`cat ${shellQuote(tmp)} > ${shellQuote(file)} && rm -f ${shellQuote(tmp)}`);
+	else
+		system(`mv -f ${shellQuote(tmp)} ${shellQuote(file)}`);
+	system('chmod 600 ' + shellQuote(file));
 
 	return true;
 };

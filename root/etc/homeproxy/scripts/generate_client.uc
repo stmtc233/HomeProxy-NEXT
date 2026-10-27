@@ -7,11 +7,10 @@
 
 'use strict';
 
-import { access, writefile } from 'fs';
 import { connect } from 'ubus';
 import { cursor } from 'uci';
 
-import { isEmpty, removeBlankAttrs, RUN_DIR } from 'homeproxy';
+import { isEmpty, writeConfig, RUN_DIR } from 'homeproxy';
 
 import { load, uciconfig } from 'client.context';
 import * as dns from 'client.dns';
@@ -82,21 +81,11 @@ if (ctx.routing_mode in ['bypass_mainland_china', 'custom']) {
 
 config['$schema'] = 'https://sing-box.sagernet.org/schema.json';
 
-system('mkdir -p ' + RUN_DIR);
-const client_tmp = RUN_DIR + '/sing-box-c.json.tmp';
-writefile(client_tmp, sprintf('%.J\n', removeBlankAttrs(config)));
-if (system('/usr/bin/sing-box check --config ' + client_tmp) !== 0) {
-	system('rm -f ' + client_tmp);
+const plugin_ctx = {
+	routing_mode: ctx.routing_mode,
+	proxy_mode: ctx.proxy_mode,
+	ipv6_support: (ctx.ipv6_support === '1'),
+	uci: uci
+};
+if (!writeConfig('client', RUN_DIR + '/sing-box-c.json', config, plugin_ctx))
 	exit(1);
-}
-/*
- * Overwrite an existing config in place: the jailed sing-box has the file
- * bind-mounted, so after a rename a reload by SIGHUP would re-read the old
- * inode. In-place also keeps the owner the jailed process reads it as.
- */
-const client_conf = RUN_DIR + '/sing-box-c.json';
-if (access(client_conf))
-	system(`cat ${client_tmp} > ${client_conf} && rm -f ${client_tmp}`);
-else
-	system(`mv -f ${client_tmp} ${client_conf}`);
-system('chmod 600 ' + client_conf);

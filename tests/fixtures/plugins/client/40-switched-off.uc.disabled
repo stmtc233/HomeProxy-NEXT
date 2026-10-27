@@ -1,0 +1,7 @@
+'use strict';
+
+return {
+	client: function(config) {
+		unshift(config.route.rules, { domain_suffix: [ 'disabled.example' ], action: 'route', outbound: 'direct-out' });
+	}
+};
