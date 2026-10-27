@@ -1,6 +1,10 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "%d updated, %d already up to date, %d failed."
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/status.js:206
 msgid "%s log"
 msgstr ""
@@ -51,6 +55,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:654
 msgid "ACME profile for certificate issuance (1.14). Example: shortlived."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "All resources"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:703
@@ -2501,6 +2509,10 @@ msgstr ""
 msgid "Rule set URL"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "See the HomeProxy log below."
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:671
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1204
 #: htdocs/luci-static/resources/view/homeproxy/node.js:458
@@ -3201,6 +3213,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:770
 msgid "UDP timeout"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "Update all"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:124
