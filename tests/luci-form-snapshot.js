@@ -55,7 +55,7 @@ class Option {
 				continue;
 			props[key] = value;
 		}
-		return {
+		const json = {
 			kind: this.__kind,
 			name: this.__name,
 			title: this.__title,
@@ -64,7 +64,15 @@ class Option {
 			values: this.__values,
 			props: props
 		};
+		/* a SectionValue carries a whole form of its own */
+		if (this.subsection)
+			json.subsection = this.subsection.toJSON();
+		return json;
 	}
+
+	/* form.Flag values, so `o.default = o.enabled` shows up in the snapshot */
+	get enabled() { return this.__kind === 'Flag' ? '1' : undefined; }
+	get disabled() { return this.__kind === 'Flag' ? '0' : undefined; }
 }
 
 class Section {

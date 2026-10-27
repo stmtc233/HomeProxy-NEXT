@@ -53,6 +53,7 @@
 					"depends": [],
 					"values": [],
 					"props": {
+						"default": "1",
 						"editable": true,
 						"rmempty": false
 					}
