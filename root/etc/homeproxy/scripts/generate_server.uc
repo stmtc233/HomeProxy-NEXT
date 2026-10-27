@@ -12,7 +12,7 @@ import { cursor } from 'uci';
 
 import {
 	strToBool, strToInt, strToTime,
-	removeBlankAttrs, buildTLSObject, buildTransportObject, buildHysteria2Realm, HP_DIR, RUN_DIR
+	removeBlankAttrs, buildTLSObject, buildTransportObject, buildHysteria2Realm, DEFAULTS, HP_DIR, RUN_DIR
 } from 'homeproxy';
 
 const uci = cursor();
@@ -22,7 +22,7 @@ uci.load(uciconfig);
 
 const uciserver = 'server';
 
-const log_level = uci.get(uciconfig, uciserver, 'log_level') || 'warn';
+const log_level = uci.get(uciconfig, uciserver, 'log_level') || DEFAULTS.server.log_level;
 
 const config = {};
 

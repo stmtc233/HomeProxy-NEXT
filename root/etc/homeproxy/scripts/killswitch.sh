@@ -29,6 +29,7 @@
 
 HP_DIR="${HP_DIR:-/etc/homeproxy}"
 RUN_DIR="${RUN_DIR:-/var/run/homeproxy}"
+. "$(dirname "$0")/defaults.sh"
 LOG_PATH="$RUN_DIR/homeproxy.log"
 
 TABLE="homeproxy_killswitch"
@@ -46,7 +47,7 @@ routing_mode() {
 	if [ -n "$KS_ROUTING_MODE" ]; then
 		echo "$KS_ROUTING_MODE"
 	else
-		uci -q get homeproxy.config.routing_mode || echo "bypass_mainland_china"
+		uci -q get homeproxy.config.routing_mode || echo "$HP_DEFAULT_ROUTING_MODE"
 	fi
 }
 

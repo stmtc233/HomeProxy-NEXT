@@ -15,7 +15,7 @@ import { cursor } from 'uci';
 import { init_action } from 'luci.sys';
 
 import {
-	wGETVerbose, decodeBase64Str, getTime, isEmpty, shellQuote, HP_DIR, RUN_DIR
+	wGETVerbose, decodeBase64Str, getTime, isEmpty, shellQuote, DEFAULTS, HP_DIR, RUN_DIR
 } from 'homeproxy';
 
 import { parse_uri } from 'parse_uri';
@@ -30,18 +30,18 @@ const ucimain = 'config',
       ucisubscription = 'subscription';
 
 const allow_insecure = uci.get(uciconfig, ucisubscription, 'allow_insecure') || '0',
-      filter_mode = uci.get(uciconfig, ucisubscription, 'filter_nodes') || 'disabled',
+      filter_mode = uci.get(uciconfig, ucisubscription, 'filter_nodes') || DEFAULTS.subscription.filter_nodes,
       filter_keywords = uci.get(uciconfig, ucisubscription, 'filter_keywords') || [],
-      packet_encoding = uci.get(uciconfig, ucisubscription, 'packet_encoding') || 'xudp',
+      packet_encoding = uci.get(uciconfig, ucisubscription, 'packet_encoding') || DEFAULTS.subscription.packet_encoding,
       subscription_urls = uci.get(uciconfig, ucisubscription, 'subscription_url') || [],
       user_agent = uci.get(uciconfig, ucisubscription, 'user_agent'),
       via_proxy = uci.get(uciconfig, ucisubscription, 'update_via_proxy') || '0';
 
-const routing_mode = uci.get(uciconfig, ucimain, 'routing_mode') || 'bypass_mainland_china';
+const routing_mode = uci.get(uciconfig, ucimain, 'routing_mode') || DEFAULTS.config.routing_mode;
 let main_node, main_udp_node;
 if (routing_mode !== 'custom') {
-	main_node = uci.get(uciconfig, ucimain, 'main_node') || 'nil';
-	main_udp_node = uci.get(uciconfig, ucimain, 'main_udp_node') || 'nil';
+	main_node = uci.get(uciconfig, ucimain, 'main_node') || DEFAULTS.config.main_node;
+	main_udp_node = uci.get(uciconfig, ucimain, 'main_udp_node') || DEFAULTS.config.main_udp_node;
 }
 
 function filter_check(name) {

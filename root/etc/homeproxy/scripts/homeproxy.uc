@@ -10,6 +10,53 @@ import { urldecode_params } from 'luci.http';
 export const HP_DIR = '/etc/homeproxy';
 export const RUN_DIR = '/var/run/homeproxy';
 
+/*
+ * Fallbacks for options missing from /etc/config/homeproxy, shared by every
+ * ucode reader; scripts/defaults.sh holds the same values for the shell side
+ * (tests/ucode/test_defaults.sh checks that the two agree). A flag that is
+ * off when missing needs no entry here.
+ */
+export const DEFAULTS = {
+	config: {
+		routing_mode: 'bypass_mainland_china',
+		proxy_mode: 'redirect_tproxy',
+		main_node: 'nil',
+		main_udp_node: 'nil',
+		log_level: 'warn',
+		dashboard_listen: '0.0.0.0:9090'
+	},
+	routing: {
+		default_outbound: 'nil',
+		default_outbound_dns: 'default-dns',
+		tcpip_stack: 'system'
+	},
+	subscription: {
+		filter_nodes: 'disabled',
+		packet_encoding: 'xudp',
+		auto_update_time: '2'
+	},
+	server: {
+		log_level: 'warn'
+	},
+	infra: {
+		common_port: '22,53,80,143,443,465,587,853,873,993,995,8080,8443,9418',
+		mixed_port: '5330',
+		redirect_port: '5331',
+		tproxy_port: '5332',
+		dns_port: '5333',
+		dns_redirect: '1',
+		ntp_server: 'time.apple.com',
+		tun_name: 'singtun0',
+		tun_addr4: '172.19.0.1/30',
+		tun_addr6: 'fdfe:dcba:9876::1/126',
+		tun_mtu: '9000',
+		table_mark: '100',
+		self_mark: '100',
+		tproxy_mark: '101',
+		tun_mark: '102'
+	}
+};
+
 export function shellQuote(s) {
 	return `'${replace(s, "'", "'\\''")}'`;
 };
