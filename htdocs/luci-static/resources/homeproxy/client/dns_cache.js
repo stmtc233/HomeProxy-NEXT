@@ -39,7 +39,8 @@ return baseclass.extend({
 
 		so = ss.option(form.Flag, 'cache_file_store_dns', _('Store DNS cache'),
 			_('Persist DNS cache across restarts (replaces Store RDRC).'));
-		so.depends(Object.assign({ '!reverse': true }, custom));
+		/* the other modes run without a cache file (see generate_client.uc) */
+		so.depends('homeproxy.config.routing_mode', 'bypass_mainland_china');
 		so.depends(Object.assign({ disable_cache: '0' }, custom));
 		so.rmempty = false;
 	}
