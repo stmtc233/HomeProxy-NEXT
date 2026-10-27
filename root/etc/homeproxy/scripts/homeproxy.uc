@@ -13,8 +13,9 @@ export const RUN_DIR = '/var/run/homeproxy';
 /*
  * Fallbacks for options missing from /etc/config/homeproxy, shared by every
  * ucode reader; scripts/defaults.sh holds the same values for the shell side
- * (tests/ucode/test_defaults.sh checks that the two agree). A flag that is
- * off when missing needs no entry here.
+ * (tests/ucode/test_defaults.sh checks that the two agree). The infra values
+ * equal the shipped config, as nobody is meant to edit that section. A flag
+ * that is off when missing needs no entry here.
  */
 export const DEFAULTS = {
 	config: {
@@ -39,13 +40,13 @@ export const DEFAULTS = {
 		log_level: 'warn'
 	},
 	infra: {
-		common_port: '22,53,80,143,443,465,587,853,873,993,995,8080,8443,9418',
+		common_port: '22,53,80,143,443,465,587,853,873,993,995,5222,8080,8443,9418',
 		mixed_port: '5330',
 		redirect_port: '5331',
 		tproxy_port: '5332',
 		dns_port: '5333',
 		dns_redirect: '1',
-		ntp_server: 'time.apple.com',
+		ntp_server: 'nil',
 		tun_name: 'singtun0',
 		tun_addr4: '172.19.0.1/30',
 		tun_addr6: 'fdfe:dcba:9876::1/126',
