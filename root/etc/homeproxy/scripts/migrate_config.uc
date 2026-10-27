@@ -25,7 +25,6 @@ const uciinfra = 'infra',
       ucirouting = 'routing',
       uciroutingnode = 'routing_node',
       uciroutingrule = 'routing_rule',
-      uciruleset = 'ruleset',
       uciserver = 'server';
 
 if (uci.get(uciconfig, uciinfra, 'china_dns_port'))
@@ -60,30 +59,6 @@ const migration_crontab = uci.get(uciconfig, ucimigration, 'crontab');
 if (!migration_crontab) {
 	system('sed -i "/update_crond.sh/d" "/etc/crontabs/root" 2>/dev/null');
 	uci.set(uciconfig, ucimigration, 'crontab', '1');
-}
-
-/*
- * The CN rule-sets kept in resources/, offered to the custom routing mode
- * (disabled, as sing-box loads every enabled rule-set). Added once, so a
- * deleted one stays deleted; the shipped config carries the same sections.
- */
-if (!uci.get(uciconfig, ucimigration, 'preset_rulesets')) {
-	const preset_rulesets = {
-		geoip_cn: [ 'GeoIP CN', 'https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set/geoip-cn.srs' ],
-		geosite_cn: [ 'GeoSite CN', 'https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-geolocation-cn.srs' ]
-	};
-	for (let name, rs in preset_rulesets) {
-		if (uci.get(uciconfig, name))
-			continue;
-		uci.set(uciconfig, name, uciruleset);
-		uci.set(uciconfig, name, 'label', rs[0]);
-		uci.set(uciconfig, name, 'enabled', '0');
-		uci.set(uciconfig, name, 'type', 'remote');
-		uci.set(uciconfig, name, 'format', 'binary');
-		uci.set(uciconfig, name, 'url', rs[1]);
-		uci.set(uciconfig, name, 'initial_path', `/etc/homeproxy/resources/${name}.srs`);
-	}
-	uci.set(uciconfig, ucimigration, 'preset_rulesets', '1');
 }
 
 if (isEmpty(uci.get(uciconfig, ucimain, 'log_level')))
