@@ -49,7 +49,7 @@ jobs:
           for f in htdocs/luci-static/resources/homeproxy.js \
             htdocs/luci-static/resources/view/homeproxy/*.js \
             htdocs/luci-static/resources/homeproxy/client/*.js \
-            tests/luci-form-snapshot.js tests/frontend-md5.js tests/frontend-status.js; do
+            tests/luci-form-snapshot.js tests/frontend-*.js; do
             [ -f "$f" ] || continue
             node --check "$f"
           done

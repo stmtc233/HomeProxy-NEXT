@@ -7,7 +7,6 @@
 'use strict';
 'require baseclass';
 'require form';
-'require uci';
 
 'require homeproxy as hp';
 'require homeproxy.client.common as common';
@@ -344,38 +343,17 @@ return baseclass.extend({
 
 		so = ss.option(form.ListValue, 'default_outbound', _('Default outbound'),
 			_('Default outbound for connections not matched by any routing rules.'));
-		so.load = function(section_id) {
-			delete this.keylist;
-			delete this.vallist;
-
-			this.value('nil', _('Disable (the service)'));
-			this.value('direct-out', _('Direct'));
-			this.value('block-out', _('Block'));
-			uci.sections(uciconfig, 'routing_node', (res) => {
-				if (res.enabled === '1')
-					this.value(res['.name'], res.label);
-			});
-
-			return this.super('load', section_id);
-		}
+		so.load = common.loadSectionChoices(uciconfig, 'routing_node', {
+			'nil': _('Disable (the service)'),
+			'direct-out': _('Direct'),
+			'block-out': _('Block')
+		});
 		so.default = 'nil';
 		so.rmempty = false;
 
 		so = ss.option(form.ListValue, 'default_outbound_dns', _('Default outbound DNS'),
 			_('Default DNS server for resolving domain name in the server address.'));
-		so.load = function(section_id) {
-			delete this.keylist;
-			delete this.vallist;
-
-			this.value('default-dns', _('Default DNS (issued by WAN)'));
-			this.value('system-dns', _('System DNS'));
-			uci.sections(uciconfig, 'dns_server', (res) => {
-				if (res.enabled === '1')
-					this.value(res['.name'], res.label);
-			});
-
-			return this.super('load', section_id);
-		}
+		so.load = common.loadSectionChoices(uciconfig, 'dns_server', common.builtinDnsServers());
 		so.default = 'default-dns';
 		so.rmempty = false;
 	}

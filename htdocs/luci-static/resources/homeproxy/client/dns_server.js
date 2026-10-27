@@ -8,7 +8,6 @@
 'require baseclass';
 'require form';
 'require uci';
-'require ui';
 
 'require homeproxy as hp';
 'require homeproxy.client.common as common';
@@ -125,46 +124,8 @@ return baseclass.extend({
 
 		so = ss.option(form.ListValue, 'address_resolver', _('Address resolver'),
 			_('Tag of a another server to resolve the domain name in the address. Required if address contains domain.'));
-		so.renderWidget = function(section_id, option_index, cfgvalue) {
-			let choices = {
-				'': _('None'),
-				'default-dns': _('Default DNS (issued by WAN)'),
-				'system-dns': _('System DNS')
-			};
-			let sort = ['', 'default-dns', 'system-dns'];
-
-			uci.sections(uciconfig, 'dns_server', (res) => {
-				if (res['.name'] !== section_id && res.enabled === '1') {
-					choices[res['.name']] = res.label || res['.name'];
-					sort.push(res['.name']);
-				}
-			});
-
-			let widget = new ui.Select((cfgvalue != null) ? cfgvalue : this.default, choices, {
-				id: this.cbid(section_id),
-				size: this.size,
-				sort: sort,
-				widget: this.widget,
-				optional: this.optional,
-				orientation: this.orientation,
-				placeholder: this.placeholder,
-				validate: L.bind(this.validate, this, section_id),
-				disabled: (this.readonly != null) ? this.readonly : this.map.readonly
-			});
-
-			return widget.render();
-		};
-		so.textvalue = function(section_id) {
-			let val = this.cfgvalue(section_id);
-			if (!val)
-				return _('None');
-			if (val === 'default-dns')
-				return _('Default DNS (issued by WAN)');
-			if (val === 'system-dns')
-				return _('System DNS');
-			let target = uci.get(uciconfig, val);
-			return target ? (target.label || target['.name']) : val;
-		};
+		common.bindSectionSelect(so, uciconfig, 'dns_server',
+			Object.assign({ '': _('None') }, common.builtinDnsServers()), true);
 		so.validate = function(section_id, value) {
 			if (section_id && value) {
 				let conflict = false;
@@ -197,51 +158,7 @@ return baseclass.extend({
 		so.retain = true;
 		for (let t of [...dns_remote_types, 'dhcp'])
 			so.depends('type', t);
-		so.renderWidget = function(section_id, option_index, cfgvalue) {
-			let choices = { 'direct-out': _('Direct') };
-			let sort = ['direct-out'];
-
-			uci.sections(uciconfig, 'routing_node', (res) => {
-				if (res.enabled === '1') {
-					choices[res['.name']] = res.label || res['.name'];
-					sort.push(res['.name']);
-				}
-			});
-
-			let widget = new ui.Select((cfgvalue != null) ? cfgvalue : this.default, choices, {
-				id: this.cbid(section_id),
-				size: this.size,
-				sort: sort,
-				widget: this.widget,
-				optional: this.optional,
-				orientation: this.orientation,
-				placeholder: this.placeholder,
-				validate: L.bind(this.validate, this, section_id),
-				disabled: (this.readonly != null) ? this.readonly : this.map.readonly
-			});
-
-			return widget.render();
-		};
-		so.textvalue = function(section_id) {
-			let val = this.cfgvalue(section_id);
-			if (!val || val === 'direct-out')
-				return _('Direct');
-			let target = uci.get(uciconfig, val);
-			return target ? (target.label || target['.name']) : val;
-		};
-		so.write = function(section_id, formvalue) {
-			let res = this.super('write', section_id, formvalue);
-			if (this.map && this.map.parent) {
-				let node = this.map.parent.findElement('id', this.cbid(section_id));
-				if (node) {
-					let select = node.querySelector('select');
-					if (select) {
-						select.value = formvalue;
-						select.dispatchEvent(new Event('change'));
-					}
-				}
-			}
-			return res;
-		};
+		common.bindSectionSelect(so, uciconfig, 'routing_node', { 'direct-out': _('Direct') });
+		so.write = common.writeAndSyncSelect;
 	}
 });

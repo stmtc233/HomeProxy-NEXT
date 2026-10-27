@@ -49,6 +49,9 @@ jobs:
       - name: Check the service status helpers
         run: node tests/frontend-status.js .
 
+      - name: Check the client tab select helpers
+        run: node tests/frontend-client-common.js .
+
   ucode:
     runs-on: ubuntu-latest
     steps:

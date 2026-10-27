@@ -7,10 +7,9 @@
 'use strict';
 'require baseclass';
 'require form';
-'require uci';
-'require ui';
 
 'require homeproxy as hp';
+'require homeproxy.client.common as common';
 
 return baseclass.extend({
 	render(s, ctx) {
@@ -87,43 +86,7 @@ return baseclass.extend({
 		so = ss.option(form.ListValue, 'outbound', _('Outbound'),
 			_('Outbound used to download this rule-set (via sing-box 1.14 http_clients).'));
 		so.depends('type', 'remote');
-		so.renderWidget = function(section_id, option_index, cfgvalue) {
-			let choices = {
-				'': _('Default'),
-				'direct-out': _('Direct')
-			};
-			let sort = ['', 'direct-out'];
-
-			uci.sections(uciconfig, 'routing_node', (res) => {
-				if (res.enabled === '1') {
-					choices[res['.name']] = res.label || res['.name'];
-					sort.push(res['.name']);
-				}
-			});
-
-			let widget = new ui.Select((cfgvalue != null) ? cfgvalue : this.default, choices, {
-				id: this.cbid(section_id),
-				size: this.size,
-				sort: sort,
-				widget: this.widget,
-				optional: this.optional,
-				orientation: this.orientation,
-				placeholder: this.placeholder,
-				validate: L.bind(this.validate, this, section_id),
-				disabled: (this.readonly != null) ? this.readonly : this.map.readonly
-			});
-
-			return widget.render();
-		};
-		so.textvalue = function(section_id) {
-			let val = this.cfgvalue(section_id);
-			if (!val)
-				return _('Default');
-			if (val === 'direct-out')
-				return _('Direct');
-			let target = uci.get(uciconfig, val);
-			return target ? (target.label || target['.name']) : val;
-		};
+		common.bindSectionSelect(so, uciconfig, 'routing_node', { '': _('Default'), 'direct-out': _('Direct') });
 
 		so = ss.option(form.Value, 'initial_path', _('Initial path'),
 			_('Local file with initial rule-set content; avoids blocking startup on first download (1.14).'));

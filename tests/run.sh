@@ -27,7 +27,7 @@ for target in node client server; do
 	fi
 done
 
-for check in md5 status; do
+for check in md5 status client-common; do
 	echo "== frontend $check =="
 	if node "$ROOT/tests/frontend-$check.js" "$ROOT"; then
 		echo "PASS: frontend $check"

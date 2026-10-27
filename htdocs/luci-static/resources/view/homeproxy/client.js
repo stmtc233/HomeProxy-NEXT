@@ -62,14 +62,12 @@ return view.extend({
 		    hosts = data[2]?.hosts;
 
 		let subinfo = [];
-		let submap = {};
 		for (let suburl of (uci.get(data[0], 'subscription', 'subscription_url') || [])) {
 			try {
 				const url = new URL(suburl);
 				const urlhash = hp.calcStringMD5(suburl.replace(/#.*$/, ''));
 				const title = url.hash ? decodeURIComponent(url.hash.slice(1)) : url.hostname;
 				subinfo.push({ hash: urlhash, title: title });
-				submap[urlhash] = title;
 			} catch(e) {}
 		}
 

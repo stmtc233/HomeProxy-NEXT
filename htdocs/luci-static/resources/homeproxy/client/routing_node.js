@@ -8,9 +8,9 @@
 'require baseclass';
 'require form';
 'require uci';
-'require ui';
 
 'require homeproxy as hp';
+'require homeproxy.client.common as common';
 'require tools.widgets as widgets';
 
 return baseclass.extend({
@@ -51,20 +51,7 @@ return baseclass.extend({
 
 		so = ss.option(form.ListValue, 'domain_resolver', _('Domain resolver'),
 			_('For resolving domain name in the server address.'));
-		so.load = function(section_id) {
-			delete this.keylist;
-			delete this.vallist;
-
-			this.value('', _('Default'));
-			this.value('default-dns', _('Default DNS (issued by WAN)'));
-			this.value('system-dns', _('System DNS'));
-			uci.sections(uciconfig, 'dns_server', (res) => {
-				if (res.enabled === '1')
-					this.value(res['.name'], res.label);
-			});
-
-			return this.super('load', section_id);
-		}
+		so.load = common.loadSectionChoices(uciconfig, 'dns_server', Object.assign({ '': _('Default') }, common.builtinDnsServers()));
 		so.depends({'node': 'urltest', '!reverse': true});
 		so.modalonly = true;
 
@@ -84,38 +71,7 @@ return baseclass.extend({
 
 		so = ss.option(form.ListValue, 'outbound', _('Outbound'),
 			_('The tag of the upstream outbound.<br/>Other dial fields will be ignored when enabled.'));
-		so.renderWidget = function(section_id, option_index, cfgvalue) {
-			let choices = { '': _('Direct') };
-			let sort = [''];
-
-			uci.sections(uciconfig, 'routing_node', (res) => {
-				if (res['.name'] !== section_id && res.enabled === '1') {
-					choices[res['.name']] = res.label || res['.name'];
-					sort.push(res['.name']);
-				}
-			});
-
-			let widget = new ui.Select((cfgvalue != null) ? cfgvalue : this.default, choices, {
-				id: this.cbid(section_id),
-				size: this.size,
-				sort: sort,
-				widget: this.widget,
-				optional: this.optional,
-				orientation: this.orientation,
-				placeholder: this.placeholder,
-				validate: L.bind(this.validate, this, section_id),
-				disabled: (this.readonly != null) ? this.readonly : this.map.readonly
-			});
-
-			return widget.render();
-		};
-		so.textvalue = function(section_id) {
-			let val = this.cfgvalue(section_id);
-			if (!val)
-				return _('Direct');
-			let target = uci.get(uciconfig, val);
-			return target ? (target.label || target['.name']) : val;
-		};
+		common.bindSectionSelect(so, uciconfig, 'routing_node', { '': _('Direct') }, true);
 		so.validate = function(section_id, value) {
 			if (section_id && value) {
 				let node = this.section.formvalue(section_id, 'node');
