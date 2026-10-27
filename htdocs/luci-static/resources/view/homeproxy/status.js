@@ -58,17 +58,19 @@ function getConnStat(o, site) {
 	]);
 }
 
+const callResUpdate = rpc.declare({
+	object: 'luci.homeproxy',
+	method: 'resources_update',
+	params: ['type'],
+	expect: { '': {} }
+});
+
+const resourceTypes = [ 'china_ip4', 'china_ip6', 'china_list', 'gfw_list', 'geoip_cn', 'geosite_cn' ];
+
 function getResVersion(o, type) {
 	const callResVersion = rpc.declare({
 		object: 'luci.homeproxy',
 		method: 'resources_get_version',
-		params: ['type'],
-		expect: { '': {} }
-	});
-
-	const callResUpdate = rpc.declare({
-		object: 'luci.homeproxy',
-		method: 'resources_update',
 		params: ['type'],
 		expect: { '': {} }
 	});
@@ -268,6 +270,30 @@ function renderBackup() {
 	]);
 }
 
+/*
+ * One resource after another, as one update script call can take a while.
+ * Like the scheduled update, apply the new lists (dnsmasq + fw4) only while
+ * the client runs: refresh_lists would otherwise set up its firewall rules.
+ */
+function updateAllResources(o) {
+	const counts = { 0: 0, 3: 0, failed: 0 };
+	let chain = Promise.resolve();
+
+	for (let type of resourceTypes)
+		chain = chain.then(() => L.resolveDefault(callResUpdate(type), {})).then((res) => {
+			counts[(res.status === 0 || res.status === 3) ? res.status : 'failed']++;
+		});
+
+	return chain.then(() => counts[0] ? hp.getServiceStatus('sing-box-c') : false).then((running) => {
+		if (running)
+			return fs.exec('/etc/init.d/homeproxy', ['refresh_lists']);
+	}).then(() => {
+		o.description = _('%d updated, %d already up to date, %d failed.').format(counts[0], counts[3], counts.failed) +
+			(counts.failed ? ' ' + _('See the HomeProxy log below.') : '');
+		return o.map.reset();
+	});
+}
+
 function getRuntimeLog(o, name, _option_index, section_id, _in_table) {
 	const filename = o.option.split('_')[1];
 
@@ -395,6 +421,15 @@ return view.extend({
 
 		s = m.section(form.NamedSection, 'config', 'homeproxy', _('Resources management'));
 		s.anonymous = true;
+
+		o = s.option(form.DummyValue, '_update_all', _('All resources'));
+		o.cfgvalue = function() {
+			return E('button', {
+				'class': 'btn cbi-button cbi-button-action',
+				'click': ui.createHandlerFn(this, updateAllResources, this)
+			}, [ _('Update all') ]);
+		};
+		o.rawhtml = true;
 
 		o = s.option(form.DummyValue, '_china_ip4_version', _('China IPv4 list version'));
 		o.cfgvalue = L.bind(getResVersion, this, o, 'china_ip4');
