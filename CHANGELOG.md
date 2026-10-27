@@ -11,6 +11,8 @@ HomeProxy NEXT 的版本号沿用 `27.919.1.14-rN`（`Makefile` 中的 `PKG_VERS
 | **规则列表更新** | 下载依次尝试 fastly / gcore / cdn.jsdelivr 与 raw.githubusercontent.com 四个地址（同一 commit，内容一致），不再因单一 CDN 不可达而更新失败；日志记录实际使用的镜像 |
 | **状态栏** | 客户端与服务端状态增加黄色“状态未知”：查询失败（重启过程中、登录过期）时不再误报“未运行”；两个页面改用 `homeproxy.js` 中共用的状态函数 |
 | **订阅分组** | 修复前端 MD5 对 emoji 等 BMP 以外字符计算错误：订阅 URL 含 emoji 时，前端写入的 `sub_<hash>` 分组与后端对不上，会被订阅更新当作“已删除”清掉 |
+| **自定义插件** | 新增「自定义插件」页面：在 `/etc/homeproxy/custom/` 放 ucode 小脚本修改生成的 sing-box 配置，升级不覆盖、刷固件保留；界面可新增 / 编辑 / 启停 / 删除，与直接改文件同步。单个插件出错会被跳过；加上插件后配置通不过检查时，按不带插件的配置启动 |
+| **缺省值** | 配置项缺省时的兜底值集中到 `homeproxy.uc` 的 `DEFAULTS`（sh 侧镜像在 `scripts/defaults.sh`）。`infra` 段的兜底值改为与出厂配置一致：缺少 `ntp_server` 时不再默认启用 time.apple.com 的 NTP（与迁移脚本一致），缺少 `common_port` 时的“常用端口”补上 5222 |
 
 ## r14 – r29
 

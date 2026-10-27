@@ -22,6 +22,7 @@ config homeproxy 'dns'
 	option default_server 'ds_main'
 
 config homeproxy 'infra'
+	option ntp_server 'time.apple.com'
 	option mixed_port '5330'
 	option dns_port '5333'
 	option redirect_port '5331'

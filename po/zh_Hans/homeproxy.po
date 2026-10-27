@@ -90,6 +90,14 @@ msgstr "访问密钥"
 msgid "Action"
 msgstr "操作"
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Actions"
+msgstr "操作"
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Active on the %s"
+msgstr "%s已生效"
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1149
 msgid "Add a DNS rule"
 msgstr "新增 DNS 规则"
@@ -101,6 +109,10 @@ msgstr "新增 DNS 服务器"
 #: htdocs/luci-static/resources/view/homeproxy/node.js:416
 msgid "Add a node"
 msgstr "新增节点"
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Add a plugin"
+msgstr "新增插件"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:453
 msgid "Add a routing node"
@@ -385,6 +397,10 @@ msgstr "取消"
 msgid "Certificate path"
 msgstr "证书路径"
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Changed, not applied yet"
+msgstr "已修改，尚未应用"
+
 #: htdocs/luci-static/resources/view/homeproxy/status.js:57
 msgid "Check"
 msgstr "检查"
@@ -472,6 +488,10 @@ msgstr "连接复用"
 #: htdocs/luci-static/resources/view/homeproxy/node.js:639
 msgid "Conservative"
 msgstr "保守"
+
+#: root/usr/share/luci/menu.d/luci-app-homeproxy.json
+msgid "Custom Plugins"
+msgstr "自定义插件"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:255
 msgid "Custom routing"
@@ -585,6 +605,14 @@ msgstr "默认服务器名称"
 msgid "Default timeout per DNS query in seconds (sing-box default: 10)."
 msgstr "每次 DNS 查询的默认超时时间（秒，sing-box 默认为 10）。"
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Delete"
+msgstr "删除"
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Delete the plugin %s?"
+msgstr "确定删除插件 %s？"
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:412
 #: htdocs/luci-static/resources/view/homeproxy/client.js:514
 #: htdocs/luci-static/resources/view/homeproxy/client.js:732
@@ -691,6 +719,10 @@ msgstr "禁用乐观缓存"
 #: htdocs/luci-static/resources/view/homeproxy/client.js:309
 msgid "Disabled"
 msgstr "禁用"
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Disabled, still active until applied"
+msgstr "已停用（应用之前仍在生效）"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:892
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1395
@@ -828,9 +860,17 @@ msgstr "前置数据标头"
 msgid "Early data is sent in path instead of header by default."
 msgstr "前置数据默认发送在路径而不是标头中。"
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Edit"
+msgstr "编辑"
+
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1297
 msgid "Edit nodes"
 msgstr "修改节点"
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Edit plugin %s"
+msgstr "编辑插件 %s"
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:628
 msgid "Email"
@@ -928,6 +968,10 @@ msgstr "端点无关"
 msgid "Error"
 msgstr "错误"
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Error on the %s: %s"
+msgstr "%s出错：%s"
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1240
 msgid "Evaluate (1.14)"
 msgstr "Evaluate（1.14）"
@@ -999,9 +1043,21 @@ msgstr ""
 msgid "Extra tags"
 msgstr "额外标签"
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Failed to change plugin %s: %s"
+msgstr "修改插件 %s 失败：%s"
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Failed to delete plugin %s: %s"
+msgstr "删除插件 %s 失败：%s"
+
 #: htdocs/luci-static/resources/view/homeproxy/server.js:86
 msgid "Failed to generate %s, error: %s."
 msgstr "生成 %s 失败，错误：%s。"
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Failed to read plugin %s: %s"
+msgstr "读取插件 %s 失败：%s"
 
 #: htdocs/luci-static/resources/homeproxy.js:261
 msgid "Failed to upload %s, error: %s."
@@ -1010,6 +1066,10 @@ msgstr "上传 %s 失败，错误：%s。"
 #: htdocs/luci-static/resources/view/homeproxy/status.js:140
 msgid "Fatal"
 msgstr "致命"
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "File"
+msgstr "文件"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1460
 msgid "Filter keywords"
@@ -1855,6 +1915,10 @@ msgstr "注意：更新订阅前先保存当前配置。"
 msgid "NS"
 msgstr "NS"
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Name"
+msgstr "名称"
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:310
 #: htdocs/luci-static/resources/view/homeproxy/node.js:750
 msgid "Native"
@@ -1885,6 +1949,14 @@ msgstr "无 TCP 传输层, 纯 HTTP 已合并到 HTTP 传输层。"
 #: htdocs/luci-static/resources/view/homeproxy/server.js:431
 msgid "No additional encryption support: It's basically duplicate encryption."
 msgstr "无额外加密支持：它基本上是重复加密。"
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "No client() or server() function"
+msgstr "没有 client() 或 server() 函数"
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "No plugins yet."
+msgstr "还没有插件。"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1498
 msgid "No subscription available"
@@ -1918,6 +1990,10 @@ msgstr "节点"
 #: htdocs/luci-static/resources/view/homeproxy/server.js:417
 msgid "None"
 msgstr "无"
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Not applied yet"
+msgstr "尚未应用"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:602
 #: htdocs/luci-static/resources/view/homeproxy/server.js:297
@@ -2077,6 +2153,10 @@ msgstr "插件"
 #: htdocs/luci-static/resources/view/homeproxy/node.js:676
 msgid "Plugin opts"
 msgstr "插件参数"
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Plugins run in the order of their names, e.g. 10-first, 20-second."
+msgstr "插件按名称顺序运行，例如 10-first、20-second。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:935
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1055
@@ -2309,6 +2389,14 @@ msgstr "区域 ID"
 msgid "Reject"
 msgstr "拒绝"
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Reload failed (exit code %d), see the HomeProxy log on the Service Status page."
+msgstr "重载失败（退出码 %d），请在“服务状态”页查看 HomeProxy 日志。"
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Reload failed: %s"
+msgstr "重载失败：%s"
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1498
 msgid "Remote"
 msgstr "远程"
@@ -2408,6 +2496,10 @@ msgstr "重写 TTL"
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1272
 msgid "Rewrite TTL in DNS responses."
 msgstr "在 DNS 响应中重写 TTL。"
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Rolled back on the %s: the config failed sing-box check"
+msgstr "%s已撤回：配置未通过 sing-box 检查"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:718
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1236
@@ -2558,6 +2650,10 @@ msgstr ""
 "持 53 端口。OpenWrt 下这会与本插件自身的 dnsmasq/nftables DNS 劫持叠加，网关"
 "建议保持 Disabled，除非需要 sing-box 全权接管 TUN 内 DNS。"
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Small ucode scripts that change the generated sing-box configuration, kept in <code>/etc/homeproxy/custom/</code>, which upgrades leave alone. <code>name.uc</code> is enabled, <code>name.uc.disabled</code> disabled; files edited over SSH show up here as well. Changes take effect after Apply (or <code>/etc/init.d/homeproxy reload</code>).<br/>A plugin runs as root with full access to the router; only add code you understand."
+msgstr "用来修改生成的 sing-box 配置的 ucode 小脚本，存放在 <code>/etc/homeproxy/custom/</code>，升级不会覆盖。<code>name.uc</code> 为启用，<code>name.uc.disabled</code> 为停用；通过 SSH 修改的文件也会显示在这里。改动在点击“应用”（或执行 <code>/etc/init.d/homeproxy reload</code>）后生效。<br/>插件以 root 身份运行，可以完全控制路由器，请只添加你看得懂的代码。"
+
 #: htdocs/luci-static/resources/view/homeproxy/server.js:185
 msgid "Snell (1.14)"
 msgstr "Snell（1.14）"
@@ -2687,6 +2783,10 @@ msgstr "抢先查询"
 #: htdocs/luci-static/resources/view/homeproxy/node.js:638
 msgid "Standard (default)"
 msgstr "标准（默认）"
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "Status"
+msgstr "状态"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1010
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1751
@@ -2907,6 +3007,10 @@ msgstr ""
 "功。用于 ACME TLS-ALPN 质询的备用端口； 系统必须将 443 转发到此端口以使质询成"
 "功。"
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "The client config failed sing-box check with the plugins applied, so it runs without them:"
+msgstr "客户端配置加上插件后未通过 sing-box 检查，当前按不带插件的配置运行："
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:644
 msgid ""
 "The default rule uses the following matching logic:<br/><code>(domain || "
@@ -3020,6 +3124,10 @@ msgstr "PEM 格式的 ECH 配置路径。如果为空，将尝试从 DNS 加载�
 msgid "The path to the server certificate, in PEM format."
 msgstr "服务端证书路径，需要 PEM 格式。"
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "The plugins changed since the last run. Apply to regenerate the configuration."
+msgstr "插件在上次运行后有改动，点击“应用”重新生成配置。"
+
 #: htdocs/luci-static/resources/view/homeproxy/server.js:200
 msgid "The port must be unique."
 msgstr "必须是唯一端口。"
@@ -3032,6 +3140,10 @@ msgstr "DNS 服务器的端口。"
 msgid "The pre-shared key (password) above must be 12-255 bytes for v6."
 msgstr "v6 下，上方的预共享密钥（密码）长度须为 12-255 字节。"
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "The reload is taking a while and goes on in the background."
+msgstr "重载耗时较长，正在后台继续进行。"
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1360
 msgid "The response code."
 msgstr "响应代码。"
@@ -3039,6 +3151,10 @@ msgstr "响应代码。"
 #: htdocs/luci-static/resources/view/homeproxy/client.js:64
 msgid "The restart is taking a while and goes on in the background."
 msgstr "重启耗时较长，正在后台继续进行。"
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "The server config failed sing-box check with the plugins applied, so it runs without them:"
+msgstr "服务端配置加上插件后未通过 sing-box 检查，当前按不带插件的配置运行："
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:815
 msgid "The server private key, in PEM format."
@@ -3406,10 +3522,18 @@ msgstr "您的 %s 已成功上传。大小：%sB。"
 msgid "ZeroSSL"
 msgstr "ZeroSSL"
 
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "a name of letters, digits, - and _ (up to 64)"
+msgstr "由字母、数字、- 和 _ 组成的名称（最多 64 个字符）"
+
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1176
 #: htdocs/luci-static/resources/view/homeproxy/server.js:811
 msgid "certificate"
 msgstr "证书"
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "client"
+msgstr "客户端"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:764
 msgid "connect UDP connections"
@@ -3487,6 +3611,10 @@ msgstr "私钥"
 #: htdocs/luci-static/resources/view/homeproxy/client.js:679
 msgid "quic-go / uquic chrome"
 msgstr "quic-go / uquic chrome"
+
+#: htdocs/luci-static/resources/view/homeproxy/plugins.js
+msgid "server"
+msgstr "服务端"
 
 #: htdocs/luci-static/resources/view/homeproxy/status.js:285
 msgid "sing-box client"

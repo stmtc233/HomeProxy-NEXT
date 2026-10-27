@@ -30,18 +30,19 @@
 
 | 路径 | 语言 | 作用 |
 | --- | --- | --- |
-| `htdocs/luci-static/resources/view/homeproxy/{client,node,server,status}.js` | LuCI JS | 四个设置页面（客户端 / 节点 / 服务端 / 状态） |
+| `htdocs/luci-static/resources/view/homeproxy/{client,node,server,plugins,status}.js` | LuCI JS | 设置页面（客户端 / 节点 / 服务端 / 自定义插件 / 状态） |
+| `htdocs/luci-static/resources/homeproxy/client/*.js` | LuCI JS | 客户端页面的各个 tab，一个 tab 一个文件（文件名即 tab id），各自导出 `render(s, ctx)`；`common.js` 放这些 tab 共用的小工具 |
 | `htdocs/luci-static/resources/homeproxy.js` | LuCI JS | 前端共享模块：TLS / 传输层表单、校验器、证书上传等 |
 | `root/etc/homeproxy/scripts/generate_client.uc` | ucode | 客户端配置生成入口：按固定顺序拼装各部分，`sing-box check` 后写出 `sing-box-c.json` |
 | `root/etc/homeproxy/scripts/client/context.uc` | ucode | 一次性读取 UCI，生成 `ctx`：配置项、各类 tag 映射、需要 uci 的查询（`ctx.get_outbound()` 等），以及共享状态（`direct_overrides`、`http_clients`） |
 | `root/etc/homeproxy/scripts/client/{dns,inbounds,outbounds,route}.uc` | ucode | 各自导出 `build(ctx)`，生成配置中对应的一节；`common.uc` 放纯解析函数和 `rule_match_fields()` |
 | `root/etc/homeproxy/scripts/generate_server.uc` | ucode | UCI → `sing-box-s.json` |
-| `root/etc/homeproxy/scripts/homeproxy.uc` | ucode | 后端共享模块：命令执行、wget、URL/Base64 解析、TLS/传输层对象构建、校验 |
+| `root/etc/homeproxy/scripts/homeproxy.uc` | ucode | 后端共享模块：缺省值 `DEFAULTS`、命令执行、wget、URL/Base64 解析、TLS/传输层对象构建、校验，以及插件运行和配置写出（`writeConfig()`：执行插件 → `sing-box check` → 写入） |
 | `root/etc/homeproxy/scripts/parse_uri.uc` | ucode | 分享链接解析（每个协议一个函数） |
 | `root/etc/homeproxy/scripts/update_subscriptions.uc` | ucode | 订阅拉取、校验、入库 |
 | `root/etc/homeproxy/scripts/migrate_config.uc` | ucode | 升级时的 UCI 迁移（由 `uci-defaults/luci-homeproxy-migration` 调用） |
 | `root/etc/homeproxy/scripts/firewall_post.ut` | ucode 模板 | 生成 fw4 nft 规则 |
-| `root/etc/homeproxy/scripts/*.sh` | POSIX sh | kill switch、fw4 名称清单、资源更新、日志清理 |
+| `root/etc/homeproxy/scripts/*.sh` | POSIX sh | kill switch、fw4 名称清单、缺省值（`defaults.sh`）、资源更新、日志清理 |
 | `root/etc/init.d/homeproxy` | POSIX sh (procd) | 启动 / 停止 / 重载，jail 配置，dnsmasq 与 fw4 接入 |
 | `root/usr/share/rpcd/ucode/luci.homeproxy` | ucode | 前端调用的 rpcd 接口（导入导出、证书、生成器、资源更新） |
 | `root/etc/config/homeproxy` | UCI | 默认配置 |
@@ -51,11 +52,16 @@
 
 数据流：**LuCI 表单 → UCI → `generate_*.uc` → sing-box JSON → `sing-box check` → procd 启动**；防火墙走 `firewall_post.ut` → fw4 include。
 
+## 个人定制：写插件，不改生成器
+
+用户想要的个人定制（加几条规则、改某个字段、加一个出站……），**先考虑写成插件**，放在路由器的 `/etc/homeproxy/custom/<name>.uc`（格式见 README 的“自定义插件”一节），不要改 `scripts/` 下的生成器：生成器属于安装包，升级会覆盖。插件只依赖 sing-box 1.14 的配置格式，不依赖本仓库的内部结构。只有对所有用户都有用、且符合“化繁为简”的功能，才进生成器和界面。
+
 ## 编码约定
 
 - 缩进用 **Tab**，沿用所在文件的风格和命名。
 - ucode 文件以 `'use strict';` 开头；ucode **不做变量提升**，使用前必须先声明（r12 和 r18 都栽在这里）。
 - `client/` 下的模块用相对路径引用上级模块（`'../homeproxy.uc'`）：裸模块名是相对**当前文件所在目录**解析的。新增配置项读进 `context.uc` 的 `ctx`，不要在各 `build()` 里直接 `uci.get` 全局设置。
+- 配置项缺省时的兜底值不要写成字面量：总表是 `homeproxy.uc` 的 `DEFAULTS`，ucode 直接读它；sh 用到的项在 `scripts/defaults.sh` 里以 `HP_DEFAULT_<OPTION>` 镜像一份，`tests/ucode/test_defaults.sh` 检查两边一致，`tests/frontend-defaults.js` 检查表单的 `o.default` 与它一致。缺省即关闭的开关不进表。
 - 拼装顺序有依赖：`outbounds` 必须在 `route` 之前构建（后者读取前者记录的直连节点 override）。
 - `init.d` 和 `scripts/*.sh` 在路由器上由 busybox `/bin/sh` 执行，只能写 **POSIX sh**，不要用 bash 语法。
 - LuCI 视图用 `'require ...'` 引入依赖，用到 `ui` 等模块时别漏了 require。
@@ -82,7 +88,7 @@
 ```sh
 # 语法检查
 for f in root/etc/init.d/homeproxy root/etc/homeproxy/scripts/*.sh tests/*.sh tests/ucode/*.sh; do sh -n "$f"; done
-for f in htdocs/luci-static/resources/homeproxy.js htdocs/luci-static/resources/view/homeproxy/*.js; do node --check "$f"; done
+for f in htdocs/luci-static/resources/homeproxy.js htdocs/luci-static/resources/view/homeproxy/*.js htdocs/luci-static/resources/homeproxy/client/*.js; do node --check "$f"; done
 
 # LuCI 表单快照（只需要 node）
 for v in node client server; do

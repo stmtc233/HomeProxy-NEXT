@@ -7,12 +7,11 @@
 
 'use strict';
 
-import { access, writefile } from 'fs';
 import { cursor } from 'uci';
 
 import {
 	strToBool, strToInt, strToTime,
-	removeBlankAttrs, buildTLSObject, buildTransportObject, buildHysteria2Realm, HP_DIR, RUN_DIR
+	buildTLSObject, buildTransportObject, buildHysteria2Realm, writeConfig, DEFAULTS, RUN_DIR
 } from 'homeproxy';
 
 const uci = cursor();
@@ -22,7 +21,7 @@ uci.load(uciconfig);
 
 const uciserver = 'server';
 
-const log_level = uci.get(uciconfig, uciserver, 'log_level') || 'warn';
+const log_level = uci.get(uciconfig, uciserver, 'log_level') || DEFAULTS.server.log_level;
 
 const config = {};
 
@@ -131,21 +130,5 @@ if (length(config.inbounds) === 0)
 
 config['$schema'] = 'https://sing-box.sagernet.org/schema.json';
 
-system('mkdir -p ' + RUN_DIR);
-const server_tmp = RUN_DIR + '/sing-box-s.json.tmp';
-writefile(server_tmp, sprintf('%.J\n', removeBlankAttrs(config)));
-if (system('/usr/bin/sing-box check --config ' + server_tmp) !== 0) {
-	system('rm -f ' + server_tmp);
+if (!writeConfig('server', RUN_DIR + '/sing-box-s.json', config, { uci: uci }))
 	exit(1);
-}
-/*
- * Overwrite an existing config in place: the jailed sing-box has the file
- * bind-mounted, so after a rename a reload by SIGHUP would re-read the old
- * inode. In-place also keeps the owner the jailed process reads it as.
- */
-const server_conf = RUN_DIR + '/sing-box-s.json';
-if (access(server_conf))
-	system(`cat ${server_tmp} > ${server_conf} && rm -f ${server_tmp}`);
-else
-	system(`mv -f ${server_tmp} ${server_conf}`);
-system('chmod 600 ' + server_conf);

@@ -13,6 +13,7 @@ run_case() {
 	generator="$3"
 	outfile="$4"
 	local_rs="$5"
+	plugins="$6"
 	dir="$WORK/$name"
 
 	rm -rf "$dir"
@@ -54,6 +55,8 @@ run_case() {
 	wan_stub="s#ubus.call('network.interface', 'status', {'interface': 'wan'})#null#"
 	sed -e "s#const uci = cursor();#const uci = cursor('$dir/config');#" -e "$wan_stub" \
 	    "$ROOT/root/etc/homeproxy/scripts/$generator" > "$dir/scripts/$generator"
+
+	[ -n "$plugins" ] && cp -R "$plugins" "$dir/custom"
 
 	mkdir -p "$dir/scripts/client"
 	for module in "$ROOT/root/etc/homeproxy/scripts/client/"*.uc; do
@@ -193,5 +196,22 @@ done
 
 run_case server "$ROOT/tests/fixtures/generators/server.uci" generate_server.uc sing-box-s.json
 check_golden server sing-box-s.json
+
+# custom plugins (tests/fixtures/plugins/<mode>) on top of the golden cases
+check_plugins() {
+	mode="$1"
+	name="$2"
+	outfile="$3"
+	kind="$4"
+	sed "s#$WORK/plugins-$mode#__WORKDIR__#g" "$WORK/plugins-$mode/run/$outfile" > "$WORK/plugins-$mode/normalized.json"
+	ucode "$ROOT/tests/ucode/check_plugins.uc" "$mode" "$WORK/plugins-$mode/normalized.json" \
+		"$ROOT/tests/snapshots/$name.generated.json" "$WORK/plugins-$mode/run/plugins-$kind.json" || FAILED=1
+}
+run_case plugins-client "$ROOT/tests/fixtures/generators/client.uci" generate_client.uc sing-box-c.json "" "$ROOT/tests/fixtures/plugins/client"
+check_plugins client client sing-box-c.json client
+run_case plugins-fallback "$ROOT/tests/fixtures/generators/client.uci" generate_client.uc sing-box-c.json "" "$ROOT/tests/fixtures/plugins/fallback"
+check_plugins fallback client sing-box-c.json client
+run_case plugins-server "$ROOT/tests/fixtures/generators/server.uci" generate_server.uc sing-box-s.json "" "$ROOT/tests/fixtures/plugins/server"
+check_plugins server server sing-box-s.json server
 
 exit $FAILED

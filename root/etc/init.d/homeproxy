@@ -26,6 +26,7 @@ DASHBOARD_DIR="$RUN_DIR/dashboard"
 
 # fw4 chain/set inventory; single source of truth shared with firewall_post.ut
 [ -f "$HP_DIR/scripts/fw4_names.sh" ] && . "$HP_DIR/scripts/fw4_names.sh"
+. "$HP_DIR/scripts/defaults.sh"
 
 log() {
 	# The log file lives in tmpfs, so it does not exist yet on the first start
@@ -83,7 +84,7 @@ dns_snippets_digest() {
 render_dns_snippets() {
 	local ipv6_support dns_port
 	config_get_bool ipv6_support "config" "ipv6_support" "0"
-	config_get dns_port "infra" "dns_port" "5333"
+	config_get dns_port "infra" "dns_port" "$HP_DEFAULT_DNS_PORT"
 
 	local staging="$RUN_DIR/dnsmasq-staging"
 	rm -rf "$staging"
@@ -238,11 +239,11 @@ apply_firewall() {
 # configured); requires config_load.
 client_outbound_node() {
 	local mode node
-	config_get mode "config" "routing_mode" "bypass_mainland_china"
+	config_get mode "config" "routing_mode" "$HP_DEFAULT_ROUTING_MODE"
 	if [ "$mode" != "custom" ]; then
-		config_get node "config" "main_node" "nil"
+		config_get node "config" "main_node" "$HP_DEFAULT_MAIN_NODE"
 	else
-		config_get node "routing" "default_outbound" "nil"
+		config_get node "routing" "default_outbound" "$HP_DEFAULT_DEFAULT_OUTBOUND"
 	fi
 	echo "$node"
 }
@@ -264,17 +265,17 @@ killswitch_wanted() {
 restart_fingerprint() {
 	local routing_mode proxy_mode main_udp_node ipv6_support dashboard server_enabled kill_switch
 	local table_mark tproxy_mark tun_mark tun_name jail=0
-	config_get routing_mode "config" "routing_mode" "bypass_mainland_china"
-	config_get proxy_mode "config" "proxy_mode" "redirect_tproxy"
-	config_get main_udp_node "config" "main_udp_node" "nil"
+	config_get routing_mode "config" "routing_mode" "$HP_DEFAULT_ROUTING_MODE"
+	config_get proxy_mode "config" "proxy_mode" "$HP_DEFAULT_PROXY_MODE"
+	config_get main_udp_node "config" "main_udp_node" "$HP_DEFAULT_MAIN_UDP_NODE"
 	config_get_bool ipv6_support "config" "ipv6_support" "0"
 	config_get dashboard "config" "dashboard" "0"
 	config_get_bool server_enabled "server" "enabled" "0"
 	config_get_bool kill_switch "config" "kill_switch" "0"
-	config_get table_mark "infra" "table_mark" "100"
-	config_get tproxy_mark "infra" "tproxy_mark" "101"
-	config_get tun_mark "infra" "tun_mark" "102"
-	config_get tun_name "infra" "tun_name" "singtun0"
+	config_get table_mark "infra" "table_mark" "$HP_DEFAULT_TABLE_MARK"
+	config_get tproxy_mark "infra" "tproxy_mark" "$HP_DEFAULT_TPROXY_MARK"
+	config_get tun_mark "infra" "tun_mark" "$HP_DEFAULT_TUN_MARK"
+	config_get tun_name "infra" "tun_name" "$HP_DEFAULT_TUN_NAME"
 	[ -x "/sbin/ujail" ] && jail=1
 	grep -Eq '"type": "(wireguard|tun)"' "$RUN_DIR/sing-box-c.json" 2>"/dev/null" && jail="$jail-off"
 	local client=on udp=on
@@ -346,15 +347,15 @@ start_homeproxy() {
 	fi
 
 	local routing_mode proxy_mode ipv6_support
-	config_get routing_mode "config" "routing_mode" "bypass_mainland_china"
-	config_get proxy_mode "config" "proxy_mode" "redirect_tproxy"
+	config_get routing_mode "config" "routing_mode" "$HP_DEFAULT_ROUTING_MODE"
+	config_get proxy_mode "config" "proxy_mode" "$HP_DEFAULT_PROXY_MODE"
 	config_get_bool ipv6_support "config" "ipv6_support" "0"
 
 	local outbound_node
 	if [ "$routing_mode" != "custom" ]; then
-		config_get outbound_node "config" "main_node" "nil"
+		config_get outbound_node "config" "main_node" "$HP_DEFAULT_MAIN_NODE"
 	else
-		config_get outbound_node "routing" "default_outbound" "nil"
+		config_get outbound_node "routing" "default_outbound" "$HP_DEFAULT_DEFAULT_OUTBOUND"
 	fi
 
 	local server_enabled dashboard
@@ -403,7 +404,7 @@ start_homeproxy() {
 		local auto_update auto_update_time autoupdate_cron
 		config_get_bool auto_update "subscription" "auto_update" "0"
 		if [ "$auto_update" = "1" ]; then
-			config_get auto_update_time "subscription" "auto_update_time" "2"
+			config_get auto_update_time "subscription" "auto_update_time" "$HP_DEFAULT_AUTO_UPDATE_TIME"
 			autoupdate_cron="0 $auto_update_time * * * $HP_DIR/scripts/update_crond.sh #${CONF}_autosetup"
 		fi
 		sync_autoupdate_cron "$autoupdate_cron"
@@ -413,15 +414,15 @@ start_homeproxy() {
 		# A reload in place keeps the ip rules and the TUN device: what they
 		# are built from is part of the restart fingerprint, which matched.
 		local table_mark net_mode="$proxy_mode"
-		config_get table_mark "infra" "table_mark" "100"
+		config_get table_mark "infra" "table_mark" "$HP_DEFAULT_TABLE_MARK"
 		[ -z "$HP_INPLACE" ] || net_mode="unchanged"
 		case "$net_mode" in
 		"redirect_tproxy")
 			local outbound_udp_node
-			config_get outbound_udp_node "config" "main_udp_node" "nil"
+			config_get outbound_udp_node "config" "main_udp_node" "$HP_DEFAULT_MAIN_UDP_NODE"
 			if [ "$outbound_udp_node" != "nil" ] || [ "$routing_mode" = "custom" ]; then
 				local tproxy_mark
-				config_get tproxy_mark "infra" "tproxy_mark" "101"
+				config_get tproxy_mark "infra" "tproxy_mark" "$HP_DEFAULT_TPROXY_MARK"
 
 				ip rule add fwmark "$tproxy_mark" table "$table_mark" 2>"/dev/null" \
 					|| log "Error: failed to add the tproxy ip rule (fwmark ${tproxy_mark}, table ${table_mark})."
@@ -438,8 +439,8 @@ start_homeproxy() {
 			;;
 		"redirect_tun"|"tun")
 			local tun_name tun_mark
-			config_get tun_name "infra" "tun_name" "singtun0"
-			config_get tun_mark "infra" "tun_mark" "102"
+			config_get tun_name "infra" "tun_name" "$HP_DEFAULT_TUN_NAME"
+			config_get tun_mark "infra" "tun_mark" "$HP_DEFAULT_TUN_MARK"
 
 			ip tuntap add mode tun user root name "$tun_name" 2>"/dev/null" \
 				|| log "Error: failed to create the TUN device ${tun_name}."
@@ -639,10 +640,10 @@ stop_service() {
 	fi
 
 	local table_mark tproxy_mark tun_mark tun_name
-	config_get table_mark "infra" "table_mark" "100"
-	config_get tproxy_mark "infra" "tproxy_mark" "101"
-	config_get tun_mark "infra" "tun_mark" "102"
-	config_get tun_name "infra" "tun_name" "singtun0"
+	config_get table_mark "infra" "table_mark" "$HP_DEFAULT_TABLE_MARK"
+	config_get tproxy_mark "infra" "tproxy_mark" "$HP_DEFAULT_TPROXY_MARK"
+	config_get tun_mark "infra" "tun_mark" "$HP_DEFAULT_TUN_MARK"
+	config_get tun_name "infra" "tun_name" "$HP_DEFAULT_TUN_NAME"
 
 	# ip rule del removes a single matching rule, so a repeated start (or an
 	# upgrade that starts before the old instance stopped) leaves duplicates
@@ -675,7 +676,7 @@ stop_service() {
 service_stopped() {
 	config_load "$CONF"
 	local tun_name
-	config_get tun_name "infra" "tun_name" "singtun0"
+	config_get tun_name "infra" "tun_name" "$HP_DEFAULT_TUN_NAME"
 
 	ip link set "$tun_name" down 2>"/dev/null"
 	ip tuntap del mode tun name "$tun_name" 2>"/dev/null"
@@ -686,13 +687,13 @@ reload_service() {
 
 	config_load "$CONF"
 	local routing_mode
-	config_get routing_mode "config" "routing_mode" "bypass_mainland_china"
+	config_get routing_mode "config" "routing_mode" "$HP_DEFAULT_ROUTING_MODE"
 
 	local outbound_node
 	if [ "$routing_mode" != "custom" ]; then
-		config_get outbound_node "config" "main_node" "nil"
+		config_get outbound_node "config" "main_node" "$HP_DEFAULT_MAIN_NODE"
 	else
-		config_get outbound_node "routing" "default_outbound" "nil"
+		config_get outbound_node "routing" "default_outbound" "$HP_DEFAULT_DEFAULT_OUTBOUND"
 	fi
 
 	local old_client old_server
@@ -769,11 +770,11 @@ refresh_lists() {
 	config_load "$CONF"
 
 	local routing_mode outbound_node
-	config_get routing_mode "config" "routing_mode" "bypass_mainland_china"
+	config_get routing_mode "config" "routing_mode" "$HP_DEFAULT_ROUTING_MODE"
 	if [ "$routing_mode" != "custom" ]; then
-		config_get outbound_node "config" "main_node" "nil"
+		config_get outbound_node "config" "main_node" "$HP_DEFAULT_MAIN_NODE"
 	else
-		config_get outbound_node "routing" "default_outbound" "nil"
+		config_get outbound_node "routing" "default_outbound" "$HP_DEFAULT_DEFAULT_OUTBOUND"
 	fi
 	[ "$outbound_node" != "nil" ] || return 0
 

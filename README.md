@@ -33,6 +33,7 @@ HomeProxy NEXT 是一个**以自用为主**的 LuCI 代理模块，源自 [Immor
 | **订阅** | 分享链接 / SIP008 导入，入库前校验，按订阅分组，可经代理更新 |
 | **DNS** | 国内外分流解析、自定义 DNS 服务器与规则、乐观缓存、劫持 LAN DNS |
 | **服务端** | 常用协议的 inbound，支持 ACME 证书 |
+| **自定义插件** | 用 ucode 小脚本修改生成的 sing-box 配置，升级不会覆盖；可在界面上新增 / 编辑 / 启停 / 删除，见下文 |
 | **其他** | Kill switch（客户端未运行时阻断海外流量）、sing-box 原生 Dashboard、配置导入 / 导出、规则清单自动更新 |
 
 ## 运行要求
@@ -54,6 +55,28 @@ opkg install luci-app-homeproxy-*.ipk luci-i18n-homeproxy-zh-cn-*.ipk
 ```
 
 安装后在 LuCI 的「服务 → HomeProxy NEXT」中配置。
+
+## 自定义插件
+
+想加一些只有自己用的定制，不要改 `/etc/homeproxy/scripts/` 下的生成脚本（升级会覆盖），写成插件放进 `/etc/homeproxy/custom/`。这个目录不属于安装包，升级不会动它，刷固件时也会保留。
+
+- **管理**：在「自定义插件」页面新增、编辑、启用 / 停用、删除，点「应用」生效；也可以通过 SSH 直接改文件，然后执行 `/etc/init.d/homeproxy reload`。两边看到的是同一批文件。
+- **启停**：`名字.uc` 为启用，`名字.uc.disabled` 为停用。多个插件按文件名顺序执行，例如 `10-xxx.uc`、`20-yyy.uc`。
+- **写法**：脚本最后 `return` 一个对象。`client(config, ctx)` 拿到生成好的客户端 sing-box 配置，`server(config, ctx)` 拿到服务端配置，两者都在 `sing-box check` 之前调用。可以直接修改 `config`，也可以返回一个新对象；值设为 `null` 的字段会被去掉。客户端的 `ctx` 提供 `routing_mode`、`proxy_mode`、`ipv6_support` 和 `uci`（UCI cursor），服务端只有 `uci`。
+
+  ```js
+  'use strict';
+
+  return {
+  	client: function(config, ctx) {
+  		// 插到最前面，优先于自带的分流规则
+  		unshift(config.route.rules, { domain_suffix: [ 'example.com' ], action: 'route', outbound: 'direct-out' });
+  	}
+  };
+  ```
+
+- **出错时**：单个插件加载失败或执行时抛错，会跳过它并撤销它已做的修改，其余插件照常执行。加上插件后的配置通不过 `sing-box check` 时，服务改用不带插件的配置启动，保证网络可用。原因会写进 HomeProxy 日志，「自定义插件」页面也会显示每个插件的状态。
+- **注意**：插件以 root 身份运行，能完全控制路由器，只添加你看得懂的代码。插件面对的是 sing-box 1.14 的配置格式（以 [sing-box 文档](https://sing-box.sagernet.org/) 为准），与 HomeProxy 的内部代码无关，所以 HomeProxy 升级后一般不用改。
 
 ## 已知限制
 

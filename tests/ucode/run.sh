@@ -34,6 +34,9 @@ sh "$ROOT/tests/ucode/test_fw4_names.sh" "$ROOT" || FAILED=1
 echo "== fw4 reload/cleanup helpers =="
 sh "$ROOT/tests/ucode/test_fw4_cleanup.sh" "$ROOT" "$WORK/fw4_cleanup" || FAILED=1
 
+echo "== shared defaults =="
+sh "$ROOT/tests/ucode/test_defaults.sh" "$ROOT" || FAILED=1
+
 echo "== kill switch =="
 sh "$ROOT/tests/ucode/test_killswitch.sh" "$ROOT" "$WORK/killswitch" || FAILED=1
 
@@ -137,6 +140,9 @@ if [ -x /bin/uclient-fetch ]; then
 else
 	echo "SKIP: /bin/uclient-fetch not installed on this host"
 fi
+
+echo "== rpcd plugin methods =="
+sh "$ROOT/tests/ucode/test_rpcd_plugins.sh" "$ROOT" "$WORK/rpcd_plugins" || FAILED=1
 
 echo "== generator regression tests =="
 sh "$ROOT/tests/ucode/test_generators.sh" "$ROOT" "$WORK/generators" || FAILED=1
