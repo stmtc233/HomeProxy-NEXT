@@ -2065,62 +2065,6 @@
 								"props": {
 									"datatype": "or(cidr, ipaddr)"
 								}
-							},
-							{
-								"kind": "Flag",
-								"name": "optimistic_cache",
-								"title": "Optimistic DNS cache",
-								"description": "Return expired cache immediately and refresh in background (sing-box 1.14).",
-								"depends": [
-									[
-										"disable_cache",
-										"0"
-									],
-									[
-										"disable_cache_expire",
-										"0"
-									]
-								],
-								"values": [],
-								"props": {
-									"rmempty": false
-								}
-							},
-							{
-								"kind": "Value",
-								"name": "optimistic_timeout",
-								"title": "Optimistic cache timeout",
-								"description": "Max time an expired entry may be served. Examples: 3d, 1h.",
-								"depends": [],
-								"values": [],
-								"props": {}
-							},
-							{
-								"kind": "Value",
-								"name": "dns_timeout",
-								"title": "DNS query timeout",
-								"description": "Default timeout per DNS query in seconds (sing-box default: 10).",
-								"depends": [],
-								"values": [],
-								"props": {
-									"datatype": "uinteger"
-								}
-							},
-							{
-								"kind": "Flag",
-								"name": "cache_file_store_dns",
-								"title": "Store DNS cache",
-								"description": "Persist DNS cache across restarts (sing-box 1.14, replaces Store RDRC).",
-								"depends": [
-									[
-										"disable_cache",
-										"0"
-									]
-								],
-								"values": [],
-								"props": {
-									"rmempty": false
-								}
 							}
 						],
 						"subsection": null
@@ -3964,12 +3908,7 @@
 					"kind": "SectionValue",
 					"name": "_dns_cache",
 					"description": "dns",
-					"depends": [
-						{
-							"routing_mode": "custom",
-							"!reverse": true
-						}
-					],
+					"depends": [],
 					"values": [],
 					"props": {},
 					"subsection": {
@@ -3983,7 +3922,20 @@
 								"name": "optimistic_cache",
 								"title": "Optimistic DNS cache",
 								"description": "Return expired cache immediately and refresh in background (sing-box 1.14).",
-								"depends": [],
+								"depends": [
+									{
+										"!reverse": true,
+										"homeproxy.config.routing_mode": "custom"
+									},
+									{
+										"disable_cache": "0",
+										"homeproxy.config.routing_mode": "custom"
+									},
+									{
+										"disable_cache_expire": "0",
+										"homeproxy.config.routing_mode": "custom"
+									}
+								],
 								"values": [],
 								"props": {
 									"rmempty": false
@@ -4014,7 +3966,16 @@
 								"name": "cache_file_store_dns",
 								"title": "Store DNS cache",
 								"description": "Persist DNS cache across restarts (replaces Store RDRC).",
-								"depends": [],
+								"depends": [
+									{
+										"!reverse": true,
+										"homeproxy.config.routing_mode": "custom"
+									},
+									{
+										"disable_cache": "0",
+										"homeproxy.config.routing_mode": "custom"
+									}
+								],
 								"values": [],
 								"props": {
 									"rmempty": false

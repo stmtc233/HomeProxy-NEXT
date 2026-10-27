@@ -2133,10 +2133,6 @@ msgstr "性能可能会略有下降，建议仅在需要时开启。"
 msgid "Persist DNS cache across restarts (replaces Store RDRC)."
 msgstr "重启后持久化 DNS 缓存（替代 Store RDRC）。"
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:1011
-msgid "Persist DNS cache across restarts (sing-box 1.14, replaces Store RDRC)."
-msgstr "重启后持久化 DNS 缓存（sing-box 1.14，替代 Store RDRC）。"
-
 #: htdocs/luci-static/resources/view/homeproxy/node.js:975
 msgid "Persistent keepalive interval"
 msgstr "持久 keepalive 间隔"
