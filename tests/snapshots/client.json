@@ -3967,10 +3967,10 @@
 								"title": "Store DNS cache",
 								"description": "Persist DNS cache across restarts (replaces Store RDRC).",
 								"depends": [
-									{
-										"!reverse": true,
-										"homeproxy.config.routing_mode": "custom"
-									},
+									[
+										"homeproxy.config.routing_mode",
+										"bypass_mainland_china"
+									],
 									{
 										"disable_cache": "0",
 										"homeproxy.config.routing_mode": "custom"
