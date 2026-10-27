@@ -52,6 +52,9 @@ jobs:
       - name: Check the client tab select helpers
         run: node tests/frontend-client-common.js .
 
+      - name: Check form defaults against the backend fallbacks
+        run: node tests/frontend-defaults.js .
+
   ucode:
     runs-on: ubuntu-latest
     steps:

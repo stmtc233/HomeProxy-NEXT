@@ -57,7 +57,7 @@
 - 缩进用 **Tab**，沿用所在文件的风格和命名。
 - ucode 文件以 `'use strict';` 开头；ucode **不做变量提升**，使用前必须先声明（r12 和 r18 都栽在这里）。
 - `client/` 下的模块用相对路径引用上级模块（`'../homeproxy.uc'`）：裸模块名是相对**当前文件所在目录**解析的。新增配置项读进 `context.uc` 的 `ctx`，不要在各 `build()` 里直接 `uci.get` 全局设置。
-- 配置项缺省时的兜底值不要写成字面量：总表是 `homeproxy.uc` 的 `DEFAULTS`，ucode 直接读它；sh 用到的项在 `scripts/defaults.sh` 里以 `HP_DEFAULT_<OPTION>` 镜像一份，`tests/ucode/test_defaults.sh` 检查两边一致。缺省即关闭的开关不进表。
+- 配置项缺省时的兜底值不要写成字面量：总表是 `homeproxy.uc` 的 `DEFAULTS`，ucode 直接读它；sh 用到的项在 `scripts/defaults.sh` 里以 `HP_DEFAULT_<OPTION>` 镜像一份，`tests/ucode/test_defaults.sh` 检查两边一致，`tests/frontend-defaults.js` 检查表单的 `o.default` 与它一致。缺省即关闭的开关不进表。
 - 拼装顺序有依赖：`outbounds` 必须在 `route` 之前构建（后者读取前者记录的直连节点 override）。
 - `init.d` 和 `scripts/*.sh` 在路由器上由 busybox `/bin/sh` 执行，只能写 **POSIX sh**，不要用 bash 语法。
 - LuCI 视图用 `'require ...'` 引入依赖，用到 `ui` 等模块时别漏了 require。
