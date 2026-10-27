@@ -2080,10 +2080,6 @@ msgstr ""
 msgid "Persist DNS cache across restarts (replaces Store RDRC)."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:1011
-msgid "Persist DNS cache across restarts (sing-box 1.14, replaces Store RDRC)."
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/node.js:975
 msgid "Persistent keepalive interval"
 msgstr ""

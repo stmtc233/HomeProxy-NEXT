@@ -40,23 +40,5 @@ return baseclass.extend({
 			_('Append a <code>edns0-subnet</code> OPT extra record with the specified IP prefix to every query by default.<br/>' +
 			'If value is an IP address instead of prefix, <code>/32</code> or <code>/128</code> will be appended automatically.'));
 		so.datatype = 'or(cidr, ipaddr)';
-
-		so = ss.option(form.Flag, 'optimistic_cache', _('Optimistic DNS cache'),
-			_('Return expired cache immediately and refresh in background (sing-box 1.14).'));
-		so.depends('disable_cache', '0');
-		so.depends('disable_cache_expire', '0');
-		so.rmempty = false;
-
-		so = ss.option(form.Value, 'optimistic_timeout', _('Optimistic cache timeout'),
-			_('Max time an expired entry may be served. Examples: 3d, 1h.'));
-
-		so = ss.option(form.Value, 'dns_timeout', _('DNS query timeout'),
-			_('Default timeout per DNS query in seconds (sing-box default: 10).'));
-		so.datatype = 'uinteger';
-
-		so = ss.option(form.Flag, 'cache_file_store_dns', _('Store DNS cache'),
-			_('Persist DNS cache across restarts (sing-box 1.14, replaces Store RDRC).'));
-		so.depends('disable_cache', '0');
-		so.rmempty = false;
 	}
 });
