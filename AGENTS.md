@@ -48,7 +48,7 @@
 | `root/etc/config/homeproxy` | UCI | 默认配置 |
 | `po/templates/homeproxy.pot`、`po/zh_Hans/homeproxy.po` | gettext | 翻译模板与简体中文翻译 |
 | `tests/` | — | 测试，详见 `tests/README.md` |
-| `.github/build-pkg.sh`、`.github/workflows/` | bash / YAML | 打包（apk + ipk）、发布、i18n 与语法检查 |
+| `.github/build-pkg.sh`、`.github/fetch-resources.sh`、`.github/workflows/` | bash / sh / YAML | 打包（apk + ipk，打包前拉取最新资源列表）、发布、i18n 与语法检查 |
 
 数据流：**LuCI 表单 → UCI → `generate_*.uc` → sing-box JSON → `sing-box check` → procd 启动**；防火墙走 `firewall_post.ut` → fw4 include。
 
@@ -124,6 +124,6 @@ ucode 测试包括 `parse_uri`、生成器 golden 快照加 `sing-box check`、k
   - `test(generators): 新增基于标签的 tag 回归用例`
   - `docs: ...`、`ci(build): ...`、`chore(release): bump to 27.919.1.14-rN`
 - 一个提交只做一件事；重构和行为变更分开提交。
-- 发布：只把 `Makefile` 里的 `PKG_RELEASE` 加 1，单独作为一个 `chore(release)` 提交；然后在 GitHub Actions 里手动触发 `Build` 工作流，`version` 填 `PKG_VERSION-rPKG_RELEASE`（例如 `27.919.1.14-r30`），必须与 Makefile 一致；留空则只构建、不发布。
+- 发布：只把 `Makefile` 里的 `PKG_RELEASE` 加 1，单独作为一个 `chore(release)` 提交；然后在 GitHub Actions 里手动触发 `Build` 工作流，`version` 填 `PKG_VERSION-rPKG_RELEASE`（例如 `27.919.1.14-r30`），必须与 Makefile 一致；留空则只构建、不发布。`Build` 会先用 `.github/fetch-resources.sh` 把 `resources/` 下的资源列表和 geoip/geosite 规则集更新到最新再打包（不提交回仓库）；发布时拉取失败会中止。
 - 用户能感知的变化，记到 `CHANGELOG.md` 最上面。
 - `docs/`、`scratch/` 是本地工作目录（已在 `.gitignore` 中），里面的评审报告和计划**不要提交**。

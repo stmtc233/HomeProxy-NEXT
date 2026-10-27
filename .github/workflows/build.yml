@@ -25,6 +25,8 @@ permissions:
 
 env:
   APK_TOOLS_REF: 'b5a31c0d865342ad80be10d68f1bb3d3ad9b0866'
+  # 与 test.yml 同一镜像：用来运行路由器上的 update_resources.sh 拉取资源列表
+  ROOTFS_IMAGE: immortalwrt/rootfs:x86-64-openwrt-25.12.2@sha256:6c4d2c12586137d0834d646d386aab2e77ecc6c98130739bfa757aab3e8524d3
 
 jobs:
   build:
@@ -38,6 +40,25 @@ jobs:
       # 发布前确认新增文案已同步进 zh_Hans（豁免项见 tests/i18n-ignore.txt）
       - name: Check zh_Hans translation coverage
         run: python3 tests/i18n-coverage.py --fail-below 100
+
+      # 安装包带上构建时最新的资源列表（含 geoip/geosite 规则集），只改工作区，不提交回仓库。
+      # 发布时拉取失败就中止，免得发出过期的资源；只构建时沿用仓库里的版本。
+      - name: Fetch the latest resource lists
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          if ! docker run --rm -e GITHUB_TOKEN -v "$PWD:/src" "$ROOTFS_IMAGE" sh /src/.github/fetch-resources.sh /src; then
+            if [ -n "$RELEASE_VERSION" ]; then
+              echo "::error::资源列表拉取失败，拒绝发布"
+              exit 1
+            fi
+            echo "::warning::资源列表拉取失败，安装包沿用仓库里的版本"
+          fi
+          sudo chown -R "$(id -u):$(id -g)" root/etc/homeproxy/resources
+          for f in root/etc/homeproxy/resources/*.ver; do
+            echo "$(basename "$f" .ver): $(cat "$f")"
+          done
 
       - name: Cache apk-tools binary
         id: cache-apk-tools
