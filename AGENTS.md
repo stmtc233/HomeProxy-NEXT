@@ -31,6 +31,7 @@
 | 路径 | 语言 | 作用 |
 | --- | --- | --- |
 | `htdocs/luci-static/resources/view/homeproxy/{client,node,server,status}.js` | LuCI JS | 四个设置页面（客户端 / 节点 / 服务端 / 状态） |
+| `htdocs/luci-static/resources/homeproxy/client/*.js` | LuCI JS | 客户端页面的各个 tab，一个 tab 一个文件（文件名即 tab id），各自导出 `render(s, ctx)`；`common.js` 放这些 tab 共用的小工具 |
 | `htdocs/luci-static/resources/homeproxy.js` | LuCI JS | 前端共享模块：TLS / 传输层表单、校验器、证书上传等 |
 | `root/etc/homeproxy/scripts/generate_client.uc` | ucode | 客户端配置生成入口：按固定顺序拼装各部分，`sing-box check` 后写出 `sing-box-c.json` |
 | `root/etc/homeproxy/scripts/client/context.uc` | ucode | 一次性读取 UCI，生成 `ctx`：配置项、各类 tag 映射、需要 uci 的查询（`ctx.get_outbound()` 等），以及共享状态（`direct_overrides`、`http_clients`） |
@@ -82,7 +83,7 @@
 ```sh
 # 语法检查
 for f in root/etc/init.d/homeproxy root/etc/homeproxy/scripts/*.sh tests/*.sh tests/ucode/*.sh; do sh -n "$f"; done
-for f in htdocs/luci-static/resources/homeproxy.js htdocs/luci-static/resources/view/homeproxy/*.js; do node --check "$f"; done
+for f in htdocs/luci-static/resources/homeproxy.js htdocs/luci-static/resources/view/homeproxy/*.js htdocs/luci-static/resources/homeproxy/client/*.js; do node --check "$f"; done
 
 # LuCI 表单快照（只需要 node）
 for v in node client server; do

@@ -184,14 +184,27 @@ const deps = {
 };
 
 
-function loadLuciModule(file, extraDeps) {
+/*
+ * A require that names no stub but a file of this package is loaded the way
+ * LuCI does (homeproxy.client.routing -> homeproxy/client/routing.js), once.
+ */
+function loadLuciModule(file, extraDeps, loaded) {
+	const resources = path.resolve(file).replace(/(\/htdocs\/luci-static\/resources)\/.*$/, '$1');
+	const all = loaded || Object.assign({}, deps, extraDeps);
+	const dep = (mod) => {
+		const sub = path.join(resources, mod.replace(/\./g, '/') + '.js');
+		if (!(mod in all) && fs.existsSync(sub))
+			all[mod] = loadLuciModule(sub, null, all);
+		return `__deps[${JSON.stringify(mod)}]`;
+	};
+
 	let src = fs.readFileSync(file, 'utf8');
 	src = src.replace(/^'require ([^']+) as (\w+)';$/gm,
-		(_m, mod, alias) => `const ${alias} = __deps[${JSON.stringify(mod)}];`);
+		(_m, mod, alias) => `const ${alias} = ${dep(mod)};`);
 	src = src.replace(/^'require ([^']+)';$/gm,
-		(_m, mod) => `const ${mod.split('.').pop().replace(/[^\w]/g, '_')} = __deps[${JSON.stringify(mod)}];`);
+		(_m, mod) => `const ${mod.split('.').pop().replace(/[^\w]/g, '_')} = ${dep(mod)};`);
 	const factory = new Function('__deps', '_', 'E', 'L', src);
-	return factory(Object.assign({}, deps, extraDeps), _, E, L);
+	return factory(all, _, E, L);
 }
 
 function main() {
