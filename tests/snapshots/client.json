@@ -802,6 +802,17 @@
 								}
 							},
 							{
+								"kind": "Value",
+								"name": "default_mode",
+								"title": "Default mode",
+								"description": "The mode sing-box starts in, Rule if empty. Once a mode has been switched in the dashboard, that one is kept across restarts instead.",
+								"depends": [],
+								"values": [],
+								"props": {
+									"placeholder": "Rule"
+								}
+							},
+							{
 								"kind": "ListValue",
 								"name": "default_outbound_dns",
 								"title": "Default outbound DNS",
@@ -1201,6 +1212,15 @@
 									"readonly": true,
 									"rmempty": false
 								}
+							},
+							{
+								"kind": "DynamicList",
+								"name": "clash_mode",
+								"title": "Active in modes",
+								"description": "Only applies while sing-box is in one of these modes (its clash mode, switched in the dashboard). Applies in every mode if empty.",
+								"depends": [],
+								"values": [],
+								"props": {}
 							},
 							{
 								"kind": "ListValue",
@@ -2600,6 +2620,15 @@
 									"readonly": true,
 									"rmempty": false
 								}
+							},
+							{
+								"kind": "DynamicList",
+								"name": "clash_mode",
+								"title": "Active in modes",
+								"description": "Only applies while sing-box is in one of these modes (its clash mode, switched in the dashboard). Applies in every mode if empty.",
+								"depends": [],
+								"values": [],
+								"props": {}
 							},
 							{
 								"kind": "ListValue",

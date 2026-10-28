@@ -351,6 +351,11 @@ return baseclass.extend({
 		so.default = 'nil';
 		so.rmempty = false;
 
+		so = ss.option(form.Value, 'default_mode', _('Default mode'),
+			_('The mode sing-box starts in, Rule if empty. Once a mode has been switched in the dashboard, that one is kept across restarts instead.'));
+		so.load = common.loadClashModes(uciconfig);
+		so.placeholder = 'Rule';
+
 		so = ss.option(form.ListValue, 'default_outbound_dns', _('Default outbound DNS'),
 			_('Default DNS server for resolving domain name in the server address.'));
 		so.load = common.loadSectionChoices(uciconfig, 'dns_server', common.builtinDnsServers());

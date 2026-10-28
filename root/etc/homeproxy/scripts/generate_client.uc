@@ -79,6 +79,13 @@ if (ctx.routing_mode in ['bypass_mainland_china', 'custom']) {
 	};
 }
 
+/* clash_mode matches nothing without the mode manager the clash API brings,
+   which listens nowhere without an external_controller */
+if (ctx.uses_clash_mode)
+	config.experimental.clash_api = {
+		default_mode: ctx.default_mode
+	};
+
 config['$schema'] = 'https://sing-box.sagernet.org/schema.json';
 
 const plugin_ctx = {

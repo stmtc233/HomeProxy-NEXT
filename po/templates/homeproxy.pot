@@ -3973,3 +3973,19 @@ msgstr ""
 #: htdocs/luci-static/resources/homeproxy/client/routing_node.js
 msgid "one of the selector nodes"
 msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_rule.js
+msgid "Active in modes"
+msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_rule.js
+msgid "Only applies while sing-box is in one of these modes (its clash mode, switched in the dashboard). Applies in every mode if empty."
+msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy/client/routing.js
+msgid "Default mode"
+msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy/client/routing.js
+msgid "The mode sing-box starts in, Rule if empty. Once a mode has been switched in the dashboard, that one is kept across restarts instead."
+msgstr ""

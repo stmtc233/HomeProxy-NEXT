@@ -52,6 +52,29 @@ return baseclass.extend({
 	},
 
 	/*
+	 * load(): suggest the clash modes sing-box lists first, then every other
+	 * mode a routing or DNS rule names, re-read on each load like the above.
+	 */
+	loadClashModes(uciconfig) {
+		return function(section_id) {
+			delete this.keylist;
+			delete this.vallist;
+
+			let modes = ['Rule', 'Global', 'Direct'];
+			for (let sectiontype of ['routing_rule', 'dns_rule'])
+				uci.sections(uciconfig, sectiontype, (res) => {
+					for (let mode of [].concat(res.clash_mode || []))
+						if (!modes.includes(mode))
+							modes.push(mode);
+				});
+			for (let mode of modes)
+				this.value(mode);
+
+			return this.super('load', section_id);
+		};
+	},
+
+	/*
 	 * A ListValue whose choices (the fixed ones, then the enabled sections of
 	 * sectiontype) are collected when the widget renders, so a grid row shows
 	 * sections added in the same session. An empty value displays as the

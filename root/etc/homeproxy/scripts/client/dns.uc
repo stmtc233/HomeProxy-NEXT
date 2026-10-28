@@ -9,7 +9,7 @@
 import { isEmpty, strToBool, strToInt, strToTime } from '../homeproxy.uc';
 
 import {
-	parse_dnsquery, parse_dnsserver, parse_headers, parse_hosts_predefined, rule_match_fields
+	parse_dnsquery, parse_dnsserver, parse_headers, parse_hosts_predefined, restrict_to_modes, rule_match_fields
 } from './common.uc';
 import { uciconfig, ucimain, ucidnsserver, ucidnsrule } from './context.uc';
 
@@ -80,6 +80,8 @@ function build_custom_rules(ctx) {
 			query_client_subnet: cfg.query_client_subnet,
 			query_dnssec: strToBool(cfg.query_dnssec)
 		};
+		const match_keys = [...keys(match_fields), 'match_response', 'ip_cidr', 'ip_is_private',
+		                    'response_rcode', 'response_answer', 'response_ns', 'response_extra'];
 
 		const rule = {
 			...match_fields,
@@ -115,12 +117,12 @@ function build_custom_rules(ctx) {
 		const legacy_filter = !isEmpty(cfg.ip_cidr) || strToBool(cfg.ip_is_private) === true;
 		if (legacy_filter && !rule.match_response && cfg.action === 'route') {
 			const eval_tag = '_hp_eval_' + cfg['.name'];
-			push(rules, {
+			push(rules, restrict_to_modes({
 				action: 'evaluate',
 				server: ctx.get_resolver(cfg.server),
 				tag: eval_tag,
 				...match_fields
-			});
+			}, cfg.clash_mode, match_keys));
 			rule.match_response = eval_tag;
 		}
 
@@ -139,7 +141,7 @@ function build_custom_rules(ctx) {
 			return;
 		}
 
-		push(rules, rule);
+		push(rules, restrict_to_modes(rule, cfg.clash_mode, match_keys));
 	});
 
 	return rules;

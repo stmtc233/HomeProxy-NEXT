@@ -10,7 +10,7 @@ import { access } from 'fs';
 
 import { isEmpty, strToBool, strToInt, strToTime, strToMs, HP_DIR } from '../homeproxy.uc';
 
-import { rule_match_fields } from './common.uc';
+import { restrict_to_modes, rule_match_fields } from './common.uc';
 import { uciconfig, uciroutingsetting, uciroutingrule, uciruleset } from './context.uc';
 
 function build_main(ctx, route) {
@@ -132,8 +132,9 @@ function build_custom_rule(ctx, cfg) {
 		rule_override_port = rule_direct_override.override_port;
 	}
 
+	const match_fields = rule_match_fields(ctx, cfg);
 	const rule = {
-		...rule_match_fields(ctx, cfg),
+		...match_fields,
 		client: cfg.client,
 		ip_cidr: cfg.ip_cidr,
 		ip_is_private: strToBool(cfg.ip_is_private),
@@ -170,7 +171,7 @@ function build_custom_rule(ctx, cfg) {
 		rule.tls_fragment_fallback_delay = null;
 	}
 
-	return rule;
+	return restrict_to_modes(rule, cfg.clash_mode, [...keys(match_fields), 'client', 'ip_cidr', 'ip_is_private']);
 }
 
 function build_custom_ruleset(ctx, cfg) {

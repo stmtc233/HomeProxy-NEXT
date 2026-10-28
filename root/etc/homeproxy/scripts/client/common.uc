@@ -120,3 +120,50 @@ export function rule_match_fields(ctx, cfg) {
 		invert: strToBool(cfg.invert)
 	};
 };
+
+function is_match_value(v) {
+	return !(v === null || v === '' || v === false || (type(v) === 'array' && !length(v)));
+}
+
+/*
+ * Limit a rule to some clash modes. One mode is just another match field,
+ * unless an invert would flip it as well; otherwise the match fields move
+ * into a logical rule next to the modes. sing-box refuses an empty sub-rule,
+ * so a rule without match fields only gets the modes.
+ */
+export function restrict_to_modes(rule, modes, match_keys) {
+	if (type(modes) === 'string')
+		modes = [modes];
+	if (isEmpty(modes))
+		return rule;
+
+	const match = {},
+	      outer = {};
+	for (let k in keys(rule)) {
+		if (!(k in match_keys))
+			outer[k] = rule[k];
+		else if (is_match_value(rule[k]))
+			match[k] = rule[k];
+	}
+
+	const mode_rules = map(modes, (m) => {
+		return { clash_mode: m };
+	});
+	const mode_rule = (length(modes) === 1) ? mode_rules[0] : {
+		type: 'logical',
+		mode: 'or',
+		rules: mode_rules
+	};
+
+	if (!length(keys(match)))
+		return { ...mode_rule, ...outer };
+	if (length(modes) === 1 && match.invert !== true)
+		return { ...match, clash_mode: modes[0], ...outer };
+
+	return {
+		type: 'logical',
+		mode: 'and',
+		rules: [mode_rule, match],
+		...outer
+	};
+};

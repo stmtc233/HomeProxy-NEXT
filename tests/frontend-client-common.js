@@ -3,7 +3,8 @@
 //
 // homeproxy/client/common.js: the section-backed selects of the client tabs
 // list the fixed choices first, then the enabled sections, and show a stored
-// value as its label in the grid.
+// value as its label in the grid; the clash mode suggestions list the modes
+// sing-box puts first, then the ones the rules name.
 
 'use strict';
 
@@ -23,6 +24,14 @@ const sections = {
 	dns_server: [
 		{ '.name': 'ds1', label: 'Ali', enabled: '1' },
 		{ '.name': 'ds2', label: 'off', enabled: '0' }
+	],
+	routing_rule: [
+		{ '.name': 'rr1', clash_mode: [ 'Rule', 'Office' ] },
+		{ '.name': 'rr2' },
+		{ '.name': 'rr3', clash_mode: 'My Mode' }
+	],
+	dns_rule: [
+		{ '.name': 'dr1', clash_mode: [ 'Office', 'Global', 'Night' ] }
 	]
 };
 
@@ -110,6 +119,15 @@ check(same(o.listed, [ [ '', 'Default' ], [ 'default-dns', 'Default DNS (issued 
 	'load lists the fixed choices, then the enabled sections', o.listed);
 check(o.keylist === undefined && o.vallist === undefined && ret === 'load' && same(o.called, [ 'load', 'cfg' ]),
 	'load starts from an empty list and chains to the parent load', o.called);
+
+/* clash modes */
+o = option();
+const mret = common.loadClashModes('homeproxy').call(o, 'cfg');
+check(same(o.listed, [ [ 'Rule', undefined ], [ 'Global', undefined ], [ 'Direct', undefined ],
+	[ 'Office', undefined ], [ 'My Mode', undefined ], [ 'Night', undefined ] ]),
+	'modes: the predefined ones, then each mode the rules name once (a hand-written option kept whole)', o.listed);
+check(o.keylist === undefined && mret === 'load' && same(o.called, [ 'load', 'cfg' ]),
+	'modes: load starts from an empty list and chains to the parent load', o.called);
 
 /* write */
 const select = { value: 'old', events: [], dispatchEvent(ev) { this.events.push(ev.type); } };

@@ -40,6 +40,46 @@
 			}
 		],
 		"rules": [
+			{
+				"type": "logical",
+				"mode": "and",
+				"rules": [
+					{
+						"type": "logical",
+						"mode": "or",
+						"rules": [
+							{
+								"clash_mode": "Rule"
+							},
+							{
+								"clash_mode": "Global"
+							}
+						]
+					},
+					{
+						"domain_suffix": [
+							"mode.example.com"
+						]
+					}
+				],
+				"action": "route",
+				"server": "ds-doh"
+			},
+			{
+				"clash_mode": "Global",
+				"action": "evaluate",
+				"server": "ds-doh",
+				"tag": "_hp_eval_dr_mode_ip"
+			},
+			{
+				"match_response": "_hp_eval_dr_mode_ip",
+				"ip_cidr": [
+					"198.51.100.0/24"
+				],
+				"clash_mode": "Global",
+				"action": "route",
+				"server": "ds-doh"
+			}
 		],
 		"strategy": "prefer_ipv6",
 		"disable_expire": true,
@@ -182,6 +222,52 @@
 				],
 				"action": "route",
 				"outbound": "rn-select"
+			},
+			{
+				"clash_mode": "Global",
+				"action": "route",
+				"outbound": "rn-select"
+			},
+			{
+				"type": "logical",
+				"mode": "and",
+				"rules": [
+					{
+						"type": "logical",
+						"mode": "or",
+						"rules": [
+							{
+								"clash_mode": "Rule"
+							},
+							{
+								"clash_mode": "RuleAllowAds"
+							}
+						]
+					},
+					{
+						"domain_suffix": [
+							"mode.example.com"
+						]
+					}
+				],
+				"action": "reject"
+			},
+			{
+				"type": "logical",
+				"mode": "and",
+				"rules": [
+					{
+						"clash_mode": "Rule"
+					},
+					{
+						"domain": [
+							"invert.example.com"
+						],
+						"invert": true
+					}
+				],
+				"action": "route",
+				"outbound": "direct-out"
 			}
 		],
 		"rule_set": [
@@ -228,6 +314,9 @@
 		"cache_file": {
 			"enabled": true,
 			"path": "/etc/homeproxy/cache.db"
+		},
+		"clash_api": {
+			"default_mode": "Rule"
 		}
 	},
 	"$schema": "https://sing-box.sagernet.org/schema.json"

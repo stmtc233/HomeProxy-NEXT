@@ -6,7 +6,9 @@
 # nodes (WireGuard endpoint and a plain outbound) with bind_interface /
 # detour / domain_resolver, a selector over a routing node, a node of its own
 # and direct, a DoH server with headers, a hosts file server, a remote
-# rule-set with initial_path and the dashboard without a main node.
+# rule-set with initial_path, the dashboard without a main node, and rules
+# limited to clash modes (one mode, several, with invert, without match
+# fields, and a DNS rule whose evaluate rule gets the modes too).
 # The keys are test-only.
 
 config homeproxy 'config'
@@ -35,6 +37,7 @@ config homeproxy 'routing'
 	option tcpip_stack 'gvisor'
 	option endpoint_independent_nat '1'
 	option udp_timeout '120'
+	option default_mode 'Rule'
 
 config homeproxy 'dns'
 	option default_strategy 'prefer_ipv6'
@@ -136,3 +139,46 @@ config routing_rule 'rr_select'
 	list domain_suffix 'select.example.com'
 	option action 'route'
 	option outbound 'rn_select'
+
+config routing_rule 'rr_mode_global'
+	option enabled '1'
+	option label 'rr-mode-global'
+	list clash_mode 'Global'
+	option action 'route'
+	option outbound 'rn_select'
+
+config routing_rule 'rr_mode_multi'
+	option enabled '1'
+	option label 'rr-mode-multi'
+	list domain_suffix 'mode.example.com'
+	list clash_mode 'Rule'
+	list clash_mode 'RuleAllowAds'
+	option action 'reject'
+
+# an invert must not flip the mode, so even one mode is kept apart
+config routing_rule 'rr_mode_invert'
+	option enabled '1'
+	option label 'rr-mode-invert'
+	list domain 'invert.example.com'
+	option invert '1'
+	list clash_mode 'Rule'
+	option action 'route'
+	option outbound 'direct-out'
+
+config dns_rule 'dr_mode_multi'
+	option enabled '1'
+	option label 'dr-mode-multi'
+	list domain_suffix 'mode.example.com'
+	list clash_mode 'Rule'
+	list clash_mode 'Global'
+	option action 'route'
+	option server 'ds_doh'
+
+# the evaluate rule generated for the IP filter is limited to the same mode
+config dns_rule 'dr_mode_ip'
+	option enabled '1'
+	option label 'dr-mode-ip'
+	list ip_cidr '198.51.100.0/24'
+	list clash_mode 'Global'
+	option action 'route'
+	option server 'ds_doh'

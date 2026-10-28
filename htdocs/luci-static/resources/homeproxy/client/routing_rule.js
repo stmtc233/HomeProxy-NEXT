@@ -57,6 +57,10 @@ return baseclass.extend({
 		so.rmempty = false;
 		so.readonly = true;
 
+		so = ss.taboption('field_other', form.DynamicList, 'clash_mode', _('Active in modes'),
+			_('Only applies while sing-box is in one of these modes (its clash mode, switched in the dashboard). Applies in every mode if empty.'));
+		so.load = common.loadClashModes(uciconfig);
+
 		so = ss.taboption('field_other', form.ListValue, 'ip_version', _('IP version'),
 			_('4 or 6. Not limited if empty.'));
 		so.value('4', _('IPv4'));

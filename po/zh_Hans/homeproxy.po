@@ -4195,3 +4195,19 @@ msgstr "选择其他出站之前使用的出站，留空则用第一个。选择
 #: htdocs/luci-static/resources/homeproxy/client/routing_node.js
 msgid "one of the selector nodes"
 msgstr "可选出站之一"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_rule.js
+msgid "Active in modes"
+msgstr "生效模式"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_rule.js
+msgid "Only applies while sing-box is in one of these modes (its clash mode, switched in the dashboard). Applies in every mode if empty."
+msgstr "仅在 sing-box 处于其中某个模式时生效（即 clash 模式，在 Dashboard 中切换）。留空则所有模式下都生效。"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing.js
+msgid "Default mode"
+msgstr "默认模式"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing.js
+msgid "The mode sing-box starts in, Rule if empty. Once a mode has been switched in the dashboard, that one is kept across restarts instead."
+msgstr "sing-box 启动时所处的模式，留空为 Rule。在 Dashboard 中切换过模式后，重启时沿用切换后的模式。"

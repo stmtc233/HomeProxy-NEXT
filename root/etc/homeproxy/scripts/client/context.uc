@@ -116,6 +116,14 @@ export function load(uci, ubus) {
 		ctx.default_outbound = uci.get(uciconfig, uciroutingsetting, 'default_outbound') || DEFAULTS.routing.default_outbound;
 		ctx.default_outbound_dns = uci.get(uciconfig, uciroutingsetting, 'default_outbound_dns') || DEFAULTS.routing.default_outbound_dns;
 		ctx.domain_strategy = uci.get(uciconfig, uciroutingsetting, 'domain_strategy');
+
+		ctx.default_mode = uci.get(uciconfig, uciroutingsetting, 'default_mode');
+		ctx.uses_clash_mode = !isEmpty(ctx.default_mode);
+		for (let section_type in [uciroutingrule, ucidnsrule])
+			uci.foreach(uciconfig, section_type, (cfg) => {
+				if (cfg.enabled === '1' && !isEmpty(cfg.clash_mode))
+					ctx.uses_clash_mode = true;
+			});
 	}
 
 	ctx.dns_optimistic_cache = uci.get(uciconfig, ucidnssetting, 'optimistic_cache') || '0';
