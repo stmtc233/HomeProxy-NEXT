@@ -43,6 +43,28 @@ function restartService() {
 	});
 }
 
+/*
+ * sing-box serves the dashboard on the port of its API. A wildcard listen
+ * address is reached under the host of this page; a loopback one is out of
+ * reach of the browser, so there is nothing to open.
+ */
+function dashboardUrl(uciconfig) {
+	if (uci.get(uciconfig, 'config', 'dashboard') !== '1')
+		return null;
+
+	const listen = /^\[?([^\]]*)\]?:([0-9]+)$/.exec(uci.get(uciconfig, 'config', 'dashboard_listen') || '');
+	if (!listen || /^(127\.|::1$|localhost$)/.test(listen[1]))
+		return null;
+
+	let host = listen[1];
+	if (!host || host === '0.0.0.0' || host === '::')
+		host = window.location.hostname;
+	else if (host.includes(':'))
+		host = '[' + host + ']';
+
+	return 'http://' + host + ':' + listen[2] + '/dashboard/';
+}
+
 return view.extend({
 	load() {
 		return Promise.all([
@@ -132,6 +154,8 @@ return view.extend({
 		m = new form.Map('homeproxy', _('HomeProxy NEXT'),
 			_('A lean sing-box 1.14 proxy for ImmortalWrt: fewer features, each one done well.'));
 
+		const dashboard_url = dashboardUrl(data[0]);
+
 		s = m.section(form.TypedSection);
 		s.render = function () {
 			const updateStatus = () => hp.getServiceStatus('sing-box-c').then((res) => {
@@ -147,7 +171,12 @@ return view.extend({
 						class: 'btn cbi-button cbi-button-reload',
 						title: _('Restart the HomeProxy service'),
 						click: ui.createHandlerFn(this, () => restartService().then(updateStatus))
-					}, [ _('Restart') ])
+					}, [ _('Restart') ]),
+					dashboard_url ? E('button', {
+						class: 'btn cbi-button cbi-button-action',
+						title: _('Open the dashboard in a new tab'),
+						click: () => window.open(dashboard_url, '_blank', 'noopener')
+					}, [ _('Open dashboard') ]) : ''
 			]);
 		}
 

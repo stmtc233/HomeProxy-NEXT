@@ -4185,3 +4185,11 @@ msgstr "复制到"
 #: htdocs/luci-static/resources/homeproxy/client/common.js:170
 msgid "Copies %s to the routing mode chosen below."
 msgstr "把 %s 复制到下面选择的路由模式。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js:180
+msgid "Open dashboard"
+msgstr "打开面板"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js:180
+msgid "Open the dashboard in a new tab"
+msgstr "在新标签页中打开面板"

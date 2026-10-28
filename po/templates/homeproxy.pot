@@ -3966,3 +3966,11 @@ msgstr ""
 #: htdocs/luci-static/resources/homeproxy/client/common.js:170
 msgid "Copies %s to the routing mode chosen below."
 msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js:180
+msgid "Open dashboard"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js:180
+msgid "Open the dashboard in a new tab"
+msgstr ""
