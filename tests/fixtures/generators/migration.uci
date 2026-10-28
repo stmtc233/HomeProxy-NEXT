@@ -1,0 +1,63 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# A config from before the routing modes: one default outbound and DNS server
+# for every rule, and a rule still carrying the clash_mode list of a
+# development build. tests/ucode/test_generators.sh seeds it (scripts/
+# apply_template.uc seed, as an upgrade does) and checks that the rules end up
+# in a mode named Custom next to the template.
+
+config homeproxy 'config'
+	option proxy_mode 'redirect_tproxy'
+	option ipv6_support '0'
+	option log_level 'error'
+
+config homeproxy 'infra'
+	option mixed_port '5330'
+	option dns_port '5333'
+	option redirect_port '5331'
+	option tproxy_port '5332'
+	option self_mark '100'
+	option ntp_server 'nil'
+
+config homeproxy 'routing'
+	option default_outbound 'rn_mine'
+	option default_outbound_dns 'default-dns'
+
+config homeproxy 'dns'
+	option default_strategy 'prefer_ipv4'
+	option default_server 'ds_mine'
+
+config node 'n_hk'
+	option label 'hk'
+	option type 'shadowsocks'
+	option address 'hk.example.com'
+	option port '8388'
+	option shadowsocks_encrypt_method 'aes-128-gcm'
+	option password 'secret'
+
+config routing_node 'rn_mine'
+	option enabled '1'
+	option label 'mine'
+	option node 'n_hk'
+
+config dns_server 'ds_mine'
+	option enabled '1'
+	option label 'ds-mine'
+	option type 'udp'
+	option server '9.9.9.9'
+	option outbound 'rn_mine'
+
+config routing_rule 'rr_mine'
+	option enabled '1'
+	option label 'rr-mine'
+	list domain_suffix 'mine.example.com'
+	list clash_mode 'Global'
+	option action 'route'
+	option outbound 'direct-out'
+
+config dns_rule 'dr_mine'
+	option enabled '1'
+	option label 'dr-mine'
+	list domain_suffix 'mine.example.com'
+	option action 'route'
+	option server 'default-dns'

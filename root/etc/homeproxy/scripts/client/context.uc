@@ -19,6 +19,7 @@ export const ucidnssetting = 'dns',
              ucidnsrule = 'dns_rule';
 
 export const uciroutingsetting = 'routing',
+             uciroutingmode = 'routing_mode',
              uciroutingnode = 'routing_node',
              uciroutingrule = 'routing_rule';
 
@@ -75,42 +76,60 @@ export function load(uci, ubus) {
 	ctx.ipv6_support = uci.get(uciconfig, ucimain, 'ipv6_support') || '0';
 
 	ctx.dns_default_strategy = uci.get(uciconfig, ucidnssetting, 'default_strategy');
-	ctx.dns_default_server = uci.get(uciconfig, ucidnssetting, 'default_server');
 	ctx.dns_disable_cache = uci.get(uciconfig, ucidnssetting, 'disable_cache');
 	ctx.dns_disable_cache_expire = uci.get(uciconfig, ucidnssetting, 'disable_cache_expire');
 	ctx.dns_client_subnet = uci.get(uciconfig, ucidnssetting, 'client_subnet');
 
-	ctx.default_outbound = uci.get(uciconfig, uciroutingsetting, 'default_outbound') || DEFAULTS.routing.default_outbound;
 	ctx.default_outbound_dns = uci.get(uciconfig, uciroutingsetting, 'default_outbound_dns') || DEFAULTS.routing.default_outbound_dns;
 	ctx.domain_strategy = uci.get(uciconfig, uciroutingsetting, 'domain_strategy');
 
 	/* the firewall sends mainland China past sing-box, so Global could not proxy everything */
 	ctx.bypass_cn_traffic = (uci.get(uciconfig, uciroutingsetting, 'bypass_cn_traffic') === '1');
 
-	/* the modes a rule applies in ([] for all), null when bypass_cn_traffic leaves none */
-	ctx.rule_modes = function(modes) {
-		if (type(modes) === 'string')
-			modes = [modes];
-		if (isEmpty(modes))
-			return [];
-		if (!ctx.bypass_cn_traffic)
-			return modes;
+	/*
+	 * The routing modes, switched in the dashboard (sing-box calls them clash
+	 * modes, named by the label). Each has its own rules and its own outbound
+	 * and DNS server for what none of them matches.
+	 */
+	ctx.modes = [];
+	const modes_by_section = {};
+	uci.foreach(uciconfig, uciroutingmode, (cfg) => {
+		if (cfg.enabled !== '1')
+			return;
 
-		const kept = filter(modes, (m) => lc(m) !== 'global');
-		return length(kept) ? kept : null;
-	};
+		const mode = {
+			section: cfg['.name'],
+			name: trim(cfg.label || '') || cfg['.name'],
+			outbound: cfg.default_outbound || DEFAULTS.routing_mode.default_outbound,
+			dns_server: cfg.default_server || DEFAULTS.routing_mode.default_server
+		};
+		if (ctx.bypass_cn_traffic && lc(mode.name) === 'global') {
+			warn("homeproxy: the Global mode is not available while bypass_cn_traffic is on, skipping it.\n");
+			return;
+		}
 
-	ctx.default_mode = uci.get(uciconfig, uciroutingsetting, 'default_mode');
-	if (ctx.bypass_cn_traffic && lc(ctx.default_mode || '') === 'global') {
-		warn("homeproxy: the default mode Global is not available while bypass_cn_traffic is on, starting in Rule.\n");
-		ctx.default_mode = null;
+		push(ctx.modes, mode);
+		modes_by_section[mode.section] = mode;
+	});
+	if (!length(ctx.modes))
+		die('No routing mode is enabled, please check your configuration.');
+
+	const default_mode = uci.get(uciconfig, uciroutingsetting, 'default_mode');
+	ctx.default_mode = modes_by_section[default_mode];
+	if (!ctx.default_mode) {
+		ctx.default_mode = ctx.modes[0];
+		warn(sprintf("homeproxy: the default mode '%s' is not available, starting in %s.\n", default_mode, ctx.default_mode.name));
 	}
-	ctx.uses_clash_mode = !isEmpty(ctx.default_mode);
-	for (let section_type in [uciroutingrule, ucidnsrule])
-		uci.foreach(uciconfig, section_type, (cfg) => {
-			if (cfg.enabled === '1' && length(ctx.rule_modes(cfg.clash_mode) || []))
-				ctx.uses_clash_mode = true;
-		});
+	ctx.default_outbound = ctx.default_mode.outbound;
+	ctx.dns_default_server = ctx.default_mode.dns_server;
+
+	/* the mode a rule belongs to, null when that one is disabled or missing */
+	ctx.rule_mode = function(cfg, kind) {
+		const mode = modes_by_section[cfg.routing_mode];
+		if (!mode && (isEmpty(cfg.routing_mode) || uci.get(uciconfig, cfg.routing_mode, '.type') !== uciroutingmode))
+			warn(sprintf("homeproxy: %s '%s' belongs to no routing mode, skipping it.\n", kind, cfg['.name']));
+		return mode;
+	};
 
 	ctx.dns_optimistic_cache = uci.get(uciconfig, ucidnssetting, 'optimistic_cache') || '0';
 	ctx.dns_optimistic_timeout = uci.get(uciconfig, ucidnssetting, 'optimistic_timeout');

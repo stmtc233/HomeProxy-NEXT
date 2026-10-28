@@ -6,9 +6,9 @@
 # nodes (WireGuard endpoint and a plain outbound) with bind_interface /
 # detour / domain_resolver, a selector over a routing node, a node of its own
 # and direct, a DoH server with headers, a hosts file server, a remote
-# rule-set with initial_path, the dashboard, and rules limited to clash
-# modes (one mode, several, with invert, without match fields, and a DNS
-# rule whose evaluate rule gets the modes too).
+# rule-set with initial_path, the dashboard, and several routing modes (their
+# own fallbacks, a disabled one, a rule with invert or without match fields,
+# and a DNS rule whose evaluate rule gets the mode too).
 # The keys are test-only.
 
 config homeproxy 'config'
@@ -29,18 +29,40 @@ config homeproxy 'infra'
 	option ntp_server 'nil'
 
 config homeproxy 'routing'
-	option default_outbound 'rn_proxy'
 	option default_outbound_dns 'ds_doh'
 	option domain_strategy 'prefer_ipv4'
 	option find_neighbor '1'
 	option tcpip_stack 'gvisor'
 	option endpoint_independent_nat '1'
 	option udp_timeout '120'
-	option default_mode 'Rule'
+	option default_mode 'm_rule'
+
+config routing_mode 'm_rule'
+	option enabled '1'
+	option label 'Rule'
+	option default_outbound 'rn_proxy'
+	option default_server 'ds_doh'
+
+config routing_mode 'm_allow_ads'
+	option enabled '1'
+	option label 'RuleAllowAds'
+	option default_outbound 'rn_proxy'
+	option default_server 'system-dns'
+
+config routing_mode 'm_global'
+	option enabled '1'
+	option label 'Global'
+	option default_outbound 'rn_select'
+	option default_server 'ds_doh'
+
+# a disabled mode takes its rules with it
+config routing_mode 'm_off'
+	option enabled '0'
+	option label 'Off'
+	option default_outbound 'block-out'
 
 config homeproxy 'dns'
 	option default_strategy 'prefer_ipv6'
-	option default_server 'ds_doh'
 	option disable_cache_expire '1'
 	option client_subnet '198.51.100.0/24'
 
@@ -126,6 +148,7 @@ config ruleset 'rs_remote'
 	option outbound 'rn_wg'
 
 config routing_rule 'rr_remote'
+	option routing_mode 'm_rule'
 	option enabled '1'
 	option label 'rr-remote'
 	list rule_set 'rs_remote'
@@ -133,6 +156,7 @@ config routing_rule 'rr_remote'
 	option outbound 'rn_wg'
 
 config routing_rule 'rr_select'
+	option routing_mode 'm_rule'
 	option enabled '1'
 	option label 'rr-select'
 	list domain_suffix 'select.example.com'
@@ -140,44 +164,49 @@ config routing_rule 'rr_select'
 	option outbound 'rn_select'
 
 config routing_rule 'rr_mode_global'
+	option routing_mode 'm_global'
 	option enabled '1'
 	option label 'rr-mode-global'
-	list clash_mode 'Global'
 	option action 'route'
 	option outbound 'rn_select'
 
 config routing_rule 'rr_mode_multi'
+	option routing_mode 'm_allow_ads'
 	option enabled '1'
 	option label 'rr-mode-multi'
 	list domain_suffix 'mode.example.com'
-	list clash_mode 'Rule'
-	list clash_mode 'RuleAllowAds'
 	option action 'reject'
 
-# an invert must not flip the mode, so even one mode is kept apart
+# an invert must not flip the mode, so the mode is kept apart
 config routing_rule 'rr_mode_invert'
+	option routing_mode 'm_rule'
 	option enabled '1'
 	option label 'rr-mode-invert'
 	list domain 'invert.example.com'
 	option invert '1'
-	list clash_mode 'Rule'
 	option action 'route'
 	option outbound 'direct-out'
 
 config dns_rule 'dr_mode_multi'
+	option routing_mode 'm_rule'
 	option enabled '1'
 	option label 'dr-mode-multi'
 	list domain_suffix 'mode.example.com'
-	list clash_mode 'Rule'
-	list clash_mode 'Global'
 	option action 'route'
 	option server 'ds_doh'
 
 # the evaluate rule generated for the IP filter is limited to the same mode
 config dns_rule 'dr_mode_ip'
+	option routing_mode 'm_global'
 	option enabled '1'
 	option label 'dr-mode-ip'
 	list ip_cidr '198.51.100.0/24'
-	list clash_mode 'Global'
 	option action 'route'
 	option server 'ds_doh'
+
+config routing_rule 'rr_mode_off'
+	option routing_mode 'm_off'
+	option enabled '1'
+	option label 'rr-mode-off'
+	list domain_suffix 'off.example.com'
+	option action 'reject'

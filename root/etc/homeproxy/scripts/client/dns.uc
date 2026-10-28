@@ -9,7 +9,7 @@
 import { isEmpty, strToBool, strToInt, strToTime } from '../homeproxy.uc';
 
 import {
-	parse_dnsquery, parse_headers, parse_hosts_predefined, restrict_to_modes, rule_match_fields
+	parse_dnsquery, parse_headers, parse_hosts_predefined, restrict_to_mode, rule_match_fields
 } from './common.uc';
 import { uciconfig, ucidnsserver, ucidnsrule } from './context.uc';
 
@@ -68,17 +68,18 @@ function build_custom_servers(ctx, servers) {
 
 function build_custom_rules(ctx) {
 	const uci = ctx.uci;
-	const rules = [];
+	const mode_rules = {};
+	for (let mode in ctx.modes)
+		mode_rules[mode.section] = [];
 
 	uci.foreach(uciconfig, ucidnsrule, (cfg) => {
 		if (cfg.enabled !== '1')
 			return;
 
-		const modes = ctx.rule_modes(cfg.clash_mode);
-		if (modes === null) {
-			warn(sprintf("homeproxy: DNS rule '%s' only applies in Global mode, which bypass_cn_traffic rules out, skipping it.\n", cfg['.name']));
+		const mode = ctx.rule_mode(cfg, 'DNS rule');
+		if (!mode)
 			return;
-		}
+		const rules = mode_rules[mode.section];
 
 		const match_fields = {
 			...rule_match_fields(ctx, cfg),
@@ -123,12 +124,12 @@ function build_custom_rules(ctx) {
 		const legacy_filter = !isEmpty(cfg.ip_cidr) || strToBool(cfg.ip_is_private) === true;
 		if (legacy_filter && !rule.match_response && cfg.action === 'route') {
 			const eval_tag = '_hp_eval_' + cfg['.name'];
-			push(rules, restrict_to_modes({
+			push(rules, restrict_to_mode({
 				action: 'evaluate',
 				server: ctx.get_resolver(cfg.server),
 				tag: eval_tag,
 				...match_fields
-			}, modes, match_keys));
+			}, mode.name, match_keys));
 			rule.match_response = eval_tag;
 		}
 
@@ -147,8 +148,20 @@ function build_custom_rules(ctx) {
 			return;
 		}
 
-		push(rules, restrict_to_modes(rule, modes, match_keys));
+		push(rules, restrict_to_mode(rule, mode.name, match_keys));
 	});
+
+	/* each mode ends in its own fallback, dns.final is only reached without the clash API */
+	const rules = [];
+	for (let mode in ctx.modes) {
+		for (let rule in mode_rules[mode.section])
+			push(rules, rule);
+		push(rules, {
+			clash_mode: mode.name,
+			action: 'route',
+			server: ctx.get_resolver(mode.dns_server)
+		});
+	}
 
 	return rules;
 }

@@ -202,7 +202,7 @@ return baseclass.extend({
 		so.depends('homeproxy.config.proxy_mode', 'tun');
 
 		so = ss.option(form.Flag, 'bypass_cn_traffic', _('Bypass CN traffic'),
-			_('Send mainland China addresses past sing-box in the firewall. The Global mode is not available while this is on: rules limited to Global are left out and it disappears from the dashboard.'));
+			_('Send mainland China addresses past sing-box in the firewall. A mode named Global is not available while this is on: it is left out with its rules and disappears from the dashboard.'));
 		so.rmempty = false;
 
 		so = ss.option(form.Flag, 'find_neighbor', _('Find neighbor hosts'),
@@ -215,14 +215,14 @@ return baseclass.extend({
 			so.value(i, hp.dns_strategy[i]);
 
 		so = ss.option(form.Button, '_template', _('Default template'),
-			_('Replaces the routing nodes, routing rules, DNS servers, DNS rules and rule-sets with the default template. ' +
-			'Its default outbound Proxy picks Auto (the fastest of all nodes), a single node or direct; ' +
-			'its modes, switched in the dashboard, are Rule (mainland China direct, ads blocked, the rest through Proxy), RuleAllowAds (the same without blocking ads), Global and Direct.'));
+			_('Replaces the routing modes, routing nodes, routing rules, DNS servers, DNS rules and rule-sets with the default template. ' +
+			'Its modes are Rule (mainland China direct, ads blocked, the rest through Proxy), RuleAllowAds (the same without blocking ads), Global (everything through Proxy) and Direct; ' +
+			'Proxy picks Auto (the fastest of all nodes), a single node or direct.'));
 		so.inputtitle = _('Reset to the template');
 		so.inputstyle = 'reset';
 		so.onclick = function() {
 			ui.showModal(_('Default template'), [
-				E('p', _('All routing nodes, routing rules, DNS servers, DNS rules and rule-sets are replaced by the template, and unsaved changes to HomeProxy are discarded.')),
+				E('p', _('All routing modes, routing nodes, routing rules, DNS servers, DNS rules and rule-sets are replaced by the template, and unsaved changes to HomeProxy are discarded.')),
 				E('div', { 'class': 'right' }, [
 					E('button', { 'class': 'btn', 'click': ui.hideModal }, [ _('Cancel') ]),
 					' ',
@@ -234,20 +234,11 @@ return baseclass.extend({
 			]);
 		};
 
-		so = ss.option(form.ListValue, 'default_outbound', _('Default outbound'),
-			_('Default outbound for connections not matched by any routing rules.'));
-		so.load = common.loadSectionChoices(uciconfig, 'routing_node', {
-			'nil': _('Disable (the service)'),
-			'direct-out': _('Direct'),
-			'block-out': _('Block')
-		});
+		so = ss.option(form.ListValue, 'default_mode', _('Default mode'),
+			_('The routing mode sing-box starts in. Once a mode has been switched in the dashboard, that one is kept across restarts instead.'));
+		so.load = common.loadSectionChoices(uciconfig, 'routing_mode', { 'nil': _('Disable (the service)') });
 		so.default = 'nil';
 		so.rmempty = false;
-
-		so = ss.option(form.Value, 'default_mode', _('Default mode'),
-			_('The mode sing-box starts in, Rule if empty. Once a mode has been switched in the dashboard, that one is kept across restarts instead.'));
-		so.load = common.loadClashModes(uciconfig);
-		so.placeholder = 'Rule';
 
 		so = ss.option(form.ListValue, 'default_outbound_dns', _('Default outbound DNS'),
 			_('Default DNS server for resolving domain name in the server address.'));

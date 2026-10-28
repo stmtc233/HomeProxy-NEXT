@@ -17,6 +17,10 @@
 					"Routing Settings"
 				],
 				[
+					"routing_mode",
+					"Routing Modes"
+				],
+				[
 					"routing_node",
 					"Routing Nodes"
 				],
@@ -427,7 +431,7 @@
 								"kind": "Flag",
 								"name": "bypass_cn_traffic",
 								"title": "Bypass CN traffic",
-								"description": "Send mainland China addresses past sing-box in the firewall. The Global mode is not available while this is on: rules limited to Global are left out and it disappears from the dashboard.",
+								"description": "Send mainland China addresses past sing-box in the firewall. A mode named Global is not available while this is on: it is left out with its rules and disappears from the dashboard.",
 								"depends": [],
 								"values": [],
 								"props": {
@@ -479,7 +483,7 @@
 								"kind": "Button",
 								"name": "_template",
 								"title": "Default template",
-								"description": "Replaces the routing nodes, routing rules, DNS servers, DNS rules and rule-sets with the default template. Its default outbound Proxy picks Auto (the fastest of all nodes), a single node or direct; its modes, switched in the dashboard, are Rule (mainland China direct, ads blocked, the rest through Proxy), RuleAllowAds (the same without blocking ads), Global and Direct.",
+								"description": "Replaces the routing modes, routing nodes, routing rules, DNS servers, DNS rules and rule-sets with the default template. Its modes are Rule (mainland China direct, ads blocked, the rest through Proxy), RuleAllowAds (the same without blocking ads), Global (everything through Proxy) and Direct; Proxy picks Auto (the fastest of all nodes), a single node or direct.",
 								"depends": [],
 								"values": [],
 								"props": {
@@ -489,25 +493,14 @@
 							},
 							{
 								"kind": "ListValue",
-								"name": "default_outbound",
-								"title": "Default outbound",
-								"description": "Default outbound for connections not matched by any routing rules.",
+								"name": "default_mode",
+								"title": "Default mode",
+								"description": "The routing mode sing-box starts in. Once a mode has been switched in the dashboard, that one is kept across restarts instead.",
 								"depends": [],
 								"values": [],
 								"props": {
 									"default": "nil",
 									"rmempty": false
-								}
-							},
-							{
-								"kind": "Value",
-								"name": "default_mode",
-								"title": "Default mode",
-								"description": "The mode sing-box starts in, Rule if empty. Once a mode has been switched in the dashboard, that one is kept across restarts instead.",
-								"depends": [],
-								"values": [],
-								"props": {
-									"placeholder": "Rule"
 								}
 							},
 							{
@@ -528,13 +521,80 @@
 				},
 				{
 					"kind": "SectionValue",
+					"name": "_routing_mode",
+					"description": "routing_mode",
+					"depends": [],
+					"values": [],
+					"props": {},
+					"subsection": {
+						"id": "GridSection:_routing_mode#3",
+						"kind": "GridSection",
+						"name": "_routing_mode",
+						"tabs": [],
+						"options": [
+							{
+								"kind": "Value",
+								"name": "label",
+								"title": "Name",
+								"description": "The name sing-box and the dashboard show for the mode.",
+								"depends": [],
+								"values": [],
+								"props": {
+									"modalonly": true
+								}
+							},
+							{
+								"kind": "Flag",
+								"name": "enabled",
+								"title": "Enable",
+								"description": null,
+								"depends": [],
+								"values": [],
+								"props": {
+									"default": "1",
+									"editable": true,
+									"rmempty": false
+								}
+							},
+							{
+								"kind": "ListValue",
+								"name": "default_outbound",
+								"title": "Default outbound",
+								"description": "Default outbound for connections not matched by any routing rules of this mode.",
+								"depends": [],
+								"values": [],
+								"props": {
+									"default": "direct-out",
+									"editable": true,
+									"rmempty": false
+								}
+							},
+							{
+								"kind": "ListValue",
+								"name": "default_server",
+								"title": "Default DNS server",
+								"description": "DNS server for queries not matched by any DNS rules of this mode.",
+								"depends": [],
+								"values": [],
+								"props": {
+									"default": "default-dns",
+									"editable": true,
+									"rmempty": false
+								}
+							}
+						],
+						"subsection": null
+					}
+				},
+				{
+					"kind": "SectionValue",
 					"name": "_routing_node",
 					"description": "routing_node",
 					"depends": [],
 					"values": [],
 					"props": {},
 					"subsection": {
-						"id": "GridSection:_routing_node#3",
+						"id": "GridSection:_routing_node#4",
 						"kind": "GridSection",
 						"name": "_routing_node",
 						"tabs": [],
@@ -842,7 +902,7 @@
 					"values": [],
 					"props": {},
 					"subsection": {
-						"id": "GridSection:_routing_rule#4",
+						"id": "GridSection:_routing_rule#5",
 						"kind": "GridSection",
 						"name": "_routing_rule",
 						"tabs": [
@@ -907,13 +967,16 @@
 								}
 							},
 							{
-								"kind": "DynamicList",
-								"name": "clash_mode",
-								"title": "Active in modes",
-								"description": "Only applies while sing-box is in one of these modes (its clash mode, switched in the dashboard). Applies in every mode if empty.",
+								"kind": "ListValue",
+								"name": "routing_mode",
+								"title": "Routing mode",
+								"description": "The mode this rule belongs to. It only applies while sing-box is in that mode.",
 								"depends": [],
 								"values": [],
-								"props": {}
+								"props": {
+									"modalonly": true,
+									"rmempty": false
+								}
 							},
 							{
 								"kind": "ListValue",
@@ -1745,7 +1808,7 @@
 					"values": [],
 					"props": {},
 					"subsection": {
-						"id": "GridSection:_dns#5",
+						"id": "GridSection:_dns#6",
 						"kind": "GridSection",
 						"name": "_dns",
 						"tabs": [],
@@ -1779,18 +1842,6 @@
 									]
 								],
 								"props": {}
-							},
-							{
-								"kind": "ListValue",
-								"name": "default_server",
-								"title": "Default DNS server",
-								"description": null,
-								"depends": [],
-								"values": [],
-								"props": {
-									"default": "default-dns",
-									"rmempty": false
-								}
 							},
 							{
 								"kind": "Flag",
@@ -1838,7 +1889,7 @@
 					"values": [],
 					"props": {},
 					"subsection": {
-						"id": "GridSection:_dns_server#6",
+						"id": "GridSection:_dns_server#7",
 						"kind": "GridSection",
 						"name": "_dns_server",
 						"tabs": [],
@@ -2234,7 +2285,7 @@
 					"values": [],
 					"props": {},
 					"subsection": {
-						"id": "GridSection:_dns_rule#7",
+						"id": "GridSection:_dns_rule#8",
 						"kind": "GridSection",
 						"name": "_dns_rule",
 						"tabs": [
@@ -2300,13 +2351,16 @@
 								}
 							},
 							{
-								"kind": "DynamicList",
-								"name": "clash_mode",
-								"title": "Active in modes",
-								"description": "Only applies while sing-box is in one of these modes (its clash mode, switched in the dashboard). Applies in every mode if empty.",
+								"kind": "ListValue",
+								"name": "routing_mode",
+								"title": "Routing mode",
+								"description": "The mode this rule belongs to. It only applies while sing-box is in that mode.",
 								"depends": [],
 								"values": [],
-								"props": {}
+								"props": {
+									"modalonly": true,
+									"rmempty": false
+								}
 							},
 							{
 								"kind": "ListValue",
@@ -3151,7 +3205,7 @@
 					"values": [],
 					"props": {},
 					"subsection": {
-						"id": "GridSection:_ruleset#8",
+						"id": "GridSection:_ruleset#9",
 						"kind": "GridSection",
 						"name": "_ruleset",
 						"tabs": [],
@@ -3333,7 +3387,7 @@
 					"values": [],
 					"props": {},
 					"subsection": {
-						"id": "GridSection:_control#9",
+						"id": "GridSection:_control#10",
 						"kind": "GridSection",
 						"name": "_control",
 						"tabs": [
@@ -3582,7 +3636,7 @@
 					"values": [],
 					"props": {},
 					"subsection": {
-						"id": "GridSection:_dns_cache#10",
+						"id": "GridSection:_dns_cache#11",
 						"kind": "GridSection",
 						"name": "_dns_cache",
 						"tabs": [],

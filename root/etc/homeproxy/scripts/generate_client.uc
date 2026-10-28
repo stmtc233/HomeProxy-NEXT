@@ -79,10 +79,9 @@ config.experimental = {
 
 /* clash_mode matches nothing without the mode manager the clash API brings,
    which listens nowhere without an external_controller */
-if (ctx.uses_clash_mode)
-	config.experimental.clash_api = {
-		default_mode: ctx.default_mode
-	};
+config.experimental.clash_api = {
+	default_mode: ctx.default_mode.name
+};
 
 config['$schema'] = 'https://sing-box.sagernet.org/schema.json';
 

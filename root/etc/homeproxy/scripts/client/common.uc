@@ -110,17 +110,12 @@ function is_match_value(v) {
 }
 
 /*
- * Limit a rule to some clash modes. One mode is just another match field,
- * unless an invert would flip it as well; otherwise the match fields move
- * into a logical rule next to the modes. sing-box refuses an empty sub-rule,
- * so a rule without match fields only gets the modes.
+ * Limit a rule to a clash mode. The mode is just another match field, unless
+ * an invert would flip it as well; then the match fields move into a logical
+ * rule next to it. sing-box refuses an empty sub-rule, so a rule without match
+ * fields only gets the mode.
  */
-export function restrict_to_modes(rule, modes, match_keys) {
-	if (type(modes) === 'string')
-		modes = [modes];
-	if (isEmpty(modes))
-		return rule;
-
+export function restrict_to_mode(rule, mode, match_keys) {
 	const match = {},
 	      outer = {};
 	for (let k in keys(rule)) {
@@ -130,24 +125,15 @@ export function restrict_to_modes(rule, modes, match_keys) {
 			match[k] = rule[k];
 	}
 
-	const mode_rules = map(modes, (m) => {
-		return { clash_mode: m };
-	});
-	const mode_rule = (length(modes) === 1) ? mode_rules[0] : {
-		type: 'logical',
-		mode: 'or',
-		rules: mode_rules
-	};
-
 	if (!length(keys(match)))
-		return { ...mode_rule, ...outer };
-	if (length(modes) === 1 && match.invert !== true)
-		return { ...match, clash_mode: modes[0], ...outer };
+		return { clash_mode: mode, ...outer };
+	if (match.invert !== true)
+		return { ...match, clash_mode: mode, ...outer };
 
 	return {
 		type: 'logical',
 		mode: 'and',
-		rules: [mode_rule, match],
+		rules: [{ clash_mode: mode }, match],
 		...outer
 	};
 };

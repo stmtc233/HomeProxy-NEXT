@@ -35,8 +35,13 @@ config homeproxy 'control'
 	option bind_interface 'eth1'
 
 config homeproxy 'routing'
-	option default_outbound 'rn_wg'
+	option default_mode 'm_rule'
 	option udp_timeout '300'
+
+config routing_mode 'm_rule'
+	option enabled '1'
+	option label 'Rule'
+	option default_outbound 'rn_wg'
 
 config node 'n_wg'
 	option label 'wg'
@@ -71,6 +76,7 @@ config routing_node 'rn_udp'
 	option node 'n_udp_direct'
 
 config routing_rule 'rr_udp'
+	option routing_mode 'm_rule'
 	option enabled '1'
 	option label 'rr-udp'
 	option network 'udp'

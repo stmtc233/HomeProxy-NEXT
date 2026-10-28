@@ -210,18 +210,18 @@ for name in tun custom-extras; do
 	check_golden "$name" sing-box-c.json
 done
 
-# bypass_cn_traffic rules Global out: the rules limited to it are skipped, the
-# others lose it, and a Global default mode falls back to Rule
+# bypass_cn_traffic rules Global out: the mode is skipped with its rules, and
+# a Global default mode falls back to the first other one
 mkdir -p "$WORK/bypass-cn-fixture"
 cp "$ROOT/tests/fixtures/generators/custom-extras.uci" "$WORK/bypass-cn-fixture/homeproxy"
 uci -c "$WORK/bypass-cn-fixture" -q batch <<-EOF
 	set homeproxy.routing.bypass_cn_traffic=1
-	set homeproxy.routing.default_mode=Global
+	set homeproxy.routing.default_mode=m_global
 	commit homeproxy
 EOF
 run_case bypass_cn "$WORK/bypass-cn-fixture/homeproxy" generate_client.uc sing-box-c.json
 BYPASS_OUT="$WORK/bypass_cn/run/sing-box-c.json"
-if [ -f "$BYPASS_OUT" ] && ! grep -q -e 'Global' -e '"default_mode"' "$BYPASS_OUT" \
+if [ -f "$BYPASS_OUT" ] && ! grep -q 'Global' "$BYPASS_OUT" && grep -q '"default_mode": "Rule"' "$BYPASS_OUT" \
 	&& grep -q '"clash_mode": "Rule"' "$BYPASS_OUT" && grep -q '"clash_mode": "RuleAllowAds"' "$BYPASS_OUT"; then
 	echo "PASS: bypass_cn: Global is gone from the rules and the default mode, the other modes stay"
 else
@@ -234,21 +234,40 @@ run_case template "$ROOT/tests/fixtures/generators/template.uci" generate_client
 check_golden template sing-box-c.json
 
 TPL_UCI="uci -c $WORK/template/config -q"
-$TPL_UCI delete homeproxy.rr_ads
+$TPL_UCI delete homeproxy.rr_rule_ads
 $TPL_UCI set homeproxy.rr_user=routing_rule
 $TPL_UCI commit homeproxy
 ( cd "$WORK/template/scripts" && ucode apply_template.uc seed )
-if ! $TPL_UCI get homeproxy.rr_ads > "/dev/null" && $TPL_UCI get homeproxy.rr_user > "/dev/null"; then
-	echo "PASS: template: seeding leaves a config with routing sections alone"
+if ! $TPL_UCI get homeproxy.rr_rule_ads > "/dev/null" && $TPL_UCI get homeproxy.rr_user > "/dev/null"; then
+	echo "PASS: template: seeding leaves a config with routing modes alone"
 else
 	echo "FAIL: template: seeding changed a config that has routing sections"
 	FAILED=1
 fi
 ( cd "$WORK/template/scripts" && ucode apply_template.uc )
-if $TPL_UCI get homeproxy.rr_ads > "/dev/null" && ! $TPL_UCI get homeproxy.rr_user > "/dev/null"; then
+if $TPL_UCI get homeproxy.rr_rule_ads > "/dev/null" && ! $TPL_UCI get homeproxy.rr_user > "/dev/null"; then
 	echo "PASS: template: applying it replaces every routing section"
 else
 	echo "FAIL: template: applying it did not replace the routing sections"
+	FAILED=1
+fi
+
+# a config from before the modes: its rules move into Custom, the template joins them
+run_case migration "$ROOT/tests/fixtures/generators/migration.uci" generate_client.uc sing-box-c.json "" "" seed
+MIG_UCI="uci -c $WORK/migration/config -q"
+mig_get() {
+	$MIG_UCI get "homeproxy.$1" 2>"/dev/null"
+}
+if [ "$(mig_get m_custom.label)" = "Custom" ] && [ "$(mig_get m_custom.default_outbound)" = "rn_mine" ] \
+	&& [ "$(mig_get m_custom.default_server)" = "ds_mine" ] && [ "$(mig_get routing.default_mode)" = "m_custom" ] \
+	&& [ "$(mig_get rr_mine.routing_mode)" = "m_custom" ] && [ "$(mig_get dr_mine.routing_mode)" = "m_custom" ] \
+	&& [ -z "$(mig_get rr_mine.clash_mode)" ] && [ -z "$(mig_get routing.default_outbound)" ] \
+	&& [ -z "$(mig_get dns.default_server)" ] && [ "$(mig_get m_rule.label)" = "Rule" ] \
+	&& grep -q '"default_mode": "Custom"' "$WORK/migration/run/sing-box-c.json"; then
+	echo "PASS: migration: the old rules and fallbacks make the Custom mode, next to the template"
+else
+	echo "FAIL: migration: the old config did not end up in the Custom mode next to the template"
+	$MIG_UCI show homeproxy
 	FAILED=1
 fi
 

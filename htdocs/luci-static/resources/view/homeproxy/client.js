@@ -21,6 +21,7 @@
 'require homeproxy.client.dns_rule as dns_rule';
 'require homeproxy.client.dns_server as dns_server';
 'require homeproxy.client.routing as routing';
+'require homeproxy.client.routing_mode as routing_mode';
 'require homeproxy.client.routing_node as routing_node';
 'require homeproxy.client.routing_rule as routing_rule';
 'require homeproxy.client.ruleset as ruleset';
@@ -154,7 +155,7 @@ return view.extend({
 
 		s = m.section(form.NamedSection, 'config', 'homeproxy');
 
-		for (let tab of [ routing, routing_node, routing_rule, dns, dns_server, dns_rule, ruleset, control, dns_cache ])
+		for (let tab of [ routing, routing_mode, routing_node, routing_rule, dns, dns_server, dns_rule, ruleset, control, dns_cache ])
 			tab.render(s, ctx);
 
 		return m.render();

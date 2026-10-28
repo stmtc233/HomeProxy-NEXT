@@ -346,10 +346,6 @@ msgstr ""
 msgid "Bypass CN traffic"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:393
-msgid "Send mainland China addresses past sing-box in the firewall. The Global mode is not available while this is on: rules limited to Global are left out and it disappears from the dashboard."
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/server.js:666
 msgid "CA provider"
 msgstr ""
@@ -536,10 +532,6 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:424
 msgid "Default outbound DNS"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:406
-msgid "Default outbound for connections not matched by any routing rules."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1475
@@ -3831,20 +3823,8 @@ msgstr ""
 msgid "one of the selector nodes"
 msgstr ""
 
-#: htdocs/luci-static/resources/homeproxy/client/routing_rule.js
-msgid "Active in modes"
-msgstr ""
-
-#: htdocs/luci-static/resources/homeproxy/client/routing_rule.js
-msgid "Only applies while sing-box is in one of these modes (its clash mode, switched in the dashboard). Applies in every mode if empty."
-msgstr ""
-
 #: htdocs/luci-static/resources/homeproxy/client/routing.js
 msgid "Default mode"
-msgstr ""
-
-#: htdocs/luci-static/resources/homeproxy/client/routing.js
-msgid "The mode sing-box starts in, Rule if empty. Once a mode has been switched in the dashboard, that one is kept across restarts instead."
 msgstr ""
 
 #: htdocs/luci-static/resources/homeproxy/client/routing.js
@@ -3856,13 +3836,57 @@ msgid "Default template"
 msgstr ""
 
 #: htdocs/luci-static/resources/homeproxy/client/routing.js
-msgid "Replaces the routing nodes, routing rules, DNS servers, DNS rules and rule-sets with the default template. Its default outbound Proxy picks Auto (the fastest of all nodes), a single node or direct; its modes, switched in the dashboard, are Rule (mainland China direct, ads blocked, the rest through Proxy), RuleAllowAds (the same without blocking ads), Global and Direct."
-msgstr ""
-
-#: htdocs/luci-static/resources/homeproxy/client/routing.js
 msgid "Reset to the template"
 msgstr ""
 
-#: htdocs/luci-static/resources/homeproxy/client/routing.js
-msgid "All routing nodes, routing rules, DNS servers, DNS rules and rule-sets are replaced by the template, and unsaved changes to HomeProxy are discarded."
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:19
+msgid "Add a routing mode"
+msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:19
+msgid "DNS server for queries not matched by any DNS rules of this mode."
+msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:19
+msgid "Default outbound for connections not matched by any routing rules of this mode."
+msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:19
+msgid "Each mode has its own routing rules and DNS rules, and its own outbound and DNS server for what none of them matches. The mode is switched in the dashboard, without a restart."
+msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:19
+msgid "Routing Modes"
+msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:19
+msgid "The name sing-box and the dashboard show for the mode."
+msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy/client/common.js:59
+msgid "Routing mode"
+msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy/client/common.js:59
+msgid "The mode this rule belongs to. It only applies while sing-box is in that mode."
+msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy/client/common.js:59
+msgid "Without a mode (not used)"
+msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy/client/routing.js:204
+msgid "All routing modes, routing nodes, routing rules, DNS servers, DNS rules and rule-sets are replaced by the template, and unsaved changes to HomeProxy are discarded."
+msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy/client/routing.js:204
+msgid "Replaces the routing modes, routing nodes, routing rules, DNS servers, DNS rules and rule-sets with the default template. Its modes are Rule (mainland China direct, ads blocked, the rest through Proxy), RuleAllowAds (the same without blocking ads), Global (everything through Proxy) and Direct; Proxy picks Auto (the fastest of all nodes), a single node or direct."
+msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy/client/routing.js:204
+msgid "Send mainland China addresses past sing-box in the firewall. A mode named Global is not available while this is on: it is left out with its rules and disappears from the dashboard."
+msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy/client/routing.js:204
+msgid "The routing mode sing-box starts in. Once a mode has been switched in the dashboard, that one is kept across restarts instead."
 msgstr ""

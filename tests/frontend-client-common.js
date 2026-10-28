@@ -3,8 +3,8 @@
 //
 // homeproxy/client/common.js: the section-backed selects of the client tabs
 // list the fixed choices first, then the enabled sections, and show a stored
-// value as its label in the grid; the clash mode suggestions list the modes
-// sing-box puts first, then the ones the rules name.
+// value as its label in the grid; the rule grids show one routing mode at a
+// time, and rule labels only need to be unique within their mode.
 
 'use strict';
 
@@ -25,19 +25,29 @@ const sections = {
 		{ '.name': 'ds1', label: 'Ali', enabled: '1' },
 		{ '.name': 'ds2', label: 'off', enabled: '0' }
 	],
-	routing_rule: [
-		{ '.name': 'rr1', clash_mode: [ 'Rule', 'Office' ] },
-		{ '.name': 'rr2' },
-		{ '.name': 'rr3', clash_mode: 'My Mode' }
+	routing_mode: [
+		{ '.name': 'm_rule', label: 'Rule', enabled: '1' },
+		{ '.name': 'm_off', enabled: '0' }
 	],
-	dns_rule: [
-		{ '.name': 'dr1', clash_mode: [ 'Office', 'Global', 'Night' ] }
+	routing_rule: [
+		{ '.name': 'rr1', label: 'ads', routing_mode: 'm_rule' },
+		{ '.name': 'rr2', label: 'ads', routing_mode: 'm_off' },
+		{ '.name': 'rr3', label: 'cn', routing_mode: 'm_gone' },
+		{ '.name': 'rr4', label: 'cn' }
 	]
 };
 
 const uci = {
-	sections: (_conf, type, cb) => (sections[type] || []).forEach(cb),
-	get: (_conf, name) => Object.values(sections).flat().find((s) => s['.name'] === name)
+	sections: (_conf, type, cb) => {
+		const list = sections[type] || [];
+		if (cb)
+			list.forEach(cb);
+		return list;
+	},
+	get: (_conf, name, opt) => {
+		const res = Object.values(sections).flat().find((s) => s['.name'] === name);
+		return (opt && res) ? res[opt] : res;
+	}
 };
 
 let rendered;
@@ -120,14 +130,22 @@ check(same(o.listed, [ [ '', 'Default' ], [ 'default-dns', 'Default DNS (issued 
 check(o.keylist === undefined && o.vallist === undefined && ret === 'load' && same(o.called, [ 'load', 'cfg' ]),
 	'load starts from an empty list and chains to the parent load', o.called);
 
-/* clash modes */
-o = option();
-const mret = common.loadClashModes('homeproxy').call(o, 'cfg');
-check(same(o.listed, [ [ 'Rule', undefined ], [ 'Global', undefined ], [ 'Direct', undefined ],
-	[ 'Office', undefined ], [ 'My Mode', undefined ], [ 'Night', undefined ] ]),
-	'modes: the predefined ones, then each mode the rules name once (a hand-written option kept whole)', o.listed);
-check(o.keylist === undefined && mret === 'load' && same(o.called, [ 'load', 'cfg' ]),
-	'modes: load starts from an empty list and chains to the parent load', o.called);
+/* rule grids by mode */
+o = { subsection: { sectiontype: 'routing_rule' } };
+const mode_option = option();
+common.bindModeGrid(o, 'homeproxy', mode_option);
+const shown = () => sections.routing_rule.map((r) => r['.name']).filter((sid) => o.subsection.filter(sid));
+check(same(shown(), [ 'rr3', 'rr4' ]), 'modes: before a mode is picked, the rules without one are listed', shown());
+mode_option.load('cfg');
+check(same(mode_option.listed, [ [ 'm_rule', 'Rule' ], [ 'm_off', 'm_off' ] ]) && mode_option.rmempty === false,
+	'modes: a rule can be moved to any mode, a disabled one too', mode_option.listed);
+
+const unique = common.validateUniqueLabelInMode('homeproxy', 'routing_rule');
+const in_mode = (mode) => ({ section: { formvalue: (sid, opt) => (opt === 'routing_mode') ? mode : null } });
+check(unique.call(in_mode('m_rule'), 'new', 'ads') !== true, 'labels: a label taken in the same mode is refused');
+check(unique.call(in_mode('m_rule'), 'new', 'cn') === true, 'labels: a label used in other modes only is fine');
+check(unique.call(in_mode('m_rule'), 'rr1', 'ads') === true, 'labels: a rule keeps its own label');
+check(unique.call(in_mode('m_rule'), 'new', '') !== true, 'labels: an empty label is refused');
 
 /* write */
 const select = { value: 'old', events: [], dispatchEvent(ev) { this.events.push(ev.type); } };

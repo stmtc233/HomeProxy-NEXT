@@ -363,10 +363,6 @@ msgstr "全部"
 msgid "Bypass CN traffic"
 msgstr "绕过中国流量"
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:393
-msgid "Send mainland China addresses past sing-box in the firewall. The Global mode is not available while this is on: rules limited to Global are left out and it disappears from the dashboard."
-msgstr "在防火墙中让中国大陆地址不经过 sing-box。开启后无法使用 Global 模式：只限 Global 的规则会被略过，Dashboard 中也不再出现 Global。"
-
 #: htdocs/luci-static/resources/view/homeproxy/server.js:666
 msgid "CA provider"
 msgstr "CA 颁发机构"
@@ -554,10 +550,6 @@ msgstr "默认出站"
 #: htdocs/luci-static/resources/view/homeproxy/client.js:424
 msgid "Default outbound DNS"
 msgstr "默认出站 DNS"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:406
-msgid "Default outbound for connections not matched by any routing rules."
-msgstr "用于未被任何路由规则匹配的连接的默认出站。"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1475
 msgid "Default packet encoding"
@@ -4050,21 +4042,9 @@ msgstr "选择其他出站之前使用的出站，留空则用第一个。选择
 msgid "one of the selector nodes"
 msgstr "可选出站之一"
 
-#: htdocs/luci-static/resources/homeproxy/client/routing_rule.js
-msgid "Active in modes"
-msgstr "生效模式"
-
-#: htdocs/luci-static/resources/homeproxy/client/routing_rule.js
-msgid "Only applies while sing-box is in one of these modes (its clash mode, switched in the dashboard). Applies in every mode if empty."
-msgstr "仅在 sing-box 处于其中某个模式时生效（即 clash 模式，在 Dashboard 中切换）。留空则所有模式下都生效。"
-
 #: htdocs/luci-static/resources/homeproxy/client/routing.js
 msgid "Default mode"
 msgstr "默认模式"
-
-#: htdocs/luci-static/resources/homeproxy/client/routing.js
-msgid "The mode sing-box starts in, Rule if empty. Once a mode has been switched in the dashboard, that one is kept across restarts instead."
-msgstr "sing-box 启动时所处的模式，留空为 Rule。在 Dashboard 中切换过模式后，重启时沿用切换后的模式。"
 
 #: htdocs/luci-static/resources/homeproxy/client/routing.js
 msgid "Failed to apply the template: %s"
@@ -4075,13 +4055,57 @@ msgid "Default template"
 msgstr "默认模板"
 
 #: htdocs/luci-static/resources/homeproxy/client/routing.js
-msgid "Replaces the routing nodes, routing rules, DNS servers, DNS rules and rule-sets with the default template. Its default outbound Proxy picks Auto (the fastest of all nodes), a single node or direct; its modes, switched in the dashboard, are Rule (mainland China direct, ads blocked, the rest through Proxy), RuleAllowAds (the same without blocking ads), Global and Direct."
-msgstr "用默认模板替换路由节点、路由规则、DNS 服务器、DNS 规则和规则集。模板的默认出站 Proxy 可选 Auto（所有节点中最快的）、单个节点或直连；模式在 Dashboard 中切换：Rule（中国大陆直连、屏蔽广告、其余走 Proxy）、RuleAllowAds（同 Rule 但不屏蔽广告）、Global 和 Direct。"
-
-#: htdocs/luci-static/resources/homeproxy/client/routing.js
 msgid "Reset to the template"
 msgstr "重置为模板"
 
-#: htdocs/luci-static/resources/homeproxy/client/routing.js
-msgid "All routing nodes, routing rules, DNS servers, DNS rules and rule-sets are replaced by the template, and unsaved changes to HomeProxy are discarded."
-msgstr "所有路由节点、路由规则、DNS 服务器、DNS 规则和规则集都会被模板替换，HomeProxy 未保存的修改会被丢弃。"
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:19
+msgid "Add a routing mode"
+msgstr "添加路由模式"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:19
+msgid "DNS server for queries not matched by any DNS rules of this mode."
+msgstr "本模式下没有匹配任何 DNS 规则的查询所用的 DNS 服务器。"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:19
+msgid "Default outbound for connections not matched by any routing rules of this mode."
+msgstr "本模式下没有匹配任何路由规则的连接所用的默认出站。"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:19
+msgid "Each mode has its own routing rules and DNS rules, and its own outbound and DNS server for what none of them matches. The mode is switched in the dashboard, without a restart."
+msgstr "每个模式有自己的路由规则和 DNS 规则，以及都没匹配上时所用的出站和 DNS 服务器。模式在 Dashboard 中切换，不用重启。"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:19
+msgid "Routing Modes"
+msgstr "路由模式"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:19
+msgid "The name sing-box and the dashboard show for the mode."
+msgstr "sing-box 和 Dashboard 中显示的模式名称。"
+
+#: htdocs/luci-static/resources/homeproxy/client/common.js:59
+msgid "Routing mode"
+msgstr "路由模式"
+
+#: htdocs/luci-static/resources/homeproxy/client/common.js:59
+msgid "The mode this rule belongs to. It only applies while sing-box is in that mode."
+msgstr "这条规则所属的模式，只在 sing-box 处于该模式时生效。"
+
+#: htdocs/luci-static/resources/homeproxy/client/common.js:59
+msgid "Without a mode (not used)"
+msgstr "无所属模式（不生效）"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing.js:204
+msgid "All routing modes, routing nodes, routing rules, DNS servers, DNS rules and rule-sets are replaced by the template, and unsaved changes to HomeProxy are discarded."
+msgstr "所有路由模式、路由节点、路由规则、DNS 服务器、DNS 规则和规则集都会被模板替换，HomeProxy 未保存的修改也会丢弃。"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing.js:204
+msgid "Replaces the routing modes, routing nodes, routing rules, DNS servers, DNS rules and rule-sets with the default template. Its modes are Rule (mainland China direct, ads blocked, the rest through Proxy), RuleAllowAds (the same without blocking ads), Global (everything through Proxy) and Direct; Proxy picks Auto (the fastest of all nodes), a single node or direct."
+msgstr "用默认模板替换路由模式、路由节点、路由规则、DNS 服务器、DNS 规则和规则集。模板的模式有 Rule（中国大陆直连、屏蔽广告、其余走 Proxy）、RuleAllowAds（同 Rule 但不屏蔽广告）、Global（全部走 Proxy）和 Direct（全部直连）；Proxy 可选 Auto（所有节点中最快的）、单个节点或直连。"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing.js:204
+msgid "Send mainland China addresses past sing-box in the firewall. A mode named Global is not available while this is on: it is left out with its rules and disappears from the dashboard."
+msgstr "在防火墙中让中国大陆地址绕过 sing-box。开启后不能使用名为 Global 的模式：它和它的规则都会被略过，Dashboard 中也不再出现。"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing.js:204
+msgid "The routing mode sing-box starts in. Once a mode has been switched in the dashboard, that one is kept across restarts instead."
+msgstr "sing-box 启动时所处的路由模式。在 Dashboard 中切换过模式后，重启会沿用切换后的模式。"

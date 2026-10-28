@@ -14,8 +14,8 @@ const proxy_mode = uci.get(cfgname, 'config', 'proxy_mode') || DEFAULTS.config.p
 
 let tun_name;
 if (match(proxy_mode, /tun/)) {
-	const outbound_node = uci.get(cfgname, 'routing', 'default_outbound') || DEFAULTS.routing.default_outbound;
-	if (outbound_node !== 'nil') {
+	const mode = uci.get(cfgname, 'routing', 'default_mode') || DEFAULTS.routing.default_mode;
+	if (uci.get(cfgname, mode, '.type') === 'routing_mode' && uci.get(cfgname, mode, 'enabled') === '1') {
 		const raw_tun = trim(uci.get(cfgname, 'infra', 'tun_name') ?? '');
 		tun_name = match(raw_tun, /^[A-Za-z0-9._-]{1,15}$/) ? raw_tun : DEFAULTS.infra.tun_name;
 	}

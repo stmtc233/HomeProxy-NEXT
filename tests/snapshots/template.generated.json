@@ -37,17 +37,8 @@
 					64,
 					65
 				],
+				"clash_mode": "Rule",
 				"action": "reject"
-			},
-			{
-				"clash_mode": "Direct",
-				"action": "route",
-				"server": "China DNS"
-			},
-			{
-				"clash_mode": "Global",
-				"action": "route",
-				"server": "Remote DNS"
 			},
 			{
 				"rule_set": [
@@ -57,27 +48,54 @@
 				"action": "reject"
 			},
 			{
-				"type": "logical",
-				"mode": "and",
-				"rules": [
-					{
-						"type": "logical",
-						"mode": "or",
-						"rules": [
-							{
-								"clash_mode": "Rule"
-							},
-							{
-								"clash_mode": "RuleAllowAds"
-							}
-						]
-					},
-					{
-						"rule_set": [
-							"geosite-cn"
-						]
-					}
+				"rule_set": [
+					"geosite-cn"
 				],
+				"clash_mode": "Rule",
+				"action": "route",
+				"server": "China DNS"
+			},
+			{
+				"clash_mode": "Rule",
+				"action": "route",
+				"server": "Remote DNS"
+			},
+			{
+				"query_type": [
+					64,
+					65
+				],
+				"clash_mode": "RuleAllowAds",
+				"action": "reject"
+			},
+			{
+				"rule_set": [
+					"geosite-cn"
+				],
+				"clash_mode": "RuleAllowAds",
+				"action": "route",
+				"server": "China DNS"
+			},
+			{
+				"clash_mode": "RuleAllowAds",
+				"action": "route",
+				"server": "Remote DNS"
+			},
+			{
+				"query_type": [
+					64,
+					65
+				],
+				"clash_mode": "Global",
+				"action": "reject"
+			},
+			{
+				"clash_mode": "Global",
+				"action": "route",
+				"server": "Remote DNS"
+			},
+			{
+				"clash_mode": "Direct",
 				"action": "route",
 				"server": "China DNS"
 			}
@@ -178,16 +196,6 @@
 				"action": "sniff"
 			},
 			{
-				"clash_mode": "Direct",
-				"action": "route",
-				"outbound": "direct-out"
-			},
-			{
-				"clash_mode": "Global",
-				"action": "route",
-				"outbound": "Proxy"
-			},
-			{
 				"rule_set": [
 					"geosite-ads"
 				],
@@ -195,65 +203,62 @@
 				"action": "reject"
 			},
 			{
-				"type": "logical",
-				"mode": "and",
-				"rules": [
-					{
-						"type": "logical",
-						"mode": "or",
-						"rules": [
-							{
-								"clash_mode": "Rule"
-							},
-							{
-								"clash_mode": "RuleAllowAds"
-							}
-						]
-					},
-					{
-						"rule_set": [
-							"geosite-cn"
-						]
-					}
+				"rule_set": [
+					"geosite-cn"
 				],
+				"clash_mode": "Rule",
 				"action": "route",
 				"outbound": "direct-out"
 			},
 			{
-				"type": "logical",
-				"mode": "or",
-				"rules": [
-					{
-						"clash_mode": "Rule"
-					},
-					{
-						"clash_mode": "RuleAllowAds"
-					}
-				],
+				"clash_mode": "Rule",
 				"action": "resolve"
 			},
 			{
-				"type": "logical",
-				"mode": "and",
-				"rules": [
-					{
-						"type": "logical",
-						"mode": "or",
-						"rules": [
-							{
-								"clash_mode": "Rule"
-							},
-							{
-								"clash_mode": "RuleAllowAds"
-							}
-						]
-					},
-					{
-						"rule_set": [
-							"geoip-cn"
-						]
-					}
+				"rule_set": [
+					"geoip-cn"
 				],
+				"clash_mode": "Rule",
+				"action": "route",
+				"outbound": "direct-out"
+			},
+			{
+				"clash_mode": "Rule",
+				"action": "route",
+				"outbound": "Proxy"
+			},
+			{
+				"rule_set": [
+					"geosite-cn"
+				],
+				"clash_mode": "RuleAllowAds",
+				"action": "route",
+				"outbound": "direct-out"
+			},
+			{
+				"clash_mode": "RuleAllowAds",
+				"action": "resolve"
+			},
+			{
+				"rule_set": [
+					"geoip-cn"
+				],
+				"clash_mode": "RuleAllowAds",
+				"action": "route",
+				"outbound": "direct-out"
+			},
+			{
+				"clash_mode": "RuleAllowAds",
+				"action": "route",
+				"outbound": "Proxy"
+			},
+			{
+				"clash_mode": "Global",
+				"action": "route",
+				"outbound": "Proxy"
+			},
+			{
+				"clash_mode": "Direct",
 				"action": "route",
 				"outbound": "direct-out"
 			}
@@ -305,6 +310,7 @@
 			"path": "/etc/homeproxy/cache.db"
 		},
 		"clash_api": {
+			"default_mode": "Rule"
 		}
 	},
 	"$schema": "https://sing-box.sagernet.org/schema.json"

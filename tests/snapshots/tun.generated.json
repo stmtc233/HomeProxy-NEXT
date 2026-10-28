@@ -26,7 +26,13 @@
 			}
 		],
 		"rules": [
-		]
+			{
+				"clash_mode": "Rule",
+				"action": "route",
+				"server": "default-dns"
+			}
+		],
+		"final": "default-dns"
 	},
 	"inbounds": [
 		{
@@ -129,10 +135,16 @@
 			},
 			{
 				"network": "udp",
+				"clash_mode": "Rule",
 				"action": "route",
 				"outbound": "udp-direct",
 				"override_address": "198.51.100.7",
 				"override_port": 4433
+			},
+			{
+				"clash_mode": "Rule",
+				"action": "route",
+				"outbound": "wg"
 			}
 		],
 		"default_interface": "eth1",
@@ -165,6 +177,9 @@
 		"cache_file": {
 			"enabled": true,
 			"path": "/etc/homeproxy/cache.db"
+		},
+		"clash_api": {
+			"default_mode": "Rule"
 		}
 	},
 	"$schema": "https://sing-box.sagernet.org/schema.json"

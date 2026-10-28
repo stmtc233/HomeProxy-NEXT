@@ -11,6 +11,11 @@ config homeproxy 'config'
 	option log_level 'error'
 
 config homeproxy 'routing'
+	option default_mode 'm_rule'
+
+config routing_mode 'm_rule'
+	option enabled '1'
+	option label 'Rule'
 	option default_outbound 'rn_auto'
 
 config routing_node 'rn_auto'

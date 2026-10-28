@@ -8,16 +8,10 @@
 
 import { isEmpty, strToBool, strToInt, strToTime, strToMs } from '../homeproxy.uc';
 
-import { restrict_to_modes, rule_match_fields } from './common.uc';
+import { restrict_to_mode, rule_match_fields } from './common.uc';
 import { uciconfig, uciroutingsetting, uciroutingrule, uciruleset } from './context.uc';
 
-function build_custom_rule(ctx, cfg) {
-	const modes = ctx.rule_modes(cfg.clash_mode);
-	if (modes === null) {
-		warn(sprintf("homeproxy: routing rule '%s' only applies in Global mode, which bypass_cn_traffic rules out, skipping it.\n", cfg['.name']));
-		return null;
-	}
-
+function build_custom_rule(ctx, cfg, mode) {
 	const rule_outbound = ctx.get_outbound(cfg.outbound);
 	const rule_direct_override = ctx.get_direct_override(cfg.outbound);
 	let rule_override_address = cfg.override_address,
@@ -66,7 +60,7 @@ function build_custom_rule(ctx, cfg) {
 		rule.tls_fragment_fallback_delay = null;
 	}
 
-	return restrict_to_modes(rule, modes, [...keys(match_fields), 'client', 'ip_cidr', 'ip_is_private']);
+	return restrict_to_mode(rule, mode, [...keys(match_fields), 'client', 'ip_cidr', 'ip_is_private']);
 }
 
 function build_custom_ruleset(ctx, cfg) {
@@ -115,22 +109,32 @@ function build_custom(ctx, route) {
 			strategy: ctx.domain_strategy
 		});
 
+	const mode_rules = {};
+	for (let mode in ctx.modes)
+		mode_rules[mode.section] = [];
 	uci.foreach(uciconfig, uciroutingrule, (cfg) => {
 		if (cfg.enabled !== '1')
 			return null;
 
-		const rule = build_custom_rule(ctx, cfg);
-		if (rule)
-			push(route.rules, rule);
+		const mode = ctx.rule_mode(cfg, 'routing rule');
+		if (mode)
+			push(mode_rules[mode.section], build_custom_rule(ctx, cfg, mode.name));
 	});
 
-	const final_override = ctx.get_direct_override(ctx.default_outbound);
-	if (final_override)
+	/* each mode ends in its own fallback, route.final is only reached without the clash API */
+	for (let mode in ctx.modes) {
+		for (let rule in mode_rules[mode.section])
+			push(route.rules, rule);
+
+		const override = ctx.get_direct_override(mode.outbound);
 		push(route.rules, {
-			action: 'route-options',
-			override_address: final_override.override_address,
-			override_port: final_override.override_port
+			clash_mode: mode.name,
+			action: 'route',
+			outbound: ctx.get_outbound(mode.outbound),
+			override_address: override?.override_address,
+			override_port: override?.override_port
 		});
+	}
 
 	route.final = ctx.get_outbound(ctx.default_outbound);
 

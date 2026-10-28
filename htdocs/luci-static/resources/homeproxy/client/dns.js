@@ -9,11 +9,9 @@
 'require form';
 
 'require homeproxy as hp';
-'require homeproxy.client.common as common';
 
 return baseclass.extend({
 	render(s, ctx) {
-		const { uciconfig } = ctx;
 		let o, ss, so;
 
 		s.tab('dns', _('DNS Settings'));
@@ -24,11 +22,6 @@ return baseclass.extend({
 			_('The DNS strategy for resolving the domain name in the address.'));
 		for (let i in hp.dns_strategy)
 			so.value(i, hp.dns_strategy[i]);
-
-		so = ss.option(form.ListValue, 'default_server', _('Default DNS server'));
-		so.load = common.loadSectionChoices(uciconfig, 'dns_server', common.builtinDnsServers());
-		so.default = 'default-dns';
-		so.rmempty = false;
 
 		so = ss.option(form.Flag, 'disable_cache', _('Disable DNS cache'));
 

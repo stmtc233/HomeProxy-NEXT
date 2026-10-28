@@ -160,7 +160,7 @@ unload_firewall() {
 # the china address lists are built here from the resource files on disk, so
 # this must run again after a resource update (refresh_lists) as well.
 apply_firewall() {
-	local outbound_node="$1"
+	local client_mode="$1"
 
 	mkdir -p "$RUN_DIR" || { log "Error: failed to create ${RUN_DIR}."; return 1; }
 	local old_digest="$(fw4_snippets_digest)"
@@ -172,7 +172,7 @@ apply_firewall() {
 	: > "$RUN_DIR/fw4_post.nft"
 
 	ucode "$HP_DIR/scripts/firewall_pre.uc" 2>"/dev/null" || log "Error: firewall pre-script failed."
-	if [ "$outbound_node" != "nil" ]; then
+	if [ "$client_mode" != "nil" ]; then
 		utpl -S "$HP_DIR/scripts/firewall_post.ut" > "$RUN_DIR/fw4_post.nft" 2>"/dev/null" || log "Error: firewall post-script failed."
 	fi
 
@@ -211,15 +211,18 @@ apply_firewall() {
 	fi
 }
 
-# Outbound the client routes through ("nil" when the client is not
+# The routing mode the client starts in ("nil" when the client is not
 # configured); requires config_load. Without a single node there is nothing
 # to route through yet (the template's groups would even be empty, which
 # sing-box refuses), so the client counts as not configured.
-client_outbound_node() {
-	local node
-	config_get node "routing" "default_outbound" "$HP_DEFAULT_DEFAULT_OUTBOUND"
-	uci -q show "$CONF" | grep -q "^$CONF\.[^.]*=node\$" || node="nil"
-	echo "$node"
+client_mode() {
+	local mode type enabled
+	config_get mode "routing" "default_mode" "$HP_DEFAULT_DEFAULT_MODE"
+	config_get type "$mode" TYPE
+	config_get enabled "$mode" "enabled"
+	{ [ "$type" = "routing_mode" ] && [ "$enabled" = "1" ]; } || mode="nil"
+	uci -q show "$CONF" | grep -q "^$CONF\.[^.]*=node\$" || mode="nil"
+	echo "$mode"
 }
 
 # 0 when the kill switch is switched on and there is a client it can watch;
@@ -227,7 +230,7 @@ client_outbound_node() {
 killswitch_wanted() {
 	local kill_switch
 	config_get_bool kill_switch "config" "kill_switch" "0"
-	[ "$kill_switch" = "1" ] && [ "$(client_outbound_node)" != "nil" ]
+	[ "$kill_switch" = "1" ] && [ "$(client_mode)" != "nil" ]
 }
 
 # The inputs of what start_service sets up without comparing it first (it
@@ -250,7 +253,7 @@ restart_fingerprint() {
 	[ -x "/sbin/ujail" ] && jail=1
 	grep -Eq '"type": "(wireguard|tun)"' "$RUN_DIR/sing-box-c.json" 2>"/dev/null" && jail="$jail-off"
 	local client=on
-	[ "$(client_outbound_node)" != "nil" ] || client=off
+	[ "$(client_mode)" != "nil" ] || client=off
 
 	echo "$proxy_mode client=$client ipv6=$ipv6_support" \
 		"dashboard=$dashboard server=$server_enabled ks=$kill_switch" \
@@ -528,7 +531,7 @@ add_helper_instances() {
 
 # Files and directories the jailed sing-box (user sing-box) reads or writes.
 prepare_runtime_files() {
-	local outbound_node="$1" server_enabled="$2" dashboard="$3"
+	local client_mode="$1" server_enabled="$2" dashboard="$3"
 
 	# The file has to exist before the client jail binds it read-write.
 	[ -e "$HP_DIR/cache.db" ] || touch "$HP_DIR/cache.db" \
@@ -545,13 +548,13 @@ prepare_runtime_files() {
 	# after a reboot). The archive and the unpacked files share one read-write
 	# mount so that sing-box never has to rename across filesystems.
 	rm -rf "$HP_DIR/dashboard"
-	if [ "$dashboard" = "1" ] && [ "$outbound_node" != "nil" ]; then
+	if [ "$dashboard" = "1" ] && [ "$client_mode" != "nil" ]; then
 		mkdir -p "$DASHBOARD_DIR/tmp" \
 			&& chown -R sing-box:sing-box "$DASHBOARD_DIR" 2>"/dev/null" \
 			|| log "Warning: failed to prepare ${DASHBOARD_DIR} for sing-box."
 	fi
 
-	[ "$outbound_node" = "nil" ] || echo > "$RUN_DIR/sing-box-c.log"
+	[ "$client_mode" = "nil" ] || echo > "$RUN_DIR/sing-box-c.log"
 	if [ "$server_enabled" = "1" ]; then
 		echo > "$RUN_DIR/sing-box-s.log"
 		mkdir -p "$HP_DIR/certs" || log "Warning: failed to create ${HP_DIR}/certs."
@@ -580,14 +583,14 @@ start_homeproxy() {
 	config_get proxy_mode "config" "proxy_mode" "$HP_DEFAULT_PROXY_MODE"
 	config_get_bool ipv6_support "config" "ipv6_support" "0"
 
-	local outbound_node="$(client_outbound_node)"
+	local client_mode="$(client_mode)"
 
 	local server_enabled dashboard
 	config_get_bool server_enabled "server" "enabled" "0"
 	config_get dashboard "config" "dashboard" "0"
 
-	if [ "$outbound_node" = "nil" ] && [ "$server_enabled" = "0" ]; then
-		log "Neither client (a default outbound and at least one node) nor server is configured. Service not started."
+	if [ "$client_mode" = "nil" ] && [ "$server_enabled" = "0" ]; then
+		log "Neither client (an enabled default mode and at least one node) nor server is configured. Service not started."
 		return 1
 	fi
 
@@ -596,7 +599,7 @@ start_homeproxy() {
 	local disable_gso=0
 	uname -r | grep -Eq "^6\.6" && disable_gso=1
 
-	if [ "$outbound_node" != "nil" ]; then
+	if [ "$client_mode" != "nil" ]; then
 		start_client "$proxy_mode" "$ipv6_support" "$dashboard" "$disable_gso" || return 1
 	else
 		# server only: what a restart left behind from the client goes now
@@ -609,9 +612,9 @@ start_homeproxy() {
 	fi
 
 	add_helper_instances
-	prepare_runtime_files "$outbound_node" "$server_enabled" "$dashboard"
+	prepare_runtime_files "$client_mode" "$server_enabled" "$dashboard"
 
-	apply_firewall "$outbound_node"
+	apply_firewall "$client_mode"
 	restart_fingerprint > "$RUN_DIR/restart.fingerprint"
 
 	log "sing-box ${sb_ver} started."
@@ -683,7 +686,7 @@ reload_service() {
 	log "Reloading service..."
 
 	config_load "$CONF"
-	local outbound_node="$(client_outbound_node)"
+	local client_mode="$(client_mode)"
 
 	local old_client old_server
 	old_client="$(md5sum < "$RUN_DIR/sing-box-c.json" 2>"/dev/null")"
@@ -692,7 +695,7 @@ reload_service() {
 	# The generators run `sing-box check` before they replace the config, so
 	# a failure leaves the running service untouched. start_service reuses
 	# what is generated here instead of generating and checking it again.
-	if [ "$outbound_node" != "nil" ]; then
+	if [ "$client_mode" != "nil" ]; then
 		if ! ucode -S "$HP_DIR/scripts/generate_client.uc" 2>>"$LOG_PATH"; then
 			log "Error: failed to generate client configuration, reload aborted."
 			return 1
@@ -719,7 +722,7 @@ reload_service() {
 		local client_pid server_pid
 		client_pid="$(instance_pid sing-box-c)"
 		server_pid="$(instance_pid sing-box-s)"
-		if { [ "$outbound_node" = "nil" ] || [ -n "$client_pid" ]; } \
+		if { [ "$client_mode" = "nil" ] || [ -n "$client_pid" ]; } \
 			&& { [ "$server_enabled" = "0" ] || [ -n "$server_pid" ]; }; then
 			HP_INPLACE=1
 			start
@@ -758,10 +761,10 @@ reload_service() {
 refresh_lists() {
 	config_load "$CONF"
 
-	local outbound_node="$(client_outbound_node)"
-	[ "$outbound_node" != "nil" ] || return 0
+	local client_mode="$(client_mode)"
+	[ "$client_mode" != "nil" ] || return 0
 
-	apply_firewall "$outbound_node"
+	apply_firewall "$client_mode"
 
 	log "Resource list changes applied (fw4 sets)."
 }

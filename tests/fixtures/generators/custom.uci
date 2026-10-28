@@ -17,8 +17,13 @@ config homeproxy 'config'
 	option log_level 'error'
 
 config homeproxy 'routing'
-	option default_outbound 'direct-out'
+	option default_mode 'm_rule'
 	option default_outbound_dns 'default-dns'
+
+config routing_mode 'm_rule'
+	option enabled '1'
+	option label 'Rule'
+	option default_outbound 'direct-out'
 
 config homeproxy 'infra'
 	option mixed_port '5330'
@@ -40,6 +45,7 @@ config routing_node 'rn_direct'
 	option node 'n_direct'
 
 config routing_rule 'rr_direct'
+	option routing_mode 'm_rule'
 	option enabled '1'
 	option label 'rr-direct'
 	option outbound 'rn_direct'

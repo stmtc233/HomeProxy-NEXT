@@ -19,13 +19,12 @@ config homeproxy 'infra'
 	option ntp_server 'nil'
 
 config homeproxy 'routing'
-	option default_outbound 'nil'
+	option default_mode 'nil'
 	option default_outbound_dns 'default-dns'
 	option find_neighbor '0'
 
 config homeproxy 'dns'
 	option default_strategy 'prefer_ipv4'
-	option default_server 'default-dns'
 
 config node 'n_hk'
 	option label 'hk'

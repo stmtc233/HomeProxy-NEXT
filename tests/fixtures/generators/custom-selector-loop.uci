@@ -10,8 +10,13 @@ config homeproxy 'config'
 	option log_level 'error'
 
 config homeproxy 'routing'
-	option default_outbound 'rn_a'
+	option default_mode 'm_rule'
 	option default_outbound_dns 'default-dns'
+
+config routing_mode 'm_rule'
+	option enabled '1'
+	option label 'Rule'
+	option default_outbound 'rn_a'
 
 config homeproxy 'infra'
 	option mixed_port '5330'

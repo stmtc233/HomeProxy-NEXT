@@ -36,7 +36,7 @@ return baseclass.extend({
 
 		so = ss.taboption('field_other', form.Value, 'label', _('Label'));
 		so.load = L.bind(hp.loadDefaultLabel, this, uciconfig);
-		so.validate = L.bind(hp.validateUniqueValue, this, uciconfig, 'dns_rule', 'label');
+		so.validate = common.validateUniqueLabelInMode(uciconfig, 'dns_rule');
 		so.modalonly = true;
 
 		so = ss.taboption('field_other', form.Flag, 'enabled', _('Enable'));
@@ -58,9 +58,10 @@ return baseclass.extend({
 		so.readonly = true;
 		so.modalonly = true;
 
-		so = ss.taboption('field_other', form.DynamicList, 'clash_mode', _('Active in modes'),
-			_('Only applies while sing-box is in one of these modes (its clash mode, switched in the dashboard). Applies in every mode if empty.'));
-		so.load = common.loadClashModes(uciconfig);
+		so = ss.taboption('field_other', form.ListValue, 'routing_mode', _('Routing mode'),
+			_('The mode this rule belongs to. It only applies while sing-box is in that mode.'));
+		so.modalonly = true;
+		common.bindModeGrid(o, uciconfig, so);
 
 		so = ss.taboption('field_other', form.ListValue, 'ip_version', _('IP version'));
 		so.value('4', _('IPv4'));

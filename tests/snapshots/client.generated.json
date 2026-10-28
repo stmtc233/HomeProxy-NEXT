@@ -18,7 +18,13 @@
 			}
 		],
 		"rules": [
-		]
+			{
+				"clash_mode": "Rule",
+				"action": "route",
+				"server": "default-dns"
+			}
+		],
+		"final": "default-dns"
 	},
 	"inbounds": [
 		{
@@ -242,6 +248,11 @@
 			},
 			{
 				"action": "sniff"
+			},
+			{
+				"clash_mode": "Rule",
+				"action": "route",
+				"outbound": "auto"
 			}
 		],
 		"auto_detect_interface": true,
@@ -254,6 +265,9 @@
 		"cache_file": {
 			"enabled": true,
 			"path": "/etc/homeproxy/cache.db"
+		},
+		"clash_api": {
+			"default_mode": "Rule"
 		}
 	},
 	"$schema": "https://sing-box.sagernet.org/schema.json"

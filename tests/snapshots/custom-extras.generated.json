@@ -41,29 +41,22 @@
 		],
 		"rules": [
 			{
-				"type": "logical",
-				"mode": "and",
-				"rules": [
-					{
-						"type": "logical",
-						"mode": "or",
-						"rules": [
-							{
-								"clash_mode": "Rule"
-							},
-							{
-								"clash_mode": "Global"
-							}
-						]
-					},
-					{
-						"domain_suffix": [
-							"mode.example.com"
-						]
-					}
+				"domain_suffix": [
+					"mode.example.com"
 				],
+				"clash_mode": "Rule",
 				"action": "route",
 				"server": "ds-doh"
+			},
+			{
+				"clash_mode": "Rule",
+				"action": "route",
+				"server": "ds-doh"
+			},
+			{
+				"clash_mode": "RuleAllowAds",
+				"action": "route",
+				"server": "system-dns"
 			},
 			{
 				"clash_mode": "Global",
@@ -76,6 +69,11 @@
 				"ip_cidr": [
 					"198.51.100.0/24"
 				],
+				"clash_mode": "Global",
+				"action": "route",
+				"server": "ds-doh"
+			},
+			{
 				"clash_mode": "Global",
 				"action": "route",
 				"server": "ds-doh"
@@ -213,6 +211,7 @@
 				"rule_set": [
 					"rs-remote"
 				],
+				"clash_mode": "Rule",
 				"action": "route",
 				"outbound": "wg"
 			},
@@ -220,37 +219,9 @@
 				"domain_suffix": [
 					"select.example.com"
 				],
+				"clash_mode": "Rule",
 				"action": "route",
 				"outbound": "rn-select"
-			},
-			{
-				"clash_mode": "Global",
-				"action": "route",
-				"outbound": "rn-select"
-			},
-			{
-				"type": "logical",
-				"mode": "and",
-				"rules": [
-					{
-						"type": "logical",
-						"mode": "or",
-						"rules": [
-							{
-								"clash_mode": "Rule"
-							},
-							{
-								"clash_mode": "RuleAllowAds"
-							}
-						]
-					},
-					{
-						"domain_suffix": [
-							"mode.example.com"
-						]
-					}
-				],
-				"action": "reject"
 			},
 			{
 				"type": "logical",
@@ -268,6 +239,33 @@
 				],
 				"action": "route",
 				"outbound": "direct-out"
+			},
+			{
+				"clash_mode": "Rule",
+				"action": "route",
+				"outbound": "ss"
+			},
+			{
+				"domain_suffix": [
+					"mode.example.com"
+				],
+				"clash_mode": "RuleAllowAds",
+				"action": "reject"
+			},
+			{
+				"clash_mode": "RuleAllowAds",
+				"action": "route",
+				"outbound": "ss"
+			},
+			{
+				"clash_mode": "Global",
+				"action": "route",
+				"outbound": "rn-select"
+			},
+			{
+				"clash_mode": "Global",
+				"action": "route",
+				"outbound": "rn-select"
 			}
 		],
 		"rule_set": [

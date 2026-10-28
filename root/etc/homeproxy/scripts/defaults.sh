@@ -5,7 +5,7 @@
 # value here mirrors its entry there (tests/ucode/test_defaults.sh checks).
 
 HP_DEFAULT_PROXY_MODE="redirect_tproxy"
-HP_DEFAULT_DEFAULT_OUTBOUND="nil"
+HP_DEFAULT_DEFAULT_MODE="nil"
 HP_DEFAULT_DNS_PORT="5333"
 HP_DEFAULT_TABLE_MARK="100"
 HP_DEFAULT_TPROXY_MARK="101"

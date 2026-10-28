@@ -2,10 +2,10 @@
 #
 # Regression fixture for routing WITHOUT a default outbound.
 #
-# This is the shape the LuCI UI produces by default: every
-# routing rule names its own outbound, so `default_outbound` is left at 'nil'.
-# The generator used to select its config branch by asking whether
-# default_outbound was non-empty, so this configuration fell through the DNS,
+# Every routing rule names its own outbound and the mode leaves its default
+# outbound unset (it was 'nil' before the routing modes). The generator used
+# to select its config branch by asking whether default_outbound was
+# non-empty, so this configuration fell through the DNS,
 # outbound and route branches alike and produced a config containing none of
 # the user's DNS servers, nodes, rules or rule-sets. With the two built-in
 # DNS servers (default-dns / system-dns) still emitted, sing-box 1.14 then
@@ -22,14 +22,16 @@ config homeproxy 'config'
 	option ipv6_support '0'
 	option log_level 'error'
 
-# No default outbound: the point of this fixture. Each routing_rule below
-# picks its own.
 config homeproxy 'routing'
-	option default_outbound 'nil'
+	option default_mode 'm_rule'
 	option default_outbound_dns 'default-dns'
 	option sniff_override '1'
 
-config homeproxy 'dns'
+# No default outbound: the point of this fixture. Each routing_rule below
+# picks its own.
+config routing_mode 'm_rule'
+	option enabled '1'
+	option label 'Rule'
 	option default_server 'default-dns'
 
 config homeproxy 'infra'
@@ -110,6 +112,7 @@ config dns_server 'DNS_Server_Dhcp'
 
 # evaluate then respond: the response saved by the first rule is returned as is.
 config dns_rule 'DNS_Rule_Evaluate'
+	option routing_mode 'm_rule'
 	option enabled '1'
 	option label 'DNS_Rule_Evaluate'
 	option mode 'default'
@@ -118,6 +121,7 @@ config dns_rule 'DNS_Rule_Evaluate'
 	option server 'DNS_Server_Proxy'
 
 config dns_rule 'DNS_Rule_Respond'
+	option routing_mode 'm_rule'
 	option enabled '1'
 	option label 'DNS_Rule_Respond'
 	option mode 'default'
@@ -125,6 +129,7 @@ config dns_rule 'DNS_Rule_Respond'
 	option action 'respond'
 
 config dns_rule 'DNS_Rule_Proxy'
+	option routing_mode 'm_rule'
 	option enabled '1'
 	option label 'DNS_Rule_Proxy'
 	option mode 'default'
@@ -143,6 +148,7 @@ config ruleset 'rs_cn'
 	option outbound 'Routing_Node_Proxy'
 
 config routing_rule 'Routing_Rule_Proxy'
+	option routing_mode 'm_rule'
 	option enabled '1'
 	option label 'Routing_Rule_Proxy'
 	option mode 'default'

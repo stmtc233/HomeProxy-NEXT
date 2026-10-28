@@ -12,25 +12,26 @@ import { cursor } from 'uci';
 import { HP_DIR } from 'homeproxy';
 
 /*
- * The default routing template. The default outbound is the selector Proxy
- * (an urltest of all nodes, every node and direct), and the rules make the
- * clash modes, switched in the dashboard:
+ * The default routing template. The modes, switched in the dashboard, each
+ * come with their own rules and fallbacks:
  *   Rule          mainland China direct, ads blocked, the rest through Proxy
  *   RuleAllowAds  the same without blocking ads
  *   Global        everything through Proxy
  *   Direct        everything direct
- * The rule-sets start from the copies the package ships, so the first start
- * downloads nothing; sing-box keeps them up to date afterwards.
+ * Proxy is a selector of Auto (an urltest of all nodes), every node and
+ * direct. The rule-sets start from the copies the package ships, so the first
+ * start downloads nothing; sing-box keeps them up to date afterwards.
  *
  *   apply_template.uc        replace the routing sections with the template
- *   apply_template.uc seed   the same, but only if there are none yet
+ *   apply_template.uc seed   on install or upgrade: the template for a config
+ *                            without routing sections; one from before the
+ *                            modes keeps its rules in a mode named Custom and
+ *                            gets the template next to them
  */
 
 const uciconfig = 'homeproxy';
-const TEMPLATE_TYPES = ['routing_node', 'routing_rule', 'dns_server', 'dns_rule', 'ruleset'];
-
-/* sing-box lists only the modes some rule names, so the rule modes name both */
-const RULE_MODES = ['Rule', 'RuleAllowAds'];
+const TEMPLATE_TYPES = ['routing_mode', 'routing_node', 'routing_rule', 'dns_server', 'dns_rule', 'ruleset'];
+const RULE_TYPES = ['routing_rule', 'dns_rule'];
 
 function ruleset(label, url, file) {
 	return {
@@ -43,7 +44,35 @@ function ruleset(label, url, file) {
 	};
 }
 
+/* HTTPS / SVCB records would steer clients to ECH, which some proxies cannot carry */
+function no_https_records(mode) {
+	return ['dns_rule', `dr_${mode}_https_rr`, { label: 'No HTTPS records', routing_mode: `m_${mode}`, query_type: ['64', '65'], action: 'reject' }];
+}
+
+/* Rule and RuleAllowAds differ only in blocking ads */
+function rule_mode_rules(mode, block_ads) {
+	const m = `m_${mode}`;
+	const sections = [no_https_records(mode)];
+	if (block_ads)
+		push(sections,
+			['dns_rule', `dr_${mode}_ads`, { label: 'Block ads', routing_mode: m, rule_set: ['rs_ads'], action: 'reject' }],
+			['routing_rule', `rr_${mode}_ads`, { label: 'Block ads', routing_mode: m, rule_set: ['rs_ads'], action: 'reject' }]);
+	push(sections,
+		['dns_rule', `dr_${mode}_china`, { label: 'China domains', routing_mode: m, rule_set: ['rs_geosite_cn'], action: 'route', server: 'ds_china' }],
+		['routing_rule', `rr_${mode}_china_site`, { label: 'China domains', routing_mode: m, rule_set: ['rs_geosite_cn'], action: 'route', outbound: 'direct-out' }],
+		['routing_rule', `rr_${mode}_resolve`, { label: 'Resolve', routing_mode: m, action: 'resolve' }],
+		['routing_rule', `rr_${mode}_china_ip`, { label: 'China IPs', routing_mode: m, rule_set: ['rs_geoip_cn'], action: 'route', outbound: 'direct-out' }]);
+	return sections;
+}
+
+const PROXY = { default_outbound: 'rn_proxy', default_server: 'ds_remote' };
+
 const SECTIONS = [
+	['routing_mode', 'm_rule', { label: 'Rule', ...PROXY }],
+	['routing_mode', 'm_rule_allow_ads', { label: 'RuleAllowAds', ...PROXY }],
+	['routing_mode', 'm_global', { label: 'Global', ...PROXY }],
+	['routing_mode', 'm_direct', { label: 'Direct', default_outbound: 'direct-out', default_server: 'ds_china' }],
+
 	['routing_node', 'rn_auto', { label: 'Auto', node: 'urltest', urltest_nodes: ['all-nodes'] }],
 	['routing_node', 'rn_proxy', {
 		label: 'Proxy',
@@ -62,56 +91,73 @@ const SECTIONS = [
 	['ruleset', 'rs_ads', ruleset('geosite-ads',
 		'https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-category-ads-all.srs', 'geosite_ads.srs')],
 
-	/* HTTPS / SVCB records would steer clients to ECH, which some proxies cannot carry */
-	['dns_rule', 'dr_https_rr', { label: 'No HTTPS records', query_type: ['64', '65'], action: 'reject' }],
-	['dns_rule', 'dr_direct', { label: 'Direct mode', clash_mode: ['Direct'], action: 'route', server: 'ds_china' }],
-	['dns_rule', 'dr_global', { label: 'Global mode', clash_mode: ['Global'], action: 'route', server: 'ds_remote' }],
-	['dns_rule', 'dr_ads', { label: 'Block ads', clash_mode: ['Rule'], rule_set: ['rs_ads'], action: 'reject' }],
-	['dns_rule', 'dr_china', { label: 'China domains', clash_mode: RULE_MODES, rule_set: ['rs_geosite_cn'], action: 'route', server: 'ds_china' }],
-
-	['routing_rule', 'rr_direct', { label: 'Direct mode', clash_mode: ['Direct'], action: 'route', outbound: 'direct-out' }],
-	['routing_rule', 'rr_global', { label: 'Global mode', clash_mode: ['Global'], action: 'route', outbound: 'rn_proxy' }],
-	['routing_rule', 'rr_ads', { label: 'Block ads', clash_mode: ['Rule'], rule_set: ['rs_ads'], action: 'reject' }],
-	['routing_rule', 'rr_china_site', { label: 'China domains', clash_mode: RULE_MODES, rule_set: ['rs_geosite_cn'], action: 'route', outbound: 'direct-out' }],
-	['routing_rule', 'rr_resolve', { label: 'Resolve', clash_mode: RULE_MODES, action: 'resolve' }],
-	['routing_rule', 'rr_china_ip', { label: 'China IPs', clash_mode: RULE_MODES, rule_set: ['rs_geoip_cn'], action: 'route', outbound: 'direct-out' }]
+	...rule_mode_rules('rule', true),
+	...rule_mode_rules('rule_allow_ads', false),
+	no_https_records('global')
 ];
-
-const SETTINGS = {
-	routing: { default_outbound: 'rn_proxy' },
-	dns: { default_server: 'ds_remote' }
-};
 
 const uci = cursor();
 uci.load(uciconfig);
 
-const existing = [];
-for (let section_type in TEMPLATE_TYPES)
-	uci.foreach(uciconfig, section_type, (cfg) => {
-		push(existing, cfg['.name']);
-	});
+function sections_of(types) {
+	const names = [];
+	for (let section_type in types)
+		uci.foreach(uciconfig, section_type, (cfg) => {
+			push(names, cfg['.name']);
+		});
+	return names;
+}
 
-if (ARGV[0] === 'seed' && length(existing))
+function add_template() {
+	for (let s in SECTIONS) {
+		const section_type = s[0], name = s[1];
+		uci.set(uciconfig, name, section_type);
+		uci.set(uciconfig, name, 'enabled', '1');
+		if (section_type in RULE_TYPES)
+			uci.set(uciconfig, name, 'mode', 'default');
+		for (let k, v in s[2])
+			uci.set(uciconfig, name, k, v);
+	}
+}
+
+if (ARGV[0] === 'seed' && length(sections_of(['routing_mode'])))
 	exit(0);
 
-for (let name in existing)
-	uci.delete(uciconfig, name);
+/* before the modes, one default outbound and DNS server stood for every rule */
+const old_outbound = uci.get(uciconfig, 'routing', 'default_outbound'),
+      old_server = uci.get(uciconfig, 'dns', 'default_server'),
+      client_on = (old_outbound && old_outbound !== 'nil');
+uci.delete(uciconfig, 'routing', 'default_outbound');
+uci.delete(uciconfig, 'dns', 'default_server');
 
-for (let s in SECTIONS) {
-	const section_type = s[0], name = s[1];
-	uci.set(uciconfig, name, section_type);
-	uci.set(uciconfig, name, 'enabled', '1');
-	if (section_type in ['routing_rule', 'dns_rule'])
-		uci.set(uciconfig, name, 'mode', 'default');
-	for (let k, v in s[2])
-		uci.set(uciconfig, name, k, v);
+let default_mode = 'm_rule';
+const existing = sections_of(TEMPLATE_TYPES);
+
+if (ARGV[0] === 'seed' && (length(existing) || client_on)) {
+	uci.set(uciconfig, 'm_custom', 'routing_mode');
+	uci.set(uciconfig, 'm_custom', 'label', 'Custom');
+	uci.set(uciconfig, 'm_custom', 'enabled', '1');
+	uci.set(uciconfig, 'm_custom', 'default_outbound', client_on ? old_outbound : 'direct-out');
+	uci.set(uciconfig, 'm_custom', 'default_server', old_server || 'default-dns');
+	for (let name in sections_of(RULE_TYPES)) {
+		uci.set(uciconfig, name, 'routing_mode', 'm_custom');
+		uci.delete(uciconfig, name, 'clash_mode');
+	}
+
+	/* the client stays off if it was */
+	default_mode = client_on ? 'm_custom' : 'nil';
+	if (length(filter(SECTIONS, (s) => s[1] in existing)))
+		warn('homeproxy: some sections are named like those of the routing template, leaving it out.\n');
+	else
+		add_template();
+} else {
+	for (let name in existing)
+		uci.delete(uciconfig, name);
+	add_template();
 }
 
-for (let section, options in SETTINGS) {
-	if (!uci.get(uciconfig, section))
-		uci.set(uciconfig, section, uciconfig);
-	for (let k, v in options)
-		uci.set(uciconfig, section, k, v);
-}
+if (!uci.get(uciconfig, 'routing'))
+	uci.set(uciconfig, 'routing', uciconfig);
+uci.set(uciconfig, 'routing', 'default_mode', default_mode);
 
 uci.commit(uciconfig);

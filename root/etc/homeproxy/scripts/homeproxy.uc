@@ -24,9 +24,13 @@ export const DEFAULTS = {
 		dashboard_listen: '0.0.0.0:9090'
 	},
 	routing: {
-		default_outbound: 'nil',
+		default_mode: 'nil',
 		default_outbound_dns: 'default-dns',
 		tcpip_stack: 'system'
+	},
+	routing_mode: {
+		default_outbound: 'direct-out',
+		default_server: 'default-dns'
 	},
 	subscription: {
 		filter_nodes: 'disabled',
