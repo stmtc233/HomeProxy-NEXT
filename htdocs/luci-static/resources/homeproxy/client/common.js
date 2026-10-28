@@ -47,7 +47,26 @@ function listMissing(option, uciconfig, section_id, value) {
 	}
 }
 
+function uniqueName(uciconfig, base) {
+	let name = base;
+	for (let n = 2; uci.get(uciconfig, name); n++)
+		name = base + '_' + n;
+	return name;
+}
+
+function copySection(uciconfig, src, name, overrides) {
+	uci.add(uciconfig, src['.type'], name);
+	for (let k in src)
+		if (k.charAt(0) !== '.')
+			uci.set(uciconfig, name, k, Array.isArray(src[k]) ? src[k].slice() : src[k]);
+	for (let k in overrides)
+		uci.set(uciconfig, name, k, overrides[k]);
+}
+
 return baseclass.extend({
+	uniqueName: uniqueName,
+	copySection: copySection,
+
 	stubValidator: {
 		factory: validation,
 		apply(type, value, args) {

@@ -60,22 +60,6 @@ function modeRules(uciconfig, section_id, sectiontype) {
 	return uci.sections(uciconfig, sectiontype).filter((res) => res.routing_mode === section_id);
 }
 
-function uniqueName(uciconfig, base) {
-	let name = base;
-	for (let n = 2; uci.get(uciconfig, name); n++)
-		name = base + '_' + n;
-	return name;
-}
-
-function copySection(uciconfig, src, name, overrides) {
-	uci.add(uciconfig, src['.type'], name);
-	for (let k in src)
-		if (k.charAt(0) !== '.')
-			uci.set(uciconfig, name, k, Array.isArray(src[k]) ? src[k].slice() : src[k]);
-	for (let k in overrides)
-		uci.set(uciconfig, name, k, overrides[k]);
-}
-
 return baseclass.extend({
 	render(s, ctx) {
 		const { uciconfig } = ctx;
@@ -97,15 +81,15 @@ return baseclass.extend({
 		/* a copy takes the rules along, under the same names with _copy */
 		ss.handleCopy = function(section_id) {
 			let src = uci.get(uciconfig, section_id);
-			let name = uniqueName(uciconfig, section_id + '_copy');
+			let name = common.uniqueName(uciconfig, section_id + '_copy');
 			let label = _('%s copy').format(src.label || section_id);
 			for (let n = 2; uci.sections(uciconfig, 'routing_mode').some((res) => res.label === label); n++)
 				label = _('%s copy').format(src.label || section_id) + ' ' + n;
 
-			copySection(uciconfig, src, name, { label: label });
+			common.copySection(uciconfig, src, name, { label: label });
 			for (let sectiontype of RULE_TYPES)
 				for (let rule of modeRules(uciconfig, section_id, sectiontype))
-					copySection(uciconfig, rule, uniqueName(uciconfig, rule['.name'] + '_copy'), { routing_mode: name });
+					common.copySection(uciconfig, rule, common.uniqueName(uciconfig, rule['.name'] + '_copy'), { routing_mode: name });
 
 			return this.map.save(null, true);
 		};
