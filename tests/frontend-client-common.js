@@ -170,6 +170,24 @@ loadDns.call(o, 'cfg');
 check(same(o.listed.at(-1), [ 'gone', 'gone (deleted)' ]) && o.validate('cfg', 'gone') !== true,
 	'load: a deleted section is listed and refused', o.listed);
 
+/* load: a list holding deleted entries next to valid ones */
+o = option({ stored: [ 'ds1', 'gone', 'ds2' ], formvalue(sid) { return this.form[sid]; }, form: {},
+	isValid: () => true, getValidationError: () => '' });
+common.loadSectionChoices('homeproxy', 'dns_server', {}).call(o, 'cfg');
+check(same(o.listed, [ [ 'ds1', 'Ali' ], [ 'gone', 'gone (deleted)' ], [ 'ds2', 'off (disabled)' ] ]),
+	'list: every missing entry is listed as such', o.listed);
+o.form.cfg = [ 'ds1', 'gone' ];
+check(o.isValid('cfg') === false && o.getValidationError('cfg') !== '',
+	'list: the save is refused while a missing entry is kept', o.getValidationError('cfg'));
+o.form.cfg = [ 'ds1' ];
+check(o.isValid('cfg') === true && o.getValidationError('cfg') === '',
+	'list: once the missing entries are removed, the save goes through', o.getValidationError('cfg'));
+const copy_of_o = Object.assign(Object.create(Object.getPrototypeOf(o)), o, { listed: [], form: { cfg: [ 'gone' ] } });
+copy_of_o.stored = [ 'ds1' ];
+common.loadSectionChoices('homeproxy', 'dns_server', {}).call(copy_of_o, 'cfg');
+check(copy_of_o.isValid('cfg') === true && o.missing.cfg.length === 2,
+	'list: a copy of the option (as a modal makes) keeps its own record', copy_of_o.missing);
+
 /* rule grids by mode */
 o = { subsection: { sectiontype: 'routing_rule' } };
 const mode_option = option();

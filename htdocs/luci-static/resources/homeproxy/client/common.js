@@ -27,22 +27,48 @@ function missingError() {
 	return _('It is deleted or disabled, choose another one.');
 }
 
-/* list.load(): list a missing scalar value, remember it for validate() */
+/*
+ * list.load(): list the missing values (a list option may hold several),
+ * remember them for validate() and isValid(); a list widget does not run
+ * validate() on the values it holds, so isValid() is what refuses the save.
+ */
 function listMissing(option, uciconfig, section_id, value) {
-	option.missing ??= {};
-	option.missing[section_id] = null;
-	if (typeof(value) !== 'string' || value === '' || (option.keylist || []).includes(value))
+	/* a modal works on a copy of the option, which must not share the record */
+	option.missing = Object.assign({}, option.missing);
+	option.missing[section_id] = (Array.isArray(value) ? value : [ value ]).filter((v) =>
+		typeof(v) === 'string' && v !== '' && !(option.keylist || []).includes(v));
+	if (!option.missing[section_id].length)
 		return;
 
-	option.value(value, missingLabel(uciconfig, value));
-	option.missing[section_id] = value;
+	for (let v of option.missing[section_id])
+		option.value(v, missingLabel(uciconfig, v));
 
 	if (!option.checks_missing) {
-		const validate = option.validate;
+		const holdsMissing = (o, sid, val) => (val != null) && (Array.isArray(val) ? val : [ val ]).some((v) => o.missing?.[sid]?.includes(v));
+		const validate = option.validate,
+		      isValid = option.isValid,
+		      getValidationError = option.getValidationError,
+		      renderWidget = option.renderWidget;
+
 		option.validate = function(sid, val) {
-			if (val != null && val === this.missing?.[sid])
-				return missingError();
-			return validate.apply(this, arguments);
+			return holdsMissing(this, sid, val) ? missingError() : validate.apply(this, arguments);
+		};
+		option.isValid = function(sid) {
+			return !holdsMissing(this, sid, this.formvalue(sid)) && isValid.apply(this, arguments);
+		};
+		option.getValidationError = function(sid) {
+			return holdsMissing(this, sid, this.formvalue(sid)) ? missingError() : getValidationError.apply(this, arguments);
+		};
+		/* the items of a list are marked one by one */
+		option.renderWidget = function(sid) {
+			const node = renderWidget.apply(this, arguments);
+			if (node && node.querySelectorAll)
+				for (let item of node.querySelectorAll('.item'))
+					if (holdsMissing(this, sid, item.querySelector('input')?.value)) {
+						item.style.color = 'red';
+						item.title = missingError();
+					}
+			return node;
 		};
 		option.checks_missing = true;
 	}
