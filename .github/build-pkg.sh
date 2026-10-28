@@ -290,6 +290,7 @@ else
 			[ -f /etc/uci-defaults/luci-$APP_ID ] && . /etc/uci-defaults/luci-$APP_ID && rm -f /etc/uci-defaults/luci-$APP_ID
 			rm -f /tmp/luci-indexcache
 			rm -rf /tmp/luci-modulecache/
+			killall -HUP rpcd 2>/dev/null
 			exit 0
 		}
 	EOF
