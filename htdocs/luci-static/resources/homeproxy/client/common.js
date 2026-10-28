@@ -149,6 +149,9 @@ return baseclass.extend({
 						current = ev.target.value;
 						mode_option.default = current;
 						return renderGrid();
+					}).then(() => {
+						/* options with depends render hidden, only a map render reveals them */
+						this.map.checkDepends();
 					}).catch(() => {
 						ev.target.value = current;
 					});
