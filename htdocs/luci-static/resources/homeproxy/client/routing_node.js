@@ -119,7 +119,7 @@ return baseclass.extend({
 				uci.sections(uciconfig, 'routing_node', (res) => {
 					if (res['.name'] !== section_id) {
 						let members = (res.node === 'selector') ? res.selector_nodes : res.urltest_nodes;
-						let in_group = members?.includes(node) || (node_gh && members?.includes('sub_' + node_gh))
+						let in_group = members?.includes(node) || members?.includes('all-nodes') || (node_gh && members?.includes('sub_' + node_gh))
 							|| (res.node === 'selector' && members?.includes(section_id));
 						if (res.outbound === section_id && res['.name'] == value)
 							conflict = true;
@@ -210,7 +210,7 @@ return baseclass.extend({
 		so.modalonly = true;
 
 		so = ss.option(hp.CBIStaticList, 'selector_nodes', _('Selector nodes'),
-			_('Outbounds to choose from: nodes, whole subscriptions, other routing nodes, direct or block.'));
+			_('Outbounds to choose from: nodes, whole subscriptions, all nodes, other routing nodes, direct or block.'));
 		so.load = loadSelectorChoices(uciconfig, {}, urltest_choices);
 		so.depends('node', 'selector');
 		so.validate = function(section_id) {
@@ -231,8 +231,10 @@ return baseclass.extend({
 		so.validate = function(section_id, value) {
 			if (section_id && value) {
 				let members = this.section.formvalue(section_id, 'selector_nodes') || [];
+				let is_node = (uci.get(uciconfig, value, '.type') === 'node');
 				let node_gh = uci.get(uciconfig, value, 'grouphash');
-				if (!members.includes(value) && !(node_gh && members.includes('sub_' + node_gh)))
+				if (!members.includes(value) && !(is_node && members.includes('all-nodes'))
+				    && !(node_gh && members.includes('sub_' + node_gh)))
 					return _('Expecting: %s').format(_('one of the selector nodes'));
 			}
 

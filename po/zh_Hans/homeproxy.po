@@ -3803,6 +3803,9 @@ msgstr "Dashboard 文件的 ZIP 压缩包。留空则使用 sing-box 默认 Dash
 msgid "[Subscription] %s (All nodes)"
 msgstr "[整组订阅] %s (全部节点)"
 
+msgid "[All nodes]"
+msgstr "[所有节点]"
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Manual"
 msgstr "手动"
@@ -4036,8 +4039,8 @@ msgid "Selector nodes"
 msgstr "可选出站"
 
 #: htdocs/luci-static/resources/homeproxy/client/routing_node.js
-msgid "Outbounds to choose from: nodes, whole subscriptions, other routing nodes, direct or block."
-msgstr "可供选择的出站：节点、整个订阅、其他路由节点、直连或封锁。"
+msgid "Outbounds to choose from: nodes, whole subscriptions, all nodes, other routing nodes, direct or block."
+msgstr "可供选择的出站：节点、整个订阅、所有节点、其他路由节点、直连或封锁。"
 
 #: htdocs/luci-static/resources/homeproxy/client/routing_node.js
 msgid "Used until another outbound is selected, the first one if empty. A selection is kept across restarts."

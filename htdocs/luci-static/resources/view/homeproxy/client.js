@@ -100,7 +100,7 @@ return view.extend({
 
 		let has_subscriptions = (subinfo.length > 0 || Object.keys(orphan_sub_nodes).length > 0);
 		let proxy_nodes = {};
-		let urltest_choices = {};
+		let urltest_choices = { 'all-nodes': _('[All nodes]') };
 
 		for (let info of subinfo) {
 			urltest_choices['sub_' + info.hash] = String.format(_('[Subscription] %s (All nodes)'), info.title);

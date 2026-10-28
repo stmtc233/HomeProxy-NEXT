@@ -123,6 +123,29 @@ assert_sub() {
 assert_sub "client-sub: n_anytls expanded from subscription" '"tag": "anytls"'
 assert_sub "client-sub: n_ss expanded from subscription" '"tag": "ss"'
 
+# group_field <config> <tag> <field>: a field of an outbound, lists joined by commas
+group_field() {
+	ucode -e "import { readfile } from 'fs';
+		for (let o in json(readfile('$1')).outbounds)
+			if (o.tag == '$2')
+				print(type(o['$3']) == 'array' ? join(',', o['$3']) : o['$3']);"
+}
+assert_group() {
+	label="$1"
+	got="$(group_field "$CLIENT_SUB_OUT" "$2" "$3")"
+	if [ "$got" = "$4" ]; then
+		echo "PASS: $label"
+	else
+		echo "FAIL: $label (got: $got)"
+		FAILED=1
+	fi
+}
+ALL_NODES="anytls,vless-reality-ws,vmess-http,trojan-grpc,ss,hy2,snell,http,socks,shadowtls"
+assert_group "client-sub: a subscription expands to its own nodes" auto outbounds "anytls,ss"
+assert_group "client-sub: all-nodes expands to every node in order" all outbounds "$ALL_NODES"
+assert_group "client-sub: a selector takes all-nodes next to other members" pick outbounds "all,$ALL_NODES,direct-out"
+assert_group "client-sub: a node reached through all-nodes can be the default" pick default "http"
+
 run_case custom "$ROOT/tests/fixtures/generators/custom.uci" generate_client.uc sing-box-c.json
 run_case custom_no_default "$ROOT/tests/fixtures/generators/custom-no-default-outbound.uci" generate_client.uc sing-box-c.json
 

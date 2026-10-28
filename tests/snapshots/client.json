@@ -669,7 +669,12 @@
 										"urltest"
 									]
 								],
-								"values": [],
+								"values": [
+									[
+										"all-nodes",
+										"[All nodes]"
+									]
+								],
 								"props": {
 									"modalonly": true
 								}
@@ -769,7 +774,7 @@
 								"kind": "CBI.StaticList",
 								"name": "selector_nodes",
 								"title": "Selector nodes",
-								"description": "Outbounds to choose from: nodes, whole subscriptions, other routing nodes, direct or block.",
+								"description": "Outbounds to choose from: nodes, whole subscriptions, all nodes, other routing nodes, direct or block.",
 								"depends": [
 									[
 										"node",

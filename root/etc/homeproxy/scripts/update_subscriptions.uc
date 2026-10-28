@@ -311,7 +311,7 @@ function main() {
 			return null;
 
 		const cleaned_nodes = filter(cfg[list_option], (v) => {
-			if (v in ['direct-out', 'block-out'])
+			if (v in ['all-nodes', 'direct-out', 'block-out'])
 				return true;
 			if (substr(v, 0, 4) === 'sub_') {
 				const sub_hash = substr(v, 4);

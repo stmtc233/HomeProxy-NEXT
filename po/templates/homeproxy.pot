@@ -3584,6 +3584,10 @@ msgid "[Subscription] %s (All nodes)"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "[All nodes]"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Manual"
 msgstr ""
 
@@ -3816,7 +3820,7 @@ msgid "Selector nodes"
 msgstr ""
 
 #: htdocs/luci-static/resources/homeproxy/client/routing_node.js
-msgid "Outbounds to choose from: nodes, whole subscriptions, other routing nodes, direct or block."
+msgid "Outbounds to choose from: nodes, whole subscriptions, all nodes, other routing nodes, direct or block."
 msgstr ""
 
 #: htdocs/luci-static/resources/homeproxy/client/routing_node.js

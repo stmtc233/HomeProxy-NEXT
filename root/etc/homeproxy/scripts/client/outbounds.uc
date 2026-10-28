@@ -152,11 +152,17 @@ function generate_outbound(ctx, node) {
 	return outbound;
 }
 
+/* all-nodes stands for every node, so a group works whatever the nodes are called */
 function expand_urltest_nodes(ctx, nodes) {
 	const uci = ctx.uci;
 	let expanded = [];
 	for (let item in (nodes || [])) {
-		if (substr(item, 0, 4) === 'sub_') {
+		if (item === 'all-nodes') {
+			uci.foreach(uciconfig, ucinode, (node) => {
+				if (!~index(expanded, node['.name']))
+					push(expanded, node['.name']);
+			});
+		} else if (substr(item, 0, 4) === 'sub_') {
 			const group_hash = substr(item, 4);
 			uci.foreach(uciconfig, ucinode, (node) => {
 				if (node.grouphash === group_hash) {

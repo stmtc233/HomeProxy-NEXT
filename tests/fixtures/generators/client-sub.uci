@@ -2,7 +2,8 @@
 #
 # Regression fixture for generate_client.uc: a urltest routing node over a
 # whole subscription (sub_<grouphash>), which has to expand into the nodes of
-# that group only.
+# that group only, and a urltest and a selector over all-nodes, which stand
+# for every node.
 
 config homeproxy 'config'
 	option proxy_mode 'tun'
@@ -17,6 +18,21 @@ config routing_node 'rn_auto'
 	option label 'auto'
 	option node 'urltest'
 	list urltest_nodes 'sub_testgroup'
+
+config routing_node 'rn_all'
+	option enabled '1'
+	option label 'all'
+	option node 'urltest'
+	list urltest_nodes 'all-nodes'
+
+config routing_node 'rn_pick'
+	option enabled '1'
+	option label 'pick'
+	option node 'selector'
+	list selector_nodes 'rn_all'
+	list selector_nodes 'all-nodes'
+	list selector_nodes 'direct-out'
+	option selector_default 'n_http'
 
 config homeproxy 'infra'
 	option mixed_port '5330'
