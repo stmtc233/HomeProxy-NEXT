@@ -269,6 +269,7 @@ if [ "$($TPL_UCI get homeproxy.m_global.label)" = "Global" ] && $TPL_UCI get hom
 	echo "PASS: template: adding it brings back the missing modes with their rules, and nothing else"
 else
 	echo "FAIL: template: adding it did not bring back exactly the missing modes"
+	$TPL_UCI show homeproxy | grep -E '^homeproxy\.(m_[a-z_]+|dr_global_https_rr|rr_rule_ads|routing\.default_mode)(=|\.label=)'
 	FAILED=1
 fi
 
