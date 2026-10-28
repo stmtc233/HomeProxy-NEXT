@@ -196,8 +196,8 @@
 							"anytls"
 						],
 						{
-							"type": {},
-							"username": {}
+							"type": "/^(http|mixed|naive|socks)$/",
+							"username": "/[\\s\\S]/"
 						},
 						[
 							"type",
@@ -344,7 +344,7 @@
 					"depends": [
 						{
 							"type": "hysteria",
-							"hysteria_auth_type": {}
+							"hysteria_auth_type": "/[\\s\\S]/"
 						}
 					],
 					"values": [],
@@ -395,7 +395,7 @@
 						],
 						{
 							"type": "hysteria2",
-							"hysteria_obfs_type": {}
+							"hysteria_obfs_type": "/[\\s\\S]/"
 						}
 					],
 					"values": [],
@@ -1920,12 +1920,12 @@
 						{
 							"tls": "1",
 							"tls_acme": "0",
-							"type": {}
+							"type": "/^(anytls|vless)$/"
 						},
 						{
 							"tls": "1",
 							"tls_acme": null,
-							"type": {}
+							"type": "/^(anytls|vless)$/"
 						}
 					],
 					"values": [],

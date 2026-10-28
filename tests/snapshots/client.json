@@ -133,8 +133,8 @@
 					"description": null,
 					"depends": [
 						{
-							"routing_mode": {},
-							"proxy_mode": {}
+							"routing_mode": "/^((?!custom).)+$/",
+							"proxy_mode": "/^((?!redirect$).)+$/"
 						}
 					],
 					"values": [
@@ -398,7 +398,7 @@
 					"description": "Drop forwarded traffic to overseas destinations while the sing-box client is not running (crash, restart, reload or failed start), so nothing leaks out directly. Mainland China and private addresses stay reachable.<br/>Stopping the service from the init script lifts the block; if the client cannot start, internet access stays blocked until it is fixed or the service is stopped.",
 					"depends": [
 						{
-							"routing_mode": {}
+							"routing_mode": "/^(bypass_mainland_china|custom|global)$/"
 						}
 					],
 					"values": [],
@@ -464,8 +464,8 @@
 					"description": null,
 					"depends": [
 						{
-							"proxy_mode": {},
-							"tun_dns_mode": {}
+							"proxy_mode": "/^((?!custom).)+$/",
+							"tun_dns_mode": "/^(disabled|native|hijack)$/"
 						}
 					],
 					"values": [],
@@ -936,7 +936,7 @@
 								"depends": [
 									{
 										"outbound": "",
-										"node": {}
+										"node": "/^((?!urltest$).)+$/"
 									}
 								],
 								"values": [],
@@ -1569,7 +1569,7 @@
 									],
 									[
 										"tls_spoof",
-										{}
+										"/[\\s\\S]/"
 									]
 								],
 								"values": [
@@ -2854,7 +2854,7 @@
 								"depends": [
 									{
 										"action": "route",
-										"match_response": {}
+										"match_response": "/[\\s\\S]/"
 									}
 								],
 								"values": [],
@@ -2951,7 +2951,7 @@
 								"depends": [
 									{
 										"action": "route",
-										"match_response": {}
+										"match_response": "/[\\s\\S]/"
 									}
 								],
 								"values": [
@@ -2992,7 +2992,7 @@
 								"depends": [
 									{
 										"action": "route",
-										"match_response": {}
+										"match_response": "/[\\s\\S]/"
 									}
 								],
 								"values": [],
@@ -3008,7 +3008,7 @@
 								"depends": [
 									{
 										"action": "route",
-										"match_response": {}
+										"match_response": "/[\\s\\S]/"
 									}
 								],
 								"values": [],
@@ -3024,7 +3024,7 @@
 								"depends": [
 									{
 										"action": "route",
-										"match_response": {}
+										"match_response": "/[\\s\\S]/"
 									}
 								],
 								"values": [],
@@ -3791,7 +3791,7 @@
 								"description": null,
 								"depends": [
 									{
-										"homeproxy.config.routing_mode": {},
+										"homeproxy.config.routing_mode": "/^((?!custom).)+$/",
 										"homeproxy.config.ipv6_support": "1"
 									}
 								],

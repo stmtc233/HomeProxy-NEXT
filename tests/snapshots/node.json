@@ -127,7 +127,7 @@
 								"description": null,
 								"depends": [
 									{
-										"type": {}
+										"type": "/^((?!direct$|hysteria2$).)+$/"
 									},
 									{
 										"type": "hysteria2",
@@ -151,7 +151,7 @@
 								"description": null,
 								"depends": [
 									{
-										"type": {}
+										"type": "/^((?!direct$|hysteria2$).)+$/"
 									},
 									{
 										"type": "hysteria2",
@@ -360,11 +360,11 @@
 								"depends": [
 									{
 										"type": "hysteria",
-										"hysteria_hopping_port": {}
+										"hysteria_hopping_port": "/[\\s\\S]/"
 									},
 									{
 										"type": "hysteria2",
-										"hysteria_hopping_port": {}
+										"hysteria_hopping_port": "/[\\s\\S]/"
 									}
 								],
 								"values": [],
@@ -382,7 +382,7 @@
 								"depends": [
 									{
 										"type": "hysteria2",
-										"hysteria_hopping_port": {}
+										"hysteria_hopping_port": "/[\\s\\S]/"
 									}
 								],
 								"values": [],
@@ -452,7 +452,7 @@
 								"depends": [
 									{
 										"type": "hysteria",
-										"hysteria_auth_type": {}
+										"hysteria_auth_type": "/[\\s\\S]/"
 									}
 								],
 								"values": [],
@@ -503,7 +503,7 @@
 									],
 									{
 										"type": "hysteria2",
-										"hysteria_obfs_type": {}
+										"hysteria_obfs_type": "/[\\s\\S]/"
 									}
 								],
 								"values": [],
@@ -2475,7 +2475,7 @@
 								"depends": [
 									{
 										"tls": "1",
-										"type": {}
+										"type": "/^((?!hysteria2?|tuic$).)+$/"
 									}
 								],
 								"values": [

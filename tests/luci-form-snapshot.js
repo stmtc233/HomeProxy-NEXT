@@ -224,7 +224,9 @@ function main() {
 	};
 
 	const rendered = mod.render([ undefined, features ]);
-	process.stdout.write(JSON.stringify(rendered, null, '\t') + '\n');
+	/* the views run in their own realm, so `instanceof RegExp` would miss their regexps */
+	const showRegExp = (k, v) => (Object.prototype.toString.call(v) === '[object RegExp]') ? String(v) : v;
+	process.stdout.write(JSON.stringify(rendered, showRegExp, '\t') + '\n');
 }
 
 if (require.main === module)
