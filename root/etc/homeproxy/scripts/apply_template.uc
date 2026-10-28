@@ -23,6 +23,8 @@ import { HP_DIR } from 'homeproxy';
  * start downloads nothing; sing-box keeps them up to date afterwards.
  *
  *   apply_template.uc        replace the routing sections with the template
+ *   apply_template.uc add    add the template modes that are missing (by
+ *                            section name or mode name), with what they use
  *   apply_template.uc seed   on install or upgrade: the template for a config
  *                            without routing sections; one from before the
  *                            modes keeps its rules in a mode named Custom and
@@ -108,8 +110,8 @@ function sections_of(types) {
 	return names;
 }
 
-function add_template() {
-	for (let s in SECTIONS) {
+function add_template(sections) {
+	for (let s in sections) {
 		const section_type = s[0], name = s[1];
 		uci.set(uciconfig, name, section_type);
 		uci.set(uciconfig, name, 'enabled', '1');
@@ -122,6 +124,21 @@ function add_template() {
 
 if (ARGV[0] === 'seed' && length(sections_of(['routing_mode'])))
 	exit(0);
+
+/* a mode is left out when its section or its name is taken, its rules go with it */
+if (ARGV[0] === 'add') {
+	const names = {}, skipped = {};
+	uci.foreach(uciconfig, 'routing_mode', (cfg) => {
+		names[lc(trim(cfg.label || '') || cfg['.name'])] = true;
+	});
+	for (let s in SECTIONS)
+		if (s[0] === 'routing_mode' && (uci.get(uciconfig, s[1]) || names[lc(s[2].label)]))
+			skipped[s[1]] = true;
+
+	add_template(filter(SECTIONS, (s) => !uci.get(uciconfig, s[1]) && !skipped[s[2].routing_mode]));
+	uci.commit(uciconfig);
+	exit(0);
+}
 
 /* before the modes, one default outbound and DNS server stood for every rule */
 const old_outbound = uci.get(uciconfig, 'routing', 'default_outbound'),
@@ -149,11 +166,11 @@ if (ARGV[0] === 'seed' && (length(existing) || client_on)) {
 	if (length(filter(SECTIONS, (s) => s[1] in existing)))
 		warn('homeproxy: some sections are named like those of the routing template, leaving it out.\n');
 	else
-		add_template();
+		add_template(SECTIONS);
 } else {
 	for (let name in existing)
 		uci.delete(uciconfig, name);
-	add_template();
+	add_template(SECTIONS);
 }
 
 if (!uci.get(uciconfig, 'routing'))

@@ -7,36 +7,9 @@
 'use strict';
 'require baseclass';
 'require form';
-'require rpc';
-'require ui';
 
 'require homeproxy as hp';
 'require homeproxy.client.common as common';
-
-const callTemplateApply = rpc.declare({
-	object: 'luci.homeproxy',
-	method: 'template_apply',
-	expect: { '': {} }
-});
-
-/* staged changes of this session would land on top of the template */
-const callRevert = rpc.declare({
-	object: 'uci',
-	method: 'revert',
-	params: ['config']
-});
-
-function applyTemplate() {
-	return L.resolveDefault(callRevert('homeproxy'), {}).then(() => {
-		return L.resolveDefault(callTemplateApply(), {});
-	}).then((res) => {
-		if (res.result)
-			return window.location.reload();
-
-		ui.hideModal();
-		ui.addNotification(null, E('p', _('Failed to apply the template: %s').format(res.error || _('Unknown error.'))));
-	});
-}
 
 return baseclass.extend({
 	render(s, ctx) {
@@ -213,26 +186,6 @@ return baseclass.extend({
 			_('If set, the requested domain name will be resolved to IP before routing.'));
 		for (let i in hp.dns_strategy)
 			so.value(i, hp.dns_strategy[i]);
-
-		so = ss.option(form.Button, '_template', _('Default template'),
-			_('Replaces the routing modes, routing nodes, routing rules, DNS servers, DNS rules and rule-sets with the default template. ' +
-			'Its modes are Rule (mainland China direct, ads blocked, the rest through Proxy), RuleAllowAds (the same without blocking ads), Global (everything through Proxy) and Direct; ' +
-			'Proxy picks Auto (the fastest of all nodes), a single node or direct.'));
-		so.inputtitle = _('Reset to the template');
-		so.inputstyle = 'reset';
-		so.onclick = function() {
-			ui.showModal(_('Default template'), [
-				E('p', _('All routing modes, routing nodes, routing rules, DNS servers, DNS rules and rule-sets are replaced by the template, and unsaved changes to HomeProxy are discarded.')),
-				E('div', { 'class': 'right' }, [
-					E('button', { 'class': 'btn', 'click': ui.hideModal }, [ _('Cancel') ]),
-					' ',
-					E('button', {
-						'class': 'btn cbi-button-negative',
-						'click': ui.createHandlerFn(this, applyTemplate)
-					}, [ _('Reset to the template') ])
-				])
-			]);
-		};
 
 		so = ss.option(form.ListValue, 'default_mode', _('Default mode'),
 			_('The routing mode sing-box starts in. Once a mode has been switched in the dashboard, that one is kept across restarts instead.'));

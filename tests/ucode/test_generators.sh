@@ -252,6 +252,26 @@ else
 	FAILED=1
 fi
 
+# adding the template brings back the missing modes only, a mode name in use keeps its out
+$TPL_UCI batch <<-EOF
+	delete homeproxy.m_global
+	delete homeproxy.dr_global_https_rr
+	delete homeproxy.m_direct
+	delete homeproxy.rr_rule_ads
+	set homeproxy.m_mine=routing_mode
+	set homeproxy.m_mine.label=Direct
+	commit homeproxy
+EOF
+( cd "$WORK/template/scripts" && ucode apply_template.uc add )
+if [ "$($TPL_UCI get homeproxy.m_global.label)" = "Global" ] && $TPL_UCI get homeproxy.dr_global_https_rr > "/dev/null" \
+	&& ! $TPL_UCI get homeproxy.m_direct > "/dev/null" && ! $TPL_UCI get homeproxy.rr_rule_ads > "/dev/null" \
+	&& [ "$($TPL_UCI get homeproxy.routing.default_mode)" = "m_rule" ]; then
+	echo "PASS: template: adding it brings back the missing modes with their rules, and nothing else"
+else
+	echo "FAIL: template: adding it did not bring back exactly the missing modes"
+	FAILED=1
+fi
+
 # a config from before the modes: its rules move into Custom, the template joins them
 run_case migration "$ROOT/tests/fixtures/generators/migration.uci" generate_client.uc sing-box-c.json "" "" seed
 MIG_UCI="uci -c $WORK/migration/config -q"

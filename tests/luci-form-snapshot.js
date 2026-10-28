@@ -110,7 +110,7 @@ class Section {
 	}
 }
 
-const classes = [ 'Value', 'ListValue', 'Flag', 'DynamicList', 'MultiValue', 'TextValue', 'Button', 'TypedSection',
+const classes = [ 'Value', 'ListValue', 'Flag', 'DynamicList', 'MultiValue', 'TextValue', 'Button', 'DummyValue', 'TypedSection',
 	'NamedSection', 'GridSection', 'SectionValue' ];
 
 const form = {};

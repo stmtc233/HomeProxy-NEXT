@@ -480,18 +480,6 @@
 								"props": {}
 							},
 							{
-								"kind": "Button",
-								"name": "_template",
-								"title": "Default template",
-								"description": "Replaces the routing modes, routing nodes, routing rules, DNS servers, DNS rules and rule-sets with the default template. Its modes are Rule (mainland China direct, ads blocked, the rest through Proxy), RuleAllowAds (the same without blocking ads), Global (everything through Proxy) and Direct; Proxy picks Auto (the fastest of all nodes), a single node or direct.",
-								"depends": [],
-								"values": [],
-								"props": {
-									"inputstyle": "reset",
-									"inputtitle": "Reset to the template"
-								}
-							},
-							{
 								"kind": "ListValue",
 								"name": "default_mode",
 								"title": "Default mode",
@@ -536,7 +524,7 @@
 								"kind": "Value",
 								"name": "label",
 								"title": "Name",
-								"description": "The name sing-box and the dashboard show for the mode.",
+								"description": "The name sing-box and the dashboard show for the mode. A renamed mode that is active in the dashboard falls back to the default mode on the next start.",
 								"depends": [],
 								"values": [],
 								"props": {
@@ -555,6 +543,15 @@
 									"editable": true,
 									"rmempty": false
 								}
+							},
+							{
+								"kind": "DummyValue",
+								"name": "_rules",
+								"title": "Rules",
+								"description": null,
+								"depends": [],
+								"values": [],
+								"props": {}
 							},
 							{
 								"kind": "ListValue",
@@ -584,6 +581,30 @@
 							}
 						],
 						"subsection": null
+					}
+				},
+				{
+					"kind": "Button",
+					"name": "_template_add",
+					"title": "Template modes",
+					"description": "Adds the modes of the default template that are missing (Rule, RuleAllowAds, Global and Direct), with the routing nodes, DNS servers and rule-sets they use. A mode whose name is already taken is left out.",
+					"depends": [],
+					"values": [],
+					"props": {
+						"inputstyle": "add",
+						"inputtitle": "Add the template modes"
+					}
+				},
+				{
+					"kind": "Button",
+					"name": "_template",
+					"title": "Default template",
+					"description": "Replaces the routing modes, routing nodes, routing rules, DNS servers, DNS rules and rule-sets with the default template. Its modes are Rule (mainland China direct, ads blocked, the rest through Proxy), RuleAllowAds (the same without blocking ads), Global (everything through Proxy) and Direct; Proxy picks Auto (the fastest of all nodes), a single node or direct.",
+					"depends": [],
+					"values": [],
+					"props": {
+						"inputstyle": "reset",
+						"inputtitle": "Reset to the template"
 					}
 				},
 				{

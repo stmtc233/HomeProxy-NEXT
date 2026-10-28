@@ -386,8 +386,10 @@ const methods = {
 
 	/* the change event makes procd reload a running service, as an apply from LuCI does */
 	template_apply: {
-		call: function() {
-			if (system(`${HP_DIR}/scripts/apply_template.uc`) !== 0)
+		args: { add: true },
+		call: function(req) {
+			const arg = req.args?.add ? ' add' : '';
+			if (system(`${HP_DIR}/scripts/apply_template.uc${arg}`) !== 0)
 				return { result: false, error: 'failed to apply the template' };
 
 			system(`ubus call service event '{"type":"config.change","data":{"package":"homeproxy"}}'`);

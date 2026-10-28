@@ -4078,10 +4078,6 @@ msgstr "每个模式有自己的路由规则和 DNS 规则，以及都没匹配�
 msgid "Routing Modes"
 msgstr "路由模式"
 
-#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:19
-msgid "The name sing-box and the dashboard show for the mode."
-msgstr "sing-box 和 Dashboard 中显示的模式名称。"
-
 #: htdocs/luci-static/resources/homeproxy/client/common.js:59
 msgid "Routing mode"
 msgstr "路由模式"
@@ -4109,3 +4105,59 @@ msgstr "在防火墙中让中国大陆地址绕过 sing-box。开启后不能使
 #: htdocs/luci-static/resources/homeproxy/client/routing.js:204
 msgid "The routing mode sing-box starts in. Once a mode has been switched in the dashboard, that one is kept across restarts instead."
 msgstr "sing-box 启动时所处的路由模式。在 Dashboard 中切换过模式后，重启会沿用切换后的模式。"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:97
+msgid "%d routing, %d DNS"
+msgstr "路由 %d 条，DNS %d 条"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:97
+msgid "%s copy"
+msgstr "%s 副本"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:97
+msgid "Add the template modes"
+msgstr "加入模板模式"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:97
+msgid "Adds the modes of the default template that are missing (Rule, RuleAllowAds, Global and Direct), with the routing nodes, DNS servers and rule-sets they use. A mode whose name is already taken is left out."
+msgstr "加入默认模板中缺少的模式（Rule、RuleAllowAds、Global 和 Direct），以及它们用到的路由节点、DNS 服务器和规则集。名称已被占用的模式不加。"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:97
+msgid "Copy"
+msgstr "复制"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:97
+msgid "Copy the mode with its rules"
+msgstr "连同规则复制这个模式"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:97
+msgid "Delete routing mode"
+msgstr "删除路由模式"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:97
+msgid "Rules"
+msgstr "规则"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:97
+msgid "Set as default"
+msgstr "设为默认"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:97
+msgid "Template modes"
+msgstr "模板模式"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:97
+msgid "The missing template modes are added, and unsaved changes to HomeProxy are discarded."
+msgstr "会加入缺少的模板模式，HomeProxy 未保存的修改也会丢弃。"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:97
+msgid "The mode %s is deleted together with its %d routing rules and %d DNS rules."
+msgstr "模式 %s 会连同它的 %d 条路由规则和 %d 条 DNS 规则一起删除。"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:97
+msgid "The mode sing-box starts in"
+msgstr "sing-box 启动时所处的模式"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:97
+msgid "The name sing-box and the dashboard show for the mode. A renamed mode that is active in the dashboard falls back to the default mode on the next start."
+msgstr "sing-box 和 Dashboard 中显示的模式名称。改名后，如果 Dashboard 里当前正处于这个模式，下次启动会回到默认模式。"
