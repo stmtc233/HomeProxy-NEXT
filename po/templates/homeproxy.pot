@@ -3539,6 +3539,10 @@ msgstr ""
 msgid "GeoSite CN rule-set version"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/status.js
+msgid "GeoSite ads rule-set version"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Bearer token required by the API. Strongly recommended when listening on a non-local address."
 msgstr ""

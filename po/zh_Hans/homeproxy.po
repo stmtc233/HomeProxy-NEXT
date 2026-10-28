@@ -3660,6 +3660,9 @@ msgstr "GeoIP CN 规则集版本"
 msgid "GeoSite CN rule-set version"
 msgstr "GeoSite CN 规则集版本"
 
+msgid "GeoSite ads rule-set version"
+msgstr "GeoSite 广告规则集版本"
+
 #~ msgid "Disable Path MTU discovery"
 #~ msgstr "禁用路径 MTU 探测"
 

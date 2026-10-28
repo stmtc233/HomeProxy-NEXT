@@ -65,7 +65,7 @@ const callResUpdate = rpc.declare({
 	expect: { '': {} }
 });
 
-const resourceTypes = [ 'china_ip4', 'china_ip6', 'geoip_cn', 'geosite_cn' ];
+const resourceTypes = [ 'china_ip4', 'china_ip6', 'geoip_cn', 'geosite_cn', 'geosite_ads' ];
 
 function getResVersion(o, type) {
 	const callResVersion = rpc.declare({
@@ -445,6 +445,10 @@ return view.extend({
 
 		o = s.option(form.DummyValue, '_geosite_cn_version', _('GeoSite CN rule-set version'));
 		o.cfgvalue = L.bind(getResVersion, this, o, 'geosite_cn');
+		o.rawhtml = true;
+
+		o = s.option(form.DummyValue, '_geosite_ads_version', _('GeoSite ads rule-set version'));
+		o.cfgvalue = L.bind(getResVersion, this, o, 'geosite_ads');
 		o.rawhtml = true;
 
 		o = s.option(form.Value, 'github_token', _('GitHub token'));

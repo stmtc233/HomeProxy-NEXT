@@ -27,7 +27,7 @@ const RUN_DIR = '/var/run/homeproxy';
 /* Resource lists the status page may query/update; single source for the two
    methods below (the update path also validates the type against it to keep
    path traversal out). */
-const RESOURCE_TYPES = ['china_ip4', 'china_ip6', 'geoip_cn', 'geosite_cn'];
+const RESOURCE_TYPES = ['china_ip4', 'china_ip6', 'geoip_cn', 'geosite_cn', 'geosite_ads'];
 
 /* Configuration backup: infra holds internal ports/marks and migration is a
    one-shot flag, neither belongs in a portable backup. */

@@ -126,8 +126,11 @@ case "$1" in
 "geosite_cn")
 	check_list_update "$1" "SagerNet/sing-geosite" "rule-set" "geosite-geolocation-cn.srs"
 	;;
+"geosite_ads")
+	check_list_update "$1" "SagerNet/sing-geosite" "rule-set" "geosite-category-ads-all.srs"
+	;;
 *)
-	echo -e "Usage: $0 <china_ip4 / china_ip6 / geoip_cn / geosite_cn>"
+	echo -e "Usage: $0 <china_ip4 / china_ip6 / geoip_cn / geosite_cn / geosite_ads>"
 	exit 1
 	;;
 esac

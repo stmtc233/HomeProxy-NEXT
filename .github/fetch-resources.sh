@@ -22,7 +22,7 @@ sed -e "s#^RESOURCES_DIR=.*#RESOURCES_DIR=\"$ROOT/root/etc/homeproxy/resources\"
     "$ROOT/root/etc/homeproxy/scripts/update_resources.sh" > "$WORK/update_resources.sh"
 
 FAILED=0
-for type in china_ip4 china_ip6 geoip_cn geosite_cn; do
+for type in china_ip4 china_ip6 geoip_cn geosite_cn geosite_ads; do
 	sh "$WORK/update_resources.sh" "$type"
 	# 3: already at the latest version
 	case "$?" in
