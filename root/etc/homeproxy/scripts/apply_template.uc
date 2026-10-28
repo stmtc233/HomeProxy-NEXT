@@ -135,7 +135,7 @@ if (ARGV[0] === 'add') {
 		if (s[0] === 'routing_mode' && (uci.get(uciconfig, s[1]) || names[lc(s[2].label)]))
 			skipped[s[1]] = true;
 
-	add_template(filter(SECTIONS, (s) => !uci.get(uciconfig, s[1]) && !skipped[s[2].routing_mode]));
+	add_template(filter(SECTIONS, (s) => !uci.get(uciconfig, s[1]) && !skipped[s[1]] && !skipped[s[2].routing_mode]));
 	uci.commit(uciconfig);
 	exit(0);
 }
