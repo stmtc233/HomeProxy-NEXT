@@ -4175,3 +4175,23 @@ msgstr "使用“路由选项”动作时，TLS 分片与 TLS 记录分片不能
 #: htdocs/luci-static/resources/homeproxy.js
 msgid "STATUS UNKNOWN"
 msgstr "状态未知"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_node.js
+msgid "Selector"
+msgstr "Selector（手动选择）"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_node.js
+msgid "Selector nodes"
+msgstr "可选出站"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_node.js
+msgid "Outbounds to choose from: nodes, whole subscriptions, other routing nodes, direct or block."
+msgstr "可供选择的出站：节点、整个订阅、其他路由节点、直连或封锁。"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_node.js
+msgid "Used until another outbound is selected, the first one if empty. A selection is kept across restarts."
+msgstr "选择其他出站之前使用的出站，留空则用第一个。选择结果在重启后保留。"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_node.js
+msgid "one of the selector nodes"
+msgstr "可选出站之一"

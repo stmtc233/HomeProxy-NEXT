@@ -14,6 +14,8 @@ import {
 import { parse_port } from './common.uc';
 import { uciconfig, ucimain, ucinode, uciroutingnode } from './context.uc';
 
+const BUILTIN_OUTBOUNDS = ['direct-out', 'block-out'];
+
 function generate_endpoint(ctx, node) {
 	if (type(node) !== 'object' || isEmpty(node))
 		return null;
@@ -170,6 +172,73 @@ function expand_urltest_nodes(ctx, nodes) {
 	return expanded;
 }
 
+function is_routing_node(ctx, name) {
+	return ctx.uci.get_all(uciconfig, name)?.['.type'] === uciroutingnode;
+}
+
+function selector_member_tag(ctx, item) {
+	if (item in BUILTIN_OUTBOUNDS)
+		return item;
+
+	return is_routing_node(ctx, item) ? ctx.get_outbound(item) : ctx.node_tag(item);
+}
+
+/* sing-box check does not start the outbounds, so it lets a selector loop through */
+function check_selector_loop(ctx, name, path) {
+	if (name in path)
+		die(sprintf("Selector loop %s, please check your configuration.",
+			join(' -> ', map([...path, name], (n) => ctx.node_tag(n)))));
+
+	const cfg = ctx.uci.get_all(uciconfig, name);
+	if (cfg?.['.type'] !== uciroutingnode || cfg.node !== 'selector' || cfg.enabled !== '1')
+		return;
+
+	for (let item in (cfg.selector_nodes || []))
+		check_selector_loop(ctx, item, [...path, name]);
+}
+
+/*
+ * A selector takes nodes and whole subscriptions like urltest, plus other
+ * routing nodes and the built-in outbounds. Returns the member tags and the
+ * nodes that need an outbound of their own.
+ */
+function expand_selector(ctx, cfg) {
+	const tags = [],
+	      nodes = [];
+	const add_tag = (tag) => {
+		if (!~index(tags, tag))
+			push(tags, tag);
+	};
+
+	for (let item in (cfg.selector_nodes || [])) {
+		if (item in BUILTIN_OUTBOUNDS) {
+			add_tag(item);
+		} else if (is_routing_node(ctx, item)) {
+			if (ctx.uci.get(uciconfig, item, 'enabled') === '1')
+				add_tag(ctx.get_outbound(item));
+			else
+				warn(sprintf("homeproxy: selector '%s' skips the disabled routing node '%s'.\n", cfg['.name'], item));
+		} else {
+			for (let node in expand_urltest_nodes(ctx, [item])) {
+				if (!~index(nodes, node))
+					push(nodes, node);
+				add_tag(ctx.node_tag(node));
+			}
+		}
+	}
+
+	let default_tag = null;
+	if (!isEmpty(cfg.selector_default)) {
+		default_tag = selector_member_tag(ctx, cfg.selector_default);
+		if (!(default_tag in tags)) {
+			warn(sprintf("homeproxy: selector '%s' defaults to '%s', which is not one of its members, ignoring it.\n", cfg['.name'], default_tag));
+			default_tag = null;
+		}
+	}
+
+	return { tags, nodes, default_tag };
+}
+
 /* endpoints and outbounds; fills ctx.direct_overrides on the way */
 export function build(ctx) {
 	const uci = ctx.uci;
@@ -255,8 +324,11 @@ export function build(ctx) {
 			}
 		}
 	} else if (ctx.is_custom_mode) {
-		let urltest_nodes = [],
+		let group_nodes = [],
 		    routing_nodes = [];
+		const add_group_nodes = (nodes) => {
+			group_nodes = [...group_nodes, ...filter(nodes, (l) => !~index(group_nodes, l))];
+		};
 
 		uci.foreach(uciconfig, uciroutingnode, (cfg) => {
 			if (cfg.enabled !== '1')
@@ -274,7 +346,18 @@ export function build(ctx) {
 					idle_timeout: strToTime(cfg.urltest_idle_timeout || '1800s'),
 					interrupt_exist_connections: strToBool(cfg.urltest_interrupt_exist_connections)
 				});
-				urltest_nodes = [...urltest_nodes, ...filter(cfg_urltest_nodes, (l) => !~index(urltest_nodes, l))];
+				add_group_nodes(cfg_urltest_nodes);
+			} else if (cfg.node === 'selector') {
+				check_selector_loop(ctx, cfg['.name'], []);
+				const members = expand_selector(ctx, cfg);
+				push(outbounds, {
+					type: 'selector',
+					tag: ctx.node_tag(cfg['.name']),
+					outbounds: members.tags,
+					default: members.default_tag,
+					interrupt_exist_connections: strToBool(cfg.selector_interrupt_exist_connections)
+				});
+				add_group_nodes(members.nodes);
 			} else {
 				const outbound = uci.get_all(uciconfig, cfg.node) || {};
 				if (outbound.type === 'wireguard') {
@@ -300,12 +383,12 @@ export function build(ctx) {
 			}
 		});
 
-		for (let i in filter(urltest_nodes, (l) => !~index(routing_nodes, l))) {
-			const urltest_node = uci.get_all(uciconfig, i) || {};
-			if (urltest_node.type === 'wireguard')
-				push(endpoints, generate_endpoint(ctx, urltest_node));
+		for (let i in filter(group_nodes, (l) => !~index(routing_nodes, l))) {
+			const group_node = uci.get_all(uciconfig, i) || {};
+			if (group_node.type === 'wireguard')
+				push(endpoints, generate_endpoint(ctx, group_node));
 			else
-				push(outbounds, generate_outbound(ctx, urltest_node));
+				push(outbounds, generate_outbound(ctx, group_node));
 		}
 	}
 

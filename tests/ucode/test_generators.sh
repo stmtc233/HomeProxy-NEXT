@@ -14,6 +14,7 @@ run_case() {
 	outfile="$4"
 	local_rs="$5"
 	plugins="$6"
+	expect_error="$7"
 	dir="$WORK/$name"
 
 	rm -rf "$dir"
@@ -62,6 +63,20 @@ run_case() {
 	for module in "$ROOT/root/etc/homeproxy/scripts/client/"*.uc; do
 		sed -e "$wan_stub" "$module" > "$dir/scripts/client/${module##*/}"
 	done
+
+	if [ -n "$expect_error" ]; then
+		if ( cd "$dir/scripts" && ucode "$generator" ) > "$dir/generator.log" 2>&1; then
+			echo "FAIL: $name: $generator accepted a config it should refuse"
+			FAILED=1
+		elif grep -qF -- "$expect_error" "$dir/generator.log"; then
+			echo "PASS: $name: $generator refused it"
+		else
+			echo "FAIL: $name: $generator failed without '$expect_error':"
+			cat "$dir/generator.log"
+			FAILED=1
+		fi
+		return
+	fi
 
 	if ! ( cd "$dir/scripts" && ucode "$generator" ); then
 		echo "FAIL: $name: $generator exited non-zero"
@@ -185,6 +200,9 @@ assert_json "custom/labels: a DNS server without label keeps the section name" '
 assert_json "custom/labels: dns.final points at the DNS label" '"final": "🌐 谷歌 DNS ✈️"'
 assert_json "custom/labels: extra rule-set tags are kept verbatim" '"geosite"$'
 assert_json "custom/labels: a rule-set label clashing with an extra tag is suffixed" '"tag": "geosite #2"'
+
+run_case custom_selector_loop "$ROOT/tests/fixtures/generators/custom-selector-loop.uci" generate_client.uc sing-box-c.json "" "" \
+	"Selector loop sel-a -> sel-b -> sel-a"
 
 run_case rules "$ROOT/tests/fixtures/generators/rules.uci" generate_client.uc sing-box-c.json
 check_golden rules sing-box-c.json

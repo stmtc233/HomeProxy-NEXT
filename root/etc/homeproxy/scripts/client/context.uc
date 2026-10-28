@@ -27,6 +27,9 @@ export const uciroutingsetting = 'routing',
 export const ucinode = 'node',
              uciruleset = 'ruleset';
 
+/* routing nodes whose `node` names a group they build instead of a node */
+export const GROUP_NODES = ['urltest', 'selector'];
+
 /*
  * Tags follow the section label (subscription nodes have md5 section names).
  * Sections without a label keep the old 'cfg-<name>-<suffix>' form.
@@ -177,7 +180,7 @@ export function load(uci, ubus) {
 	}
 
 	const outbound_tags = build_tags(
-		[...uci_sections(ucinode), ...uci_sections(uciroutingnode, (cfg) => cfg.node === 'urltest')],
+		[...uci_sections(ucinode), ...uci_sections(uciroutingnode, (cfg) => cfg.node in GROUP_NODES)],
 		['direct-out', 'block-out', 'main-out', 'main-udp-out', 'any'],
 		'out'
 	);
@@ -219,7 +222,7 @@ export function load(uci, ubus) {
 				const node = uci.get(uciconfig, cfg, 'node');
 				if (isEmpty(node))
 					die(sprintf("%s's node is missing, please check your configuration.", cfg));
-				else if (node === 'urltest')
+				else if (node in GROUP_NODES)
 					return ctx.node_tag(cfg);
 				else
 					return ctx.node_tag(node);
@@ -238,7 +241,7 @@ export function load(uci, ubus) {
 			return null;
 		default:
 			const node = uci.get(uciconfig, outbound_selector, 'node');
-			return (!isEmpty(node) && node !== 'urltest') ? (ctx.direct_overrides[node] || null) : null;
+			return (!isEmpty(node) && !(node in GROUP_NODES)) ? (ctx.direct_overrides[node] || null) : null;
 		}
 	};
 

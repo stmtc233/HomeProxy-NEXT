@@ -3953,3 +3953,23 @@ msgstr ""
 #: htdocs/luci-static/resources/homeproxy.js
 msgid "STATUS UNKNOWN"
 msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_node.js
+msgid "Selector"
+msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_node.js
+msgid "Selector nodes"
+msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_node.js
+msgid "Outbounds to choose from: nodes, whole subscriptions, other routing nodes, direct or block."
+msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_node.js
+msgid "Used until another outbound is selected, the first one if empty. A selection is kept across restarts."
+msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy/client/routing_node.js
+msgid "one of the selector nodes"
+msgstr ""

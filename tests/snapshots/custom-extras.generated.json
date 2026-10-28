@@ -134,6 +134,26 @@
 				"server": "ds-doh",
 				"strategy": "ipv4_only"
 			}
+		},
+		{
+			"type": "selector",
+			"tag": "rn-select",
+			"outbounds": [
+				"wg",
+				"ss2",
+				"direct-out"
+			],
+			"default": "wg",
+			"interrupt_exist_connections": true
+		},
+		{
+			"type": "shadowsocks",
+			"tag": "ss2",
+			"routing_mark": 100,
+			"server": "ss2.example.com",
+			"server_port": 8389,
+			"password": "secret2",
+			"method": "aes-128-gcm"
 		}
 	],
 	"route": {
@@ -155,6 +175,13 @@
 				],
 				"action": "route",
 				"outbound": "wg"
+			},
+			{
+				"domain_suffix": [
+					"select.example.com"
+				],
+				"action": "route",
+				"outbound": "rn-select"
 			}
 		],
 		"rule_set": [

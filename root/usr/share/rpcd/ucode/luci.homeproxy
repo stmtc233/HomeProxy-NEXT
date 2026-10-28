@@ -69,13 +69,17 @@ function backupStripNodeRefs(section, node_names) {
 			delete section.options[opt];
 	} else if (section.type === 'routing_node') {
 		const opts = section.options;
-		if (type(opts.node) === 'string' && opts.node !== 'urltest' && isNodeRef(opts.node))
+		if (type(opts.node) === 'string' && !(opts.node in ['urltest', 'selector']) && isNodeRef(opts.node))
 			delete opts.node;
-		if (type(opts.urltest_nodes) === 'array') {
-			opts.urltest_nodes = filter(opts.urltest_nodes, (v) => !isNodeRef(v));
-			if (!length(opts.urltest_nodes))
-				delete opts.urltest_nodes;
+		for (let list_opt in ['urltest_nodes', 'selector_nodes']) {
+			if (type(opts[list_opt]) === 'array') {
+				opts[list_opt] = filter(opts[list_opt], (v) => !isNodeRef(v));
+				if (!length(opts[list_opt]))
+					delete opts[list_opt];
+			}
 		}
+		if (type(opts.selector_default) === 'string' && isNodeRef(opts.selector_default))
+			delete opts.selector_default;
 	}
 }
 

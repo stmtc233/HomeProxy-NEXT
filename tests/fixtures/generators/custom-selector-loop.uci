@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# Two selectors that pick each other. sing-box check only builds the
+# outbounds and never starts them, so it would pass this config and sing-box
+# would fail at startup; the generator has to refuse it.
+
+config homeproxy 'config'
+	option routing_mode 'custom'
+	option proxy_mode 'redirect_tproxy'
+	option ipv6_support '0'
+	option log_level 'error'
+
+config homeproxy 'routing'
+	option default_outbound 'rn_a'
+	option default_outbound_dns 'default-dns'
+
+config homeproxy 'infra'
+	option mixed_port '5330'
+	option dns_port '5333'
+	option redirect_port '5331'
+	option self_mark '100'
+
+config routing_node 'rn_a'
+	option enabled '1'
+	option label 'sel-a'
+	option node 'selector'
+	list selector_nodes 'rn_b'
+	list selector_nodes 'direct-out'
+
+config routing_node 'rn_b'
+	option enabled '1'
+	option label 'sel-b'
+	option node 'selector'
+	list selector_nodes 'rn_a'

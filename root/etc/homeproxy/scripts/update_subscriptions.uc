@@ -392,27 +392,33 @@ function main() {
 	}
 
 	uci.foreach(uciconfig, 'routing_node', (cfg) => {
-		if (cfg.node !== 'urltest' || isEmpty(cfg.urltest_nodes))
+		if (!(cfg.node in ['urltest', 'selector']))
 			return null;
 
-		const cleaned_nodes = filter(cfg.urltest_nodes, (v) => {
+		const list_option = cfg.node + '_nodes';
+		if (isEmpty(cfg[list_option]))
+			return null;
+
+		const cleaned_nodes = filter(cfg[list_option], (v) => {
+			if (v in ['direct-out', 'block-out'])
+				return true;
 			if (substr(v, 0, 4) === 'sub_') {
 				const sub_hash = substr(v, 4);
 				for (let suburl in subscription_urls) {
 					if (md5(replace(suburl, /#.*$/, '')) === sub_hash)
 						return true;
 				}
-				log(sprintf('Routing node %s: subscription %s is gone, removing from urltest list.', cfg['.name'], sub_hash));
+				log(sprintf('Routing node %s: subscription %s is gone, removing from %s list.', cfg['.name'], sub_hash, cfg.node));
 				return false;
 			}
 			return !!uci.get(uciconfig, v);
 		});
-		if (length(cleaned_nodes) !== length(cfg.urltest_nodes)) {
-			uci.set(uciconfig, cfg['.name'], 'urltest_nodes', cleaned_nodes);
+		if (length(cleaned_nodes) !== length(cfg[list_option])) {
+			uci.set(uciconfig, cfg['.name'], list_option, cleaned_nodes);
 			uci.commit(uciconfig);
 			need_restart = true;
 
-			log(sprintf('Routing node %s: removed gone nodes from urltest list.', cfg['.name']));
+			log(sprintf('Routing node %s: removed gone nodes from %s list.', cfg['.name'], cfg.node));
 		}
 	});
 

@@ -869,6 +869,10 @@
 									[
 										"urltest",
 										"URLTest"
+									],
+									[
+										"selector",
+										"Selector"
 									]
 								],
 								"props": {
@@ -882,7 +886,7 @@
 								"description": "For resolving domain name in the server address.",
 								"depends": [
 									{
-										"node": "urltest",
+										"node": "/^(urltest|selector)$/",
 										"!reverse": true
 									}
 								],
@@ -898,7 +902,7 @@
 								"description": "The domain strategy for resolving the domain name in the address.",
 								"depends": [
 									{
-										"node": "urltest",
+										"node": "/^(urltest|selector)$/",
 										"!reverse": true
 									}
 								],
@@ -936,7 +940,7 @@
 								"depends": [
 									{
 										"outbound": "",
-										"node": "/^((?!urltest$).)+$/"
+										"node": "/^(?!(urltest|selector)$).+$/"
 									}
 								],
 								"values": [],
@@ -953,7 +957,7 @@
 								"description": "The tag of the upstream outbound.<br/>Other dial fields will be ignored when enabled.",
 								"depends": [
 									{
-										"node": "urltest",
+										"node": "/^(urltest|selector)$/",
 										"!reverse": true
 									}
 								],
@@ -1062,6 +1066,54 @@
 									[
 										"node",
 										"urltest"
+									]
+								],
+								"values": [],
+								"props": {
+									"modalonly": true
+								}
+							},
+							{
+								"kind": "CBI.StaticList",
+								"name": "selector_nodes",
+								"title": "Selector nodes",
+								"description": "Outbounds to choose from: nodes, whole subscriptions, other routing nodes, direct or block.",
+								"depends": [
+									[
+										"node",
+										"selector"
+									]
+								],
+								"values": [],
+								"props": {
+									"modalonly": true
+								}
+							},
+							{
+								"kind": "ListValue",
+								"name": "selector_default",
+								"title": "Default outbound",
+								"description": "Used until another outbound is selected, the first one if empty. A selection is kept across restarts.",
+								"depends": [
+									[
+										"node",
+										"selector"
+									]
+								],
+								"values": [],
+								"props": {
+									"modalonly": true
+								}
+							},
+							{
+								"kind": "Flag",
+								"name": "selector_interrupt_exist_connections",
+								"title": "Interrupt existing connections",
+								"description": "Interrupt existing connections when the selected outbound has changed.",
+								"depends": [
+									[
+										"node",
+										"selector"
 									]
 								],
 								"values": [],

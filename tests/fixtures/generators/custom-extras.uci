@@ -4,8 +4,9 @@
 # the global routing options (domain strategy, find_neighbor, tun stack,
 # endpoint-independent NAT, UDP timeout), the global DNS options, routing
 # nodes (WireGuard endpoint and a plain outbound) with bind_interface /
-# detour / domain_resolver, a DoH server with headers, a hosts file server,
-# a remote rule-set with initial_path and the dashboard without a main node.
+# detour / domain_resolver, a selector over a routing node, a node of its own
+# and direct, a DoH server with headers, a hosts file server, a remote
+# rule-set with initial_path and the dashboard without a main node.
 # The keys are test-only.
 
 config homeproxy 'config'
@@ -59,6 +60,14 @@ config node 'n_wg'
 	option wireguard_peer_public_key 'zoKstuivPm2HhlAcg6Uui1hKUtVsvn/HDQUXeEyCVxg='
 	option wireguard_pre_shared_key 'IDTYSQiGLnnkIWRPNr6QJP+eYxdX6xeUbfp3VPl/100='
 
+config node 'n_ss2'
+	option label 'ss2'
+	option type 'shadowsocks'
+	option address 'ss2.example.com'
+	option port '8389'
+	option shadowsocks_encrypt_method 'aes-128-gcm'
+	option password 'secret2'
+
 config routing_node 'rn_proxy'
 	option enabled '1'
 	option label 'rn-proxy'
@@ -75,6 +84,17 @@ config routing_node 'rn_wg'
 	option outbound 'rn_proxy'
 	option domain_resolver 'ds_doh'
 	option domain_strategy 'ipv4_only'
+
+# n_ss2 has no routing node, so the selector brings in its outbound
+config routing_node 'rn_select'
+	option enabled '1'
+	option label 'rn-select'
+	option node 'selector'
+	list selector_nodes 'rn_wg'
+	list selector_nodes 'n_ss2'
+	list selector_nodes 'direct-out'
+	option selector_default 'rn_wg'
+	option selector_interrupt_exist_connections '1'
 
 config dns_server 'ds_doh'
 	option enabled '1'
@@ -109,3 +129,10 @@ config routing_rule 'rr_remote'
 	list rule_set 'rs_remote'
 	option action 'route'
 	option outbound 'rn_wg'
+
+config routing_rule 'rr_select'
+	option enabled '1'
+	option label 'rr-select'
+	list domain_suffix 'select.example.com'
+	option action 'route'
+	option outbound 'rn_select'
