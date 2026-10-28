@@ -29,6 +29,9 @@ const sections = {
 		{ '.name': 'm_rule', label: 'Rule', enabled: '1' },
 		{ '.name': 'm_off', enabled: '0' }
 	],
+	homeproxy: [
+		{ '.name': 'routing', default_mode: 'm_off' }
+	],
 	routing_rule: [
 		{ '.name': 'rr1', label: 'ads', routing_mode: 'm_rule' },
 		{ '.name': 'rr2', label: 'ads', routing_mode: 'm_off' },
@@ -135,7 +138,8 @@ o = { subsection: { sectiontype: 'routing_rule' } };
 const mode_option = option();
 common.bindModeGrid(o, 'homeproxy', mode_option);
 const shown = () => sections.routing_rule.map((r) => r['.name']).filter((sid) => o.subsection.filter(sid));
-check(same(shown(), [ 'rr3', 'rr4' ]), 'modes: before a mode is picked, the rules without one are listed', shown());
+check(same(shown(), [ 'rr2' ]) && mode_option.default === 'm_off',
+	'modes: the rows loaded first are those of the default mode, which new rules join', shown());
 mode_option.load('cfg');
 check(same(mode_option.listed, [ [ 'm_rule', 'Rule' ], [ 'm_off', 'm_off' ] ]) && mode_option.rmempty === false,
 	'modes: a rule can be moved to any mode, a disabled one too', mode_option.listed);

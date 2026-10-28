@@ -60,35 +60,47 @@ return baseclass.extend({
 	 */
 	bindModeGrid(o, uciconfig, mode_option) {
 		const ss = o.subsection;
-		const modes = () => uci.sections(uciconfig, 'routing_mode').map((res) => res['.name']);
-		const has_mode = (sid) => modes().includes(uci.get(uciconfig, sid, 'routing_mode'));
+		const modes = () => uci.sections(uciconfig, 'routing_mode').map((res) => [ res['.name'], res.label || res['.name'] ]);
+		const has_mode = (sid) => modes().some((m) => m[0] === uci.get(uciconfig, sid, 'routing_mode'));
 		let current = null;
 
-		ss.filter = (section_id) => current ? (uci.get(uciconfig, section_id, 'routing_mode') === current) : !has_mode(section_id);
+		const choices = () => {
+			let res = modes();
+			if (uci.sections(uciconfig, ss.sectiontype).some((rule) => !has_mode(rule['.name'])))
+				res.push([ '', _('Without a mode (not used)') ]);
+			return res;
+		};
+		/* settled before the rows load: a row only has values for the mode it was loaded with */
+		const settle = () => {
+			let list = choices();
+			if (current == null || !list.some((c) => c[0] === current)) {
+				let default_mode = uci.get(uciconfig, 'routing', 'default_mode');
+				current = list.some((c) => c[0] === default_mode) ? default_mode : (list.length ? list[0][0] : '');
+			}
+			mode_option.default = current;
+			return list;
+		};
+
+		ss.filter = (section_id) => {
+			settle();
+			return current ? (uci.get(uciconfig, section_id, 'routing_mode') === current) : !has_mode(section_id);
+		};
 
 		mode_option.load = function(section_id) {
 			delete this.keylist;
 			delete this.vallist;
 
-			uci.sections(uciconfig, 'routing_mode', (res) => {
-				this.value(res['.name'], res.label || res['.name']);
-			});
+			for (let m of modes())
+				this.value(m[0], m[1]);
 
 			return this.super('load', section_id);
 		};
 		mode_option.rmempty = false;
 
 		o.renderWidget = function(section_id, option_index, cfgvalue) {
-			let choices = uci.sections(uciconfig, 'routing_mode').map((res) => [ res['.name'], res.label || res['.name'] ]);
-			if (uci.sections(uciconfig, ss.sectiontype).some((res) => !has_mode(res['.name'])))
-				choices.push([ '', _('Without a mode (not used)') ]);
-			if (current == null || !choices.some((c) => c[0] === current)) {
-				let default_mode = uci.get(uciconfig, 'routing', 'default_mode');
-				current = choices.some((c) => c[0] === default_mode) ? default_mode : (choices.length ? choices[0][0] : '');
-			}
-			mode_option.default = current;
-
+			let list = settle();
 			let grid = E('div');
+			let renderGrid = () => ss.load().then(() => ss.render()).then((node) => dom.content(grid, node));
 			let select = E('select', {
 				'class': 'cbi-input-select',
 				'change': ui.createHandlerFn(this, (ev) => {
@@ -96,23 +108,20 @@ return baseclass.extend({
 					return ss.parse().then(() => {
 						current = ev.target.value;
 						mode_option.default = current;
-						return ss.render();
-					}).then((node) => dom.content(grid, node)).catch(() => {
+						return renderGrid();
+					}).catch(() => {
 						ev.target.value = current;
 					});
 				})
-			}, choices.map((c) => E('option', { 'value': c[0], 'selected': (c[0] === current) ? '' : null }, [ c[1] ])));
+			}, list.map((c) => E('option', { 'value': c[0], 'selected': (c[0] === current) ? '' : null }, [ c[1] ])));
 
-			return ss.render().then((node) => {
-				dom.content(grid, node);
-				return E('div', {}, [
-					E('div', { 'class': 'cbi-value' }, [
-						E('label', { 'class': 'cbi-value-title' }, [ _('Routing mode') ]),
-						E('div', { 'class': 'cbi-value-field' }, [ select ])
-					]),
-					grid
-				]);
-			});
+			return renderGrid().then(() => E('div', {}, [
+				E('div', { 'class': 'cbi-value' }, [
+					E('label', { 'class': 'cbi-value-title' }, [ _('Routing mode') ]),
+					E('div', { 'class': 'cbi-value-field' }, [ select ])
+				]),
+				grid
+			]));
 		};
 	},
 
