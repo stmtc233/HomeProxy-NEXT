@@ -3,7 +3,8 @@
 //
 // homeproxy/client/common.js: the section-backed selects of the client tabs
 // list the fixed choices first, then the enabled sections, and show a stored
-// value as its label in the grid; the rule grids show one routing mode at a
+// value as its label in the grid, and keep a value whose section is deleted or
+// disabled, refusing it until another one is picked; the rule grids show one routing mode at a
 // time, and rule labels only need to be unique within their mode.
 
 'use strict';
@@ -56,7 +57,7 @@ const uci = {
 let rendered;
 const ui = {
 	Select: class {
-		constructor(value, choices, opts) { rendered = { value, choices, sort: opts.sort }; }
+		constructor(value, choices, opts) { rendered = { value, choices, sort: opts.sort, validate: opts.validate }; }
 		render() { return rendered; }
 	}
 };
@@ -73,8 +74,8 @@ function option(props) {
 		cbid: (sid) => `cbid.homeproxy.${sid}.x`,
 		validate: () => true,
 		map: { readonly: false },
-		value(k, v) { (this.listed = this.listed || []).push([ k, v ]); },
-		super(method, ...args) { this.called = [ method, ...args ]; return method; }
+		value(k, v) { (this.keylist = this.keylist || []).push(k); (this.listed = this.listed || []).push([ k, v ]); },
+		super(method, ...args) { this.called = [ method, ...args ]; return (method === 'load') ? this.stored : method; }
 	}, props);
 }
 
@@ -103,11 +104,22 @@ check(rendered.value === 'direct-out', 'an unset value renders as the default', 
 o.renderWidget('rn1', 0, 'rn2');
 check(rendered.value === 'rn2', 'a stored value renders as is', rendered.value);
 
+/* a section that is gone keeps its value, under an entry of its own, and is refused */
+for (const [ value, label ] of [ [ 'gone', 'gone (deleted)' ], [ 'rn3', 'off (disabled)' ] ]) {
+	o.renderWidget('rn1', 0, value);
+	check(rendered.value === value && rendered.choices[value] === label && rendered.sort.at(-1) === value,
+		`a ${label.split('(')[1].slice(0, -1)} section stays selected`, rendered);
+	check(rendered.validate(value) !== true && rendered.validate('rn2') === true,
+		`a ${label.split('(')[1].slice(0, -1)} section is refused until another one is picked`, rendered.validate(value));
+}
+o.renderWidget('rn1', 0, 'rn2');
+check(rendered.choices.gone === undefined && rendered.validate('rn2') === true, 'a later render starts afresh', rendered.choices);
+
 /* textvalue */
 const textCases = [
 	[ 'outbound defaulting to direct-out', { 'direct-out': 'Direct' }, 'direct-out',
 		{ a: '', b: 'direct-out', c: 'rn1', d: 'rn2', e: 'gone', f: 'toString' },
-		{ a: 'Direct', b: 'Direct', c: 'HK', d: 'rn2', e: 'gone', f: 'odd name' } ],
+		{ a: 'Direct', b: 'Direct', c: 'HK', d: 'rn2', e: 'gone (deleted)', f: 'odd name' } ],
 	[ 'dns server defaulting to default-dns', common.builtinDnsServers(), 'default-dns',
 		{ a: '', b: 'system-dns', c: 'ds1' },
 		{ a: 'Default DNS (issued by WAN)', b: 'System DNS', c: 'Ali' } ],
@@ -125,13 +137,31 @@ for (const [ label, fixed, def, values, want ] of textCases) {
 }
 
 /* load */
-o = option();
+o = option({ stored: 'ds1' });
 const ret = common.loadSectionChoices('homeproxy', 'dns_server',
 	Object.assign({ '': 'Default' }, common.builtinDnsServers())).call(o, 'cfg');
 check(same(o.listed, [ [ '', 'Default' ], [ 'default-dns', 'Default DNS (issued by WAN)' ], [ 'system-dns', 'System DNS' ], [ 'ds1', 'Ali' ] ]),
 	'load lists the fixed choices, then the enabled sections', o.listed);
-check(o.keylist === undefined && o.vallist === undefined && ret === 'load' && same(o.called, [ 'load', 'cfg' ]),
+check(same(o.keylist, [ '', 'default-dns', 'system-dns', 'ds1' ]) && o.vallist === undefined && ret === 'ds1' && same(o.called, [ 'load', 'cfg' ]),
 	'load starts from an empty list and chains to the parent load', o.called);
+
+/* load: a value pointing at a deleted or disabled section */
+o = option();
+const loadDns = common.loadSectionChoices('homeproxy', 'dns_server', common.builtinDnsServers());
+o.stored = 'ds2';
+check(loadDns.call(o, 'cfg') === 'ds2' && same(o.listed.at(-1), [ 'ds2', 'off (disabled)' ]),
+	'load: a disabled section is listed as such', o.listed);
+check(o.validate('cfg', 'ds2') !== true && o.validate('cfg', 'ds1') === true && o.validate('other', 'ds2') === true,
+	'load: the disabled section is refused for the section that holds it', o.validate('cfg', 'ds2'));
+o.listed = [];
+o.stored = 'ds1';
+loadDns.call(o, 'cfg');
+check(o.validate('cfg', 'ds2') === true && !o.listed.some((l) => l[0] === 'ds2'),
+	'load: once fixed, nothing is refused', o.listed);
+o.stored = 'gone';
+loadDns.call(o, 'cfg');
+check(same(o.listed.at(-1), [ 'gone', 'gone (deleted)' ]) && o.validate('cfg', 'gone') !== true,
+	'load: a deleted section is listed and refused', o.listed);
 
 /* rule grids by mode */
 o = { subsection: { sectiontype: 'routing_rule' } };
@@ -143,6 +173,11 @@ check(same(shown(), [ 'rr2' ]) && mode_option.default === 'm_off',
 mode_option.load('cfg');
 check(same(mode_option.listed, [ [ 'm_rule', 'Rule' ], [ 'm_off', 'm_off' ] ]) && mode_option.rmempty === false,
 	'modes: a rule can be moved to any mode, a disabled one too', mode_option.listed);
+mode_option.listed = [];
+mode_option.stored = 'm_gone';
+mode_option.load('rr3');
+check(same(mode_option.listed.at(-1), [ 'm_gone', 'm_gone (deleted)' ]) && mode_option.validate('rr3', 'm_gone') !== true,
+	'modes: a rule whose mode is deleted keeps it until another one is picked', mode_option.listed);
 
 const unique = common.validateUniqueLabelInMode('homeproxy', 'routing_rule');
 const in_mode = (mode) => ({ section: { formvalue: (sid, opt) => (opt === 'routing_mode') ? mode : null } });

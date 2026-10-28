@@ -11,6 +11,42 @@
 'require ui';
 'require validation';
 
+/*
+ * A stored value that points at a section the select no longer offers (it
+ * was deleted or disabled) stays as it is, listed under its own entry and
+ * refused by validation: falling back to the first choice would change the
+ * setting behind the user's back on the next save.
+ */
+function missingLabel(uciconfig, value) {
+	let target = uci.get(uciconfig, value);
+	return target ? _('%s (disabled)').format(target.label || value) : _('%s (deleted)').format(value);
+}
+
+function missingError() {
+	return _('It is deleted or disabled, choose another one.');
+}
+
+/* list.load(): list a missing scalar value, remember it for validate() */
+function listMissing(option, uciconfig, section_id, value) {
+	option.missing ??= {};
+	option.missing[section_id] = null;
+	if (typeof(value) !== 'string' || value === '' || (option.keylist || []).includes(value))
+		return;
+
+	option.value(value, missingLabel(uciconfig, value));
+	option.missing[section_id] = value;
+
+	if (!option.checks_missing) {
+		const validate = option.validate;
+		option.validate = function(sid, val) {
+			if (val != null && val === this.missing?.[sid])
+				return missingError();
+			return validate.apply(this, arguments);
+		};
+		option.checks_missing = true;
+	}
+}
+
 return baseclass.extend({
 	stubValidator: {
 		factory: validation,
@@ -48,7 +84,9 @@ return baseclass.extend({
 					this.value(res['.name'], res.label);
 			});
 
-			return this.super('load', section_id);
+			let value = this.super('load', section_id);
+			listMissing(this, uciconfig, section_id, value);
+			return value;
 		};
 	},
 
@@ -93,7 +131,9 @@ return baseclass.extend({
 			for (let m of modes())
 				this.value(m[0], m[1]);
 
-			return this.super('load', section_id);
+			let value = this.super('load', section_id);
+			listMissing(this, uciconfig, section_id, value);
+			return value;
 		};
 		mode_option.rmempty = false;
 
@@ -145,7 +185,7 @@ return baseclass.extend({
 	 * A ListValue whose choices (the fixed ones, then the enabled sections of
 	 * sectiontype) are collected when the widget renders, so a grid row shows
 	 * sections added in the same session. An empty value displays as the
-	 * option default.
+	 * option default; a missing one is kept and refused, see missingLabel().
 	 */
 	bindSectionSelect(option, uciconfig, sectiontype, fixed, exclude_self) {
 		option.renderWidget = function(section_id, option_index, cfgvalue) {
@@ -159,7 +199,14 @@ return baseclass.extend({
 				}
 			});
 
-			let widget = new ui.Select((cfgvalue != null) ? cfgvalue : this.default, choices, {
+			let value = (cfgvalue != null) ? cfgvalue : this.default;
+			let missing = (value != null && value !== '' && !Object.prototype.hasOwnProperty.call(choices, value)) ? value : null;
+			if (missing != null) {
+				choices[missing] = missingLabel(uciconfig, missing);
+				sort.push(missing);
+			}
+
+			let widget = new ui.Select(value, choices, {
 				id: this.cbid(section_id),
 				size: this.size,
 				sort: sort,
@@ -167,7 +214,7 @@ return baseclass.extend({
 				optional: this.optional,
 				orientation: this.orientation,
 				placeholder: this.placeholder,
-				validate: L.bind(this.validate, this, section_id),
+				validate: (val) => (missing != null && val === missing) ? missingError() : this.validate(section_id, val),
 				disabled: (this.readonly != null) ? this.readonly : this.map.readonly
 			});
 
@@ -178,7 +225,9 @@ return baseclass.extend({
 			if (Object.prototype.hasOwnProperty.call(fixed, val))
 				return fixed[val];
 			let target = uci.get(uciconfig, val);
-			return target ? (target.label || target['.name']) : val;
+			if (!target || target.enabled !== '1')
+				return missingLabel(uciconfig, val);
+			return target.label || target['.name'];
 		};
 	},
 

@@ -4161,3 +4161,15 @@ msgstr "sing-box 启动时所处的模式"
 #: htdocs/luci-static/resources/homeproxy/client/routing_mode.js:97
 msgid "The name sing-box and the dashboard show for the mode. A renamed mode that is active in the dashboard falls back to the default mode on the next start."
 msgstr "sing-box 和 Dashboard 中显示的模式名称。改名后，如果 Dashboard 里当前正处于这个模式，下次启动会回到默认模式。"
+
+#: htdocs/luci-static/resources/homeproxy/client/common.js:20
+msgid "%s (deleted)"
+msgstr "%s（已删除）"
+
+#: htdocs/luci-static/resources/homeproxy/client/common.js:20
+msgid "%s (disabled)"
+msgstr "%s（已禁用）"
+
+#: htdocs/luci-static/resources/homeproxy/client/common.js:20
+msgid "It is deleted or disabled, choose another one."
+msgstr "所选项已删除或已禁用，请重新选择。"
