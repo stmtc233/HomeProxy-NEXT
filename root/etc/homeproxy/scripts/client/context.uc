@@ -84,11 +84,31 @@ export function load(uci, ubus) {
 	ctx.default_outbound_dns = uci.get(uciconfig, uciroutingsetting, 'default_outbound_dns') || DEFAULTS.routing.default_outbound_dns;
 	ctx.domain_strategy = uci.get(uciconfig, uciroutingsetting, 'domain_strategy');
 
+	/* the firewall sends mainland China past sing-box, so Global could not proxy everything */
+	ctx.bypass_cn_traffic = (uci.get(uciconfig, uciroutingsetting, 'bypass_cn_traffic') === '1');
+
+	/* the modes a rule applies in ([] for all), null when bypass_cn_traffic leaves none */
+	ctx.rule_modes = function(modes) {
+		if (type(modes) === 'string')
+			modes = [modes];
+		if (isEmpty(modes))
+			return [];
+		if (!ctx.bypass_cn_traffic)
+			return modes;
+
+		const kept = filter(modes, (m) => lc(m) !== 'global');
+		return length(kept) ? kept : null;
+	};
+
 	ctx.default_mode = uci.get(uciconfig, uciroutingsetting, 'default_mode');
+	if (ctx.bypass_cn_traffic && lc(ctx.default_mode || '') === 'global') {
+		warn("homeproxy: the default mode Global is not available while bypass_cn_traffic is on, starting in Rule.\n");
+		ctx.default_mode = null;
+	}
 	ctx.uses_clash_mode = !isEmpty(ctx.default_mode);
 	for (let section_type in [uciroutingrule, ucidnsrule])
 		uci.foreach(uciconfig, section_type, (cfg) => {
-			if (cfg.enabled === '1' && !isEmpty(cfg.clash_mode))
+			if (cfg.enabled === '1' && length(ctx.rule_modes(cfg.clash_mode) || []))
 				ctx.uses_clash_mode = true;
 		});
 

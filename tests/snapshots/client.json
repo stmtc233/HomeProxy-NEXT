@@ -427,7 +427,7 @@
 								"kind": "Flag",
 								"name": "bypass_cn_traffic",
 								"title": "Bypass CN traffic",
-								"description": "Bypass mainland China traffic via firewall rules by default.",
+								"description": "Send mainland China addresses past sing-box in the firewall. The Global mode is not available while this is on: rules limited to Global are left out and it disappears from the dashboard.",
 								"depends": [],
 								"values": [],
 								"props": {

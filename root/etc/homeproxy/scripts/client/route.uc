@@ -12,6 +12,12 @@ import { restrict_to_modes, rule_match_fields } from './common.uc';
 import { uciconfig, uciroutingsetting, uciroutingrule, uciruleset } from './context.uc';
 
 function build_custom_rule(ctx, cfg) {
+	const modes = ctx.rule_modes(cfg.clash_mode);
+	if (modes === null) {
+		warn(sprintf("homeproxy: routing rule '%s' only applies in Global mode, which bypass_cn_traffic rules out, skipping it.\n", cfg['.name']));
+		return null;
+	}
+
 	const rule_outbound = ctx.get_outbound(cfg.outbound);
 	const rule_direct_override = ctx.get_direct_override(cfg.outbound);
 	let rule_override_address = cfg.override_address,
@@ -60,7 +66,7 @@ function build_custom_rule(ctx, cfg) {
 		rule.tls_fragment_fallback_delay = null;
 	}
 
-	return restrict_to_modes(rule, cfg.clash_mode, [...keys(match_fields), 'client', 'ip_cidr', 'ip_is_private']);
+	return restrict_to_modes(rule, modes, [...keys(match_fields), 'client', 'ip_cidr', 'ip_is_private']);
 }
 
 function build_custom_ruleset(ctx, cfg) {
@@ -113,7 +119,9 @@ function build_custom(ctx, route) {
 		if (cfg.enabled !== '1')
 			return null;
 
-		push(route.rules, build_custom_rule(ctx, cfg));
+		const rule = build_custom_rule(ctx, cfg);
+		if (rule)
+			push(route.rules, rule);
 	});
 
 	const final_override = ctx.get_direct_override(ctx.default_outbound);

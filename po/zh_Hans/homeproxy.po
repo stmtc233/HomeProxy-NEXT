@@ -364,8 +364,8 @@ msgid "Bypass CN traffic"
 msgstr "绕过中国流量"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:393
-msgid "Bypass mainland China traffic via firewall rules by default."
-msgstr "默认使用防火墙规则绕过中国大陆流量。"
+msgid "Send mainland China addresses past sing-box in the firewall. The Global mode is not available while this is on: rules limited to Global are left out and it disappears from the dashboard."
+msgstr "在防火墙中让中国大陆地址不经过 sing-box。开启后无法使用 Global 模式：只限 Global 的规则会被略过，Dashboard 中也不再出现 Global。"
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:666
 msgid "CA provider"

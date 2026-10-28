@@ -74,6 +74,12 @@ function build_custom_rules(ctx) {
 		if (cfg.enabled !== '1')
 			return;
 
+		const modes = ctx.rule_modes(cfg.clash_mode);
+		if (modes === null) {
+			warn(sprintf("homeproxy: DNS rule '%s' only applies in Global mode, which bypass_cn_traffic rules out, skipping it.\n", cfg['.name']));
+			return;
+		}
+
 		const match_fields = {
 			...rule_match_fields(ctx, cfg),
 			query_type: parse_dnsquery(cfg.query_type),
@@ -122,7 +128,7 @@ function build_custom_rules(ctx) {
 				server: ctx.get_resolver(cfg.server),
 				tag: eval_tag,
 				...match_fields
-			}, cfg.clash_mode, match_keys));
+			}, modes, match_keys));
 			rule.match_response = eval_tag;
 		}
 
@@ -141,7 +147,7 @@ function build_custom_rules(ctx) {
 			return;
 		}
 
-		push(rules, restrict_to_modes(rule, cfg.clash_mode, match_keys));
+		push(rules, restrict_to_modes(rule, modes, match_keys));
 	});
 
 	return rules;

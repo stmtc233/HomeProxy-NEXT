@@ -210,6 +210,25 @@ for name in tun custom-extras; do
 	check_golden "$name" sing-box-c.json
 done
 
+# bypass_cn_traffic rules Global out: the rules limited to it are skipped, the
+# others lose it, and a Global default mode falls back to Rule
+mkdir -p "$WORK/bypass-cn-fixture"
+cp "$ROOT/tests/fixtures/generators/custom-extras.uci" "$WORK/bypass-cn-fixture/homeproxy"
+uci -c "$WORK/bypass-cn-fixture" -q batch <<-EOF
+	set homeproxy.routing.bypass_cn_traffic=1
+	set homeproxy.routing.default_mode=Global
+	commit homeproxy
+EOF
+run_case bypass_cn "$WORK/bypass-cn-fixture/homeproxy" generate_client.uc sing-box-c.json
+BYPASS_OUT="$WORK/bypass_cn/run/sing-box-c.json"
+if [ -f "$BYPASS_OUT" ] && ! grep -q -e 'Global' -e '"default_mode"' "$BYPASS_OUT" \
+	&& grep -q '"clash_mode": "Rule"' "$BYPASS_OUT" && grep -q '"clash_mode": "RuleAllowAds"' "$BYPASS_OUT"; then
+	echo "PASS: bypass_cn: Global is gone from the rules and the default mode, the other modes stay"
+else
+	echo "FAIL: bypass_cn: Global is still there, or the other modes went with it"
+	FAILED=1
+fi
+
 # the default template, seeded into a fresh install with two nodes
 run_case template "$ROOT/tests/fixtures/generators/template.uci" generate_client.uc sing-box-c.json "" "" seed
 check_golden template sing-box-c.json

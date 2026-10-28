@@ -202,7 +202,7 @@ return baseclass.extend({
 		so.depends('homeproxy.config.proxy_mode', 'tun');
 
 		so = ss.option(form.Flag, 'bypass_cn_traffic', _('Bypass CN traffic'),
-			_('Bypass mainland China traffic via firewall rules by default.'));
+			_('Send mainland China addresses past sing-box in the firewall. The Global mode is not available while this is on: rules limited to Global are left out and it disappears from the dashboard.'));
 		so.rmempty = false;
 
 		so = ss.option(form.Flag, 'find_neighbor', _('Find neighbor hosts'),
