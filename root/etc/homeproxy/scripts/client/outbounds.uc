@@ -12,7 +12,7 @@ import {
 } from '../homeproxy.uc';
 
 import { parse_port } from './common.uc';
-import { uciconfig, ucimain, ucinode, uciroutingnode } from './context.uc';
+import { uciconfig, ucinode, uciroutingnode } from './context.uc';
 
 const BUILTIN_OUTBOUNDS = ['direct-out', 'block-out'];
 
@@ -242,8 +242,6 @@ function expand_selector(ctx, cfg) {
 /* endpoints and outbounds; fills ctx.direct_overrides on the way */
 export function build(ctx) {
 	const uci = ctx.uci;
-	const main_node = ctx.main_node,
-	      main_udp_node = ctx.main_udp_node;
 
 	const endpoints = [];
 	const outbounds = [
@@ -258,138 +256,71 @@ export function build(ctx) {
 		}
 	];
 
-	if (!isEmpty(main_node)) {
-		let urltest_nodes = [];
+	let group_nodes = [],
+	    routing_nodes = [];
+	const add_group_nodes = (nodes) => {
+		group_nodes = [...group_nodes, ...filter(nodes, (l) => !~index(group_nodes, l))];
+	};
 
-		if (main_node === 'urltest') {
-			const main_urltest_nodes = expand_urltest_nodes(ctx, uci.get(uciconfig, ucimain, 'main_urltest_nodes'));
-			const main_urltest_interval = uci.get(uciconfig, ucimain, 'main_urltest_interval');
-			const main_urltest_tolerance = uci.get(uciconfig, ucimain, 'main_urltest_tolerance');
+	uci.foreach(uciconfig, uciroutingnode, (cfg) => {
+		if (cfg.enabled !== '1')
+			return;
 
+		if (cfg.node === 'urltest') {
+			const cfg_urltest_nodes = expand_urltest_nodes(ctx, cfg.urltest_nodes);
 			push(outbounds, {
 				type: 'urltest',
-				tag: 'main-out',
-				outbounds: map(main_urltest_nodes, (k) => ctx.node_tag(k)),
-				interval: strToTime(main_urltest_interval),
-				tolerance: strToInt(main_urltest_tolerance),
-				idle_timeout: (strToInt(main_urltest_interval) > 1800) ? `${main_urltest_interval * 2}s` : null,
+				tag: ctx.node_tag(cfg['.name']),
+				outbounds: map(cfg_urltest_nodes, (k) => ctx.node_tag(k)),
+				url: cfg.urltest_url || 'https://www.gstatic.com/generate_204',
+				interval: strToTime(cfg.urltest_interval || '180s'),
+				tolerance: strToInt(cfg.urltest_tolerance || '50'),
+				idle_timeout: strToTime(cfg.urltest_idle_timeout || '1800s'),
+				interrupt_exist_connections: strToBool(cfg.urltest_interrupt_exist_connections)
 			});
-			urltest_nodes = main_urltest_nodes;
+			add_group_nodes(cfg_urltest_nodes);
+		} else if (cfg.node === 'selector') {
+			check_selector_loop(ctx, cfg['.name'], []);
+			const members = expand_selector(ctx, cfg);
+			push(outbounds, {
+				type: 'selector',
+				tag: ctx.node_tag(cfg['.name']),
+				outbounds: members.tags,
+				default: members.default_tag,
+				interrupt_exist_connections: strToBool(cfg.selector_interrupt_exist_connections)
+			});
+			add_group_nodes(members.nodes);
 		} else {
-			const main_node_cfg = uci.get_all(uciconfig, main_node) || {};
-			if (main_node_cfg.type === 'wireguard') {
-				push(endpoints, generate_endpoint(ctx, main_node_cfg));
-				endpoints[length(endpoints)-1].tag = 'main-out';
+			const outbound = uci.get_all(uciconfig, cfg.node) || {};
+			if (outbound.type === 'wireguard') {
+				push(endpoints, generate_endpoint(ctx, outbound));
+				endpoints[length(endpoints)-1].bind_interface = cfg.bind_interface;
+				endpoints[length(endpoints)-1].detour = ctx.get_outbound(cfg.outbound);
+				if (cfg.domain_resolver)
+					endpoints[length(endpoints)-1].domain_resolver = {
+						server: ctx.get_resolver(cfg.domain_resolver),
+						strategy: cfg.domain_strategy
+					};
 			} else {
-				push(outbounds, generate_outbound(ctx, main_node_cfg));
-				outbounds[length(outbounds)-1].tag = 'main-out';
+				push(outbounds, generate_outbound(ctx, outbound));
+				outbounds[length(outbounds)-1].bind_interface = cfg.bind_interface;
+				outbounds[length(outbounds)-1].detour = ctx.get_outbound(cfg.outbound);
+				if (cfg.domain_resolver)
+					outbounds[length(outbounds)-1].domain_resolver = {
+						server: ctx.get_resolver(cfg.domain_resolver),
+						strategy: cfg.domain_strategy
+					};
 			}
+			push(routing_nodes, cfg.node);
 		}
+	});
 
-		if (main_udp_node === 'urltest') {
-			const main_udp_urltest_nodes = expand_urltest_nodes(ctx, uci.get(uciconfig, ucimain, 'main_udp_urltest_nodes'));
-			const main_udp_urltest_interval = uci.get(uciconfig, ucimain, 'main_udp_urltest_interval');
-			const main_udp_urltest_tolerance = uci.get(uciconfig, ucimain, 'main_udp_urltest_tolerance');
-
-			push(outbounds, {
-				type: 'urltest',
-				tag: 'main-udp-out',
-				outbounds: map(main_udp_urltest_nodes, (k) => ctx.node_tag(k)),
-				interval: strToTime(main_udp_urltest_interval),
-				tolerance: strToInt(main_udp_urltest_tolerance),
-				idle_timeout: (strToInt(main_udp_urltest_interval) > 1800) ? `${main_udp_urltest_interval * 2}s` : null,
-			});
-			urltest_nodes = [...urltest_nodes, ...filter(main_udp_urltest_nodes, (l) => !~index(urltest_nodes, l))];
-		} else if (ctx.dedicated_udp_node) {
-			const main_udp_node_cfg = uci.get_all(uciconfig, main_udp_node) || {};
-			if (main_udp_node_cfg.type === 'wireguard') {
-				push(endpoints, generate_endpoint(ctx, main_udp_node_cfg));
-				endpoints[length(endpoints)-1].tag = 'main-udp-out';
-			} else {
-				push(outbounds, generate_outbound(ctx, main_udp_node_cfg));
-				outbounds[length(outbounds)-1].tag = 'main-udp-out';
-			}
-		}
-
-		for (let i in urltest_nodes) {
-			const urltest_node = uci.get_all(uciconfig, i) || {};
-			if (isEmpty(urltest_node))
-				continue;
-			if (urltest_node.type === 'wireguard') {
-				push(endpoints, generate_endpoint(ctx, urltest_node));
-				endpoints[length(endpoints)-1].tag = ctx.node_tag(i);
-			} else {
-				push(outbounds, generate_outbound(ctx, urltest_node));
-				outbounds[length(outbounds)-1].tag = ctx.node_tag(i);
-			}
-		}
-	} else if (ctx.is_custom_mode) {
-		let group_nodes = [],
-		    routing_nodes = [];
-		const add_group_nodes = (nodes) => {
-			group_nodes = [...group_nodes, ...filter(nodes, (l) => !~index(group_nodes, l))];
-		};
-
-		uci.foreach(uciconfig, uciroutingnode, (cfg) => {
-			if (cfg.enabled !== '1')
-				return;
-
-			if (cfg.node === 'urltest') {
-				const cfg_urltest_nodes = expand_urltest_nodes(ctx, cfg.urltest_nodes);
-				push(outbounds, {
-					type: 'urltest',
-					tag: ctx.node_tag(cfg['.name']),
-					outbounds: map(cfg_urltest_nodes, (k) => ctx.node_tag(k)),
-					url: cfg.urltest_url || 'https://www.gstatic.com/generate_204',
-					interval: strToTime(cfg.urltest_interval || '180s'),
-					tolerance: strToInt(cfg.urltest_tolerance || '50'),
-					idle_timeout: strToTime(cfg.urltest_idle_timeout || '1800s'),
-					interrupt_exist_connections: strToBool(cfg.urltest_interrupt_exist_connections)
-				});
-				add_group_nodes(cfg_urltest_nodes);
-			} else if (cfg.node === 'selector') {
-				check_selector_loop(ctx, cfg['.name'], []);
-				const members = expand_selector(ctx, cfg);
-				push(outbounds, {
-					type: 'selector',
-					tag: ctx.node_tag(cfg['.name']),
-					outbounds: members.tags,
-					default: members.default_tag,
-					interrupt_exist_connections: strToBool(cfg.selector_interrupt_exist_connections)
-				});
-				add_group_nodes(members.nodes);
-			} else {
-				const outbound = uci.get_all(uciconfig, cfg.node) || {};
-				if (outbound.type === 'wireguard') {
-					push(endpoints, generate_endpoint(ctx, outbound));
-					endpoints[length(endpoints)-1].bind_interface = cfg.bind_interface;
-					endpoints[length(endpoints)-1].detour = ctx.get_outbound(cfg.outbound);
-					if (cfg.domain_resolver)
-						endpoints[length(endpoints)-1].domain_resolver = {
-							server: ctx.get_resolver(cfg.domain_resolver),
-							strategy: cfg.domain_strategy
-						};
-				} else {
-					push(outbounds, generate_outbound(ctx, outbound));
-					outbounds[length(outbounds)-1].bind_interface = cfg.bind_interface;
-					outbounds[length(outbounds)-1].detour = ctx.get_outbound(cfg.outbound);
-					if (cfg.domain_resolver)
-						outbounds[length(outbounds)-1].domain_resolver = {
-							server: ctx.get_resolver(cfg.domain_resolver),
-							strategy: cfg.domain_strategy
-						};
-				}
-				push(routing_nodes, cfg.node);
-			}
-		});
-
-		for (let i in filter(group_nodes, (l) => !~index(routing_nodes, l))) {
-			const group_node = uci.get_all(uciconfig, i) || {};
-			if (group_node.type === 'wireguard')
-				push(endpoints, generate_endpoint(ctx, group_node));
-			else
-				push(outbounds, generate_outbound(ctx, group_node));
-		}
+	for (let i in filter(group_nodes, (l) => !~index(routing_nodes, l))) {
+		const group_node = uci.get_all(uciconfig, i) || {};
+		if (group_node.type === 'wireguard')
+			push(endpoints, generate_endpoint(ctx, group_node));
+		else
+			push(outbounds, generate_outbound(ctx, group_node));
 	}
 
 	return {

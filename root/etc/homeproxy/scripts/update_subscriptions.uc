@@ -25,8 +25,7 @@ const uci = cursor();
 const uciconfig = 'homeproxy';
 uci.load(uciconfig);
 
-const ucimain = 'config',
-      ucinode = 'node',
+const ucinode = 'node',
       ucisubscription = 'subscription';
 
 const allow_insecure = uci.get(uciconfig, ucisubscription, 'allow_insecure') || '0',
@@ -36,13 +35,6 @@ const allow_insecure = uci.get(uciconfig, ucisubscription, 'allow_insecure') || 
       subscription_urls = uci.get(uciconfig, ucisubscription, 'subscription_url') || [],
       user_agent = uci.get(uciconfig, ucisubscription, 'user_agent'),
       via_proxy = uci.get(uciconfig, ucisubscription, 'update_via_proxy') || '0';
-
-const routing_mode = uci.get(uciconfig, ucimain, 'routing_mode') || DEFAULTS.config.routing_mode;
-let main_node, main_udp_node;
-if (routing_mode !== 'custom') {
-	main_node = uci.get(uciconfig, ucimain, 'main_node') || DEFAULTS.config.main_node;
-	main_udp_node = uci.get(uciconfig, ucimain, 'main_udp_node') || DEFAULTS.config.main_udp_node;
-}
 
 function filter_check(name) {
 	if (isEmpty(name) || filter_mode === 'disabled' || isEmpty(filter_keywords))
@@ -309,87 +301,6 @@ function main() {
 	uci.commit(uciconfig);
 
 	let need_restart = (via_proxy !== '1') || changed;
-	if (!isEmpty(main_node)) {
-		const first_server = uci.get_first(uciconfig, ucinode);
-		if (first_server) {
-			let main_urltest_nodes;
-			if (main_node === 'urltest') {
-				const old_urltest_nodes = uci.get(uciconfig, ucimain, 'main_urltest_nodes') || [];
-				main_urltest_nodes = filter(old_urltest_nodes, (v) => {
-					if (substr(v, 0, 4) === 'sub_') {
-						const sub_hash = substr(v, 4);
-						for (let suburl in subscription_urls) {
-							if (md5(replace(suburl, /#.*$/, '')) === sub_hash)
-								return true;
-						}
-						log(sprintf('Subscription %s is gone, removing from urltest list.', sub_hash));
-						return false;
-					}
-					if (!uci.get(uciconfig, v)) {
-						log(sprintf('Node %s is gone, removing from urltest list.', v));
-						return false;
-					}
-					return true;
-				});
-				if (length(main_urltest_nodes) !== length(old_urltest_nodes)) {
-					uci.set(uciconfig, ucimain, 'main_urltest_nodes', main_urltest_nodes);
-					uci.commit(uciconfig);
-					need_restart = true;
-				}
-			}
-
-			if ((main_node === 'urltest') ? !length(main_urltest_nodes) : !uci.get(uciconfig, main_node)) {
-				uci.set(uciconfig, ucimain, 'main_node', first_server);
-				uci.commit(uciconfig);
-				need_restart = true;
-
-				log('Main node is gone, switching to the first node.');
-			}
-
-			if (!isEmpty(main_udp_node) && main_udp_node !== 'same') {
-				let main_udp_urltest_nodes;
-				if (main_udp_node === 'urltest') {
-					const old_udp_urltest_nodes = uci.get(uciconfig, ucimain, 'main_udp_urltest_nodes') || [];
-					main_udp_urltest_nodes = filter(old_udp_urltest_nodes, (v) => {
-						if (substr(v, 0, 4) === 'sub_') {
-							const sub_hash = substr(v, 4);
-							for (let suburl in subscription_urls) {
-								if (md5(replace(suburl, /#.*$/, '')) === sub_hash)
-									return true;
-							}
-							log(sprintf('Subscription %s is gone, removing from udp urltest list.', sub_hash));
-							return false;
-						}
-						if (!uci.get(uciconfig, v)) {
-							log(sprintf('Node %s is gone, removing from urltest list.', v));
-							return false;
-						}
-						return true;
-					});
-					if (length(main_udp_urltest_nodes) !== length(old_udp_urltest_nodes)) {
-						uci.set(uciconfig, ucimain, 'main_udp_urltest_nodes', main_udp_urltest_nodes);
-						uci.commit(uciconfig);
-						need_restart = true;
-					}
-				}
-
-				if ((main_udp_node === 'urltest') ? !length(main_udp_urltest_nodes) : !uci.get(uciconfig, main_udp_node)) {
-					uci.set(uciconfig, ucimain, 'main_udp_node', first_server);
-					uci.commit(uciconfig);
-					need_restart = true;
-
-					log('Main UDP node is gone, switching to the first node.');
-				}
-			}
-		} else {
-			uci.set(uciconfig, ucimain, 'main_node', 'nil');
-			uci.set(uciconfig, ucimain, 'main_udp_node', 'nil');
-			uci.commit(uciconfig);
-			need_restart = true;
-
-			log('No available node, disable tproxy.');
-		}
-	}
 
 	uci.foreach(uciconfig, 'routing_node', (cfg) => {
 		if (!(cfg.node in ['urltest', 'selector']))

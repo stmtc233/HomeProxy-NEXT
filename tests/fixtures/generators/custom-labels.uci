@@ -7,12 +7,11 @@
 # the old cfg-<md5>-out tags could not be told apart). Covered here:
 #   - non-ASCII labels with spaces and emoji (flags, variation selector)
 #   - the same label on two nodes (two subscriptions), suffixed " #2"
-#   - a label equal to a built-in tag (main-out, default-dns), suffixed " #2"
+#   - a label equal to a built-in tag (direct-out, default-dns), suffixed " #2"
 #   - an empty label, falling back to cfg-<name>-<suffix>
 #   - rule-set extra tags kept verbatim, a clashing label gives way
 
 config homeproxy 'config'
-	option routing_mode 'custom'
 	option proxy_mode 'redirect_tproxy'
 	option ipv6_support '0'
 	option log_level 'error'
@@ -53,7 +52,7 @@ config node '9a8b7c6d5e4f30211203f4e5d6c7b8a9'
 	option tls_sni 'hk2.example.com'
 
 config node 'n_builtin'
-	option label 'main-out'
+	option label 'direct-out'
 	option type 'trojan'
 	option address 'builtin.example.com'
 	option port '443'

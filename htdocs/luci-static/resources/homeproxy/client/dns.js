@@ -18,7 +18,6 @@ return baseclass.extend({
 
 		s.tab('dns', _('DNS Settings'));
 		o = s.taboption('dns', form.SectionValue, '_dns', form.NamedSection, 'dns', 'homeproxy');
-		o.depends('routing_mode', 'custom');
 
 		ss = o.subsection;
 		so = ss.option(form.ListValue, 'default_strategy', _('Default DNS strategy'),

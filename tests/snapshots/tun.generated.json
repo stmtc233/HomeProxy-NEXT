@@ -16,27 +16,17 @@
 			{
 				"tag": "default-dns",
 				"type": "udp",
-				"server": "8.8.8.8",
+				"server": "223.5.5.5",
 				"detour": "direct-out"
 			},
 			{
 				"tag": "system-dns",
 				"type": "local",
 				"detour": "direct-out"
-			},
-			{
-				"tag": "main-dns",
-				"domain_resolver": {
-					"server": "default-dns"
-				},
-				"detour": "main-out",
-				"type": "tls",
-				"server": "1.1.1.1"
 			}
 		],
 		"rules": [
-		],
-		"final": "main-dns"
+		]
 	},
 	"inbounds": [
 		{
@@ -81,7 +71,7 @@
 	"endpoints": [
 		{
 			"type": "wireguard",
-			"tag": "main-out",
+			"tag": "wg",
 			"address": [
 				"10.0.0.2/32",
 				"fd00::2/128"
@@ -124,7 +114,7 @@
 		},
 		{
 			"type": "direct",
-			"tag": "main-udp-out",
+			"tag": "udp-direct",
 			"routing_mark": 100
 		}
 	],
@@ -140,7 +130,7 @@
 			{
 				"network": "udp",
 				"action": "route",
-				"outbound": "main-udp-out",
+				"outbound": "udp-direct",
 				"override_address": "198.51.100.7",
 				"override_port": 4433
 			}
@@ -149,7 +139,7 @@
 		"default_domain_resolver": {
 			"server": "default-dns"
 		},
-		"final": "main-out"
+		"final": "wg"
 	},
 	"services": [
 		{
@@ -161,15 +151,21 @@
 				"enabled": true,
 				"path": "__WORKDIR__/run/dashboard/web",
 				"download_url": "https://example.com/dashboard.zip",
-				"http_client": "hp-main-out"
+				"http_client": "hp-wg"
 			}
 		}
 	],
 	"http_clients": [
 		{
-			"tag": "hp-main-out",
-			"detour": "main-out"
+			"tag": "hp-wg",
+			"detour": "wg"
 		}
 	],
+	"experimental": {
+		"cache_file": {
+			"enabled": true,
+			"path": "/etc/homeproxy/cache.db"
+		}
+	},
 	"$schema": "https://sing-box.sagernet.org/schema.json"
 }

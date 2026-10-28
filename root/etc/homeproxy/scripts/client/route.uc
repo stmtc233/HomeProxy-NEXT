@@ -6,121 +6,10 @@
 
 'use strict';
 
-import { access } from 'fs';
-
-import { isEmpty, strToBool, strToInt, strToTime, strToMs, HP_DIR } from '../homeproxy.uc';
+import { isEmpty, strToBool, strToInt, strToTime, strToMs } from '../homeproxy.uc';
 
 import { restrict_to_modes, rule_match_fields } from './common.uc';
 import { uciconfig, uciroutingsetting, uciroutingrule, uciruleset } from './context.uc';
-
-function build_main(ctx, route) {
-	const routing_mode = ctx.routing_mode;
-
-	route.default_domain_resolver = {
-		server: 'default-dns',
-		strategy: (ctx.ipv6_support !== '1') ? 'prefer_ipv4' : null
-	};
-
-	if (length(ctx.direct_domain_list))
-		push(route.rules, {
-			rule_set: 'direct-domain',
-			action: 'route',
-			outbound: 'direct-out'
-		});
-
-	if (ctx.dedicated_udp_node) {
-		const udp_override = ctx.direct_overrides[ctx.main_udp_node] || null;
-		push(route.rules, {
-			network: 'udp',
-			action: 'route',
-			outbound: 'main-udp-out',
-			override_address: udp_override ? udp_override.override_address : null,
-			override_port: udp_override ? udp_override.override_port : null
-		});
-	}
-
-	if (routing_mode === 'bypass_mainland_china') {
-		push(route.rules, {
-			action: 'resolve',
-			strategy: (ctx.ipv6_support !== '1') ? 'prefer_ipv4' : null
-		});
-		push(route.rules, {
-			rule_set: 'geoip-cn',
-			action: 'route',
-			outbound: 'direct-out'
-		});
-	}
-
-	const main_override = ctx.direct_overrides[ctx.main_node] || null;
-	if (main_override)
-		push(route.rules, {
-			action: 'route-options',
-			override_address: main_override.override_address,
-			override_port: main_override.override_port
-		});
-
-	route.final = 'main-out';
-
-	if (length(ctx.direct_domain_list))
-		push(route.rule_set, {
-			type: 'inline',
-			tag: 'direct-domain',
-			rules: [
-				{
-					domain_keyword: ctx.direct_domain_list,
-				}
-			]
-		});
-
-	if (length(ctx.proxy_domain_list))
-		push(route.rule_set, {
-			type: 'inline',
-			tag: 'proxy-domain',
-			rules: [
-				{
-					domain_keyword: ctx.proxy_domain_list,
-				}
-			]
-		});
-
-	if (routing_mode === 'bypass_mainland_china') {
-		const preset_rulesets = [
-			{
-				tag: 'geoip-cn',
-				path: HP_DIR + '/resources/geoip_cn.srs',
-				url: 'https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set/geoip-cn.srs'
-			},
-			{
-				tag: 'geosite-cn',
-				path: HP_DIR + '/resources/geosite_cn.srs',
-				url: 'https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-geolocation-cn.srs'
-			}
-		];
-
-		for (let rs in preset_rulesets) {
-			if (access(rs.path)) {
-				push(route.rule_set, {
-					type: 'local',
-					tag: rs.tag,
-					format: 'binary',
-					path: rs.path
-				});
-			} else {
-				push(route.rule_set, {
-					type: 'remote',
-					tag: rs.tag,
-					format: 'binary',
-					url: rs.url,
-					update_interval: '24h',
-					http_client: ctx.http_client_for('main-out')
-				});
-			}
-		}
-	}
-
-	if (isEmpty(route.rule_set))
-		route.rule_set = null;
-}
 
 function build_custom_rule(ctx, cfg) {
 	const rule_outbound = ctx.get_outbound(cfg.outbound);
@@ -262,13 +151,10 @@ export function build(ctx) {
 		default_interface: ctx.default_interface
 	};
 
-	if (!isEmpty(ctx.main_node))
-		build_main(ctx, route);
-	else if (ctx.is_custom_mode)
-		build_custom(ctx, route);
+	build_custom(ctx, route);
 
-	if (isEmpty(route.default_domain_resolver))
-		route.default_domain_resolver = { server: 'default-dns' };
+	if (isEmpty(route.rule_set))
+		route.rule_set = null;
 
 	return route;
 };

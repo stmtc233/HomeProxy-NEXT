@@ -51,283 +51,6 @@
 			],
 			"options": [
 				{
-					"kind": "ListValue",
-					"name": "main_node",
-					"title": "Main node",
-					"description": null,
-					"depends": [
-						{
-							"routing_mode": "custom",
-							"!reverse": true
-						}
-					],
-					"values": [
-						[
-							"nil",
-							"Disable"
-						],
-						[
-							"urltest",
-							"URLTest"
-						]
-					],
-					"props": {
-						"default": "nil",
-						"rmempty": false
-					}
-				},
-				{
-					"kind": "CBI.StaticList",
-					"name": "main_urltest_nodes",
-					"title": "URLTest nodes",
-					"description": "List of nodes to test.",
-					"depends": [
-						[
-							"main_node",
-							"urltest"
-						]
-					],
-					"values": [],
-					"props": {
-						"rmempty": false
-					}
-				},
-				{
-					"kind": "Value",
-					"name": "main_urltest_interval",
-					"title": "Test interval",
-					"description": "The test interval in seconds.",
-					"depends": [
-						[
-							"main_node",
-							"urltest"
-						]
-					],
-					"values": [],
-					"props": {
-						"datatype": "uinteger",
-						"placeholder": "180"
-					}
-				},
-				{
-					"kind": "Value",
-					"name": "main_urltest_tolerance",
-					"title": "Test tolerance",
-					"description": "The test tolerance in milliseconds.",
-					"depends": [
-						[
-							"main_node",
-							"urltest"
-						]
-					],
-					"values": [],
-					"props": {
-						"datatype": "uinteger",
-						"placeholder": "50"
-					}
-				},
-				{
-					"kind": "ListValue",
-					"name": "main_udp_node",
-					"title": "Main UDP node",
-					"description": null,
-					"depends": [
-						{
-							"routing_mode": "/^((?!custom).)+$/",
-							"proxy_mode": "/^((?!redirect$).)+$/"
-						}
-					],
-					"values": [
-						[
-							"nil",
-							"Disable"
-						],
-						[
-							"same",
-							"Same as main node"
-						],
-						[
-							"urltest",
-							"URLTest"
-						]
-					],
-					"props": {
-						"default": "nil",
-						"rmempty": false
-					}
-				},
-				{
-					"kind": "CBI.StaticList",
-					"name": "main_udp_urltest_nodes",
-					"title": "URLTest nodes",
-					"description": "List of nodes to test.",
-					"depends": [
-						[
-							"main_udp_node",
-							"urltest"
-						]
-					],
-					"values": [],
-					"props": {
-						"rmempty": false
-					}
-				},
-				{
-					"kind": "Value",
-					"name": "main_udp_urltest_interval",
-					"title": "Test interval",
-					"description": "The test interval in seconds.",
-					"depends": [
-						[
-							"main_udp_node",
-							"urltest"
-						]
-					],
-					"values": [],
-					"props": {
-						"datatype": "uinteger",
-						"placeholder": "180"
-					}
-				},
-				{
-					"kind": "Value",
-					"name": "main_udp_urltest_tolerance",
-					"title": "Test tolerance",
-					"description": "The test tolerance in milliseconds.",
-					"depends": [
-						[
-							"main_udp_node",
-							"urltest"
-						]
-					],
-					"values": [],
-					"props": {
-						"datatype": "uinteger",
-						"placeholder": "50"
-					}
-				},
-				{
-					"kind": "Value",
-					"name": "dns_server",
-					"title": "DNS server",
-					"description": "Support UDP, TCP, DoH, DoQ, DoT. TCP protocol will be used if not specified.",
-					"depends": [
-						{
-							"routing_mode": "custom",
-							"!reverse": true
-						}
-					],
-					"values": [
-						[
-							"wan",
-							"WAN DNS (read from interface)"
-						],
-						[
-							"1.1.1.1",
-							"CloudFlare Public DNS (1.1.1.1)"
-						],
-						[
-							"208.67.222.222",
-							"Cisco Public DNS (208.67.222.222)"
-						],
-						[
-							"8.8.8.8",
-							"Google Public DNS (8.8.8.8)"
-						],
-						[
-							"",
-							"---"
-						],
-						[
-							"223.5.5.5",
-							"Aliyun Public DNS (223.5.5.5)"
-						],
-						[
-							"119.29.29.29",
-							"Tencent Public DNS (119.29.29.29)"
-						],
-						[
-							"117.50.10.10",
-							"ThreatBook Public DNS (117.50.10.10)"
-						]
-					],
-					"props": {
-						"default": "8.8.8.8",
-						"rmempty": false
-					}
-				},
-				{
-					"kind": "Value",
-					"name": "china_dns_server",
-					"title": "China DNS server",
-					"description": "The dns server for resolving China domains. Support UDP, TCP, DoH, DoQ, DoT.",
-					"depends": [
-						[
-							"routing_mode",
-							"bypass_mainland_china"
-						]
-					],
-					"values": [
-						[
-							"wan",
-							"WAN DNS (read from interface)"
-						],
-						[
-							"223.5.5.5",
-							"Aliyun Public DNS (223.5.5.5)"
-						],
-						[
-							"210.2.4.8",
-							"CNNIC Public DNS (210.2.4.8)"
-						],
-						[
-							"119.29.29.29",
-							"Tencent Public DNS (119.29.29.29)"
-						],
-						[
-							"117.50.10.10",
-							"ThreatBook Public DNS (117.50.10.10)"
-						]
-					],
-					"props": {
-						"default": "223.5.5.5",
-						"rmempty": false
-					}
-				},
-				{
-					"kind": "ListValue",
-					"name": "routing_mode",
-					"title": "Routing mode",
-					"description": null,
-					"depends": [],
-					"values": [
-						[
-							"gfwlist",
-							"GFWList"
-						],
-						[
-							"bypass_mainland_china",
-							"Bypass mainland China"
-						],
-						[
-							"proxy_mainland_china",
-							"Only proxy mainland China"
-						],
-						[
-							"custom",
-							"Custom routing"
-						],
-						[
-							"global",
-							"Global"
-						]
-					],
-					"props": {
-						"default": "bypass_mainland_china",
-						"rmempty": false
-					}
-				},
-				{
 					"kind": "Value",
 					"name": "routing_port",
 					"title": "Routing ports",
@@ -377,45 +100,13 @@
 				},
 				{
 					"kind": "Flag",
-					"name": "cn_ip_fallback",
-					"title": "CN-IP DNS fallback (sing-box 1.14)",
-					"description": "When the main DNS returns a mainland China IP, re-resolve via China DNS using evaluate/match_response.",
-					"depends": [
-						[
-							"routing_mode",
-							"bypass_mainland_china"
-						]
-					],
-					"values": [],
-					"props": {
-						"rmempty": false
-					}
-				},
-				{
-					"kind": "Flag",
 					"name": "kill_switch",
 					"title": "Kill switch",
 					"description": "Drop forwarded traffic to overseas destinations while the sing-box client is not running (crash, restart, reload or failed start), so nothing leaks out directly. Mainland China and private addresses stay reachable.<br/>Stopping the service from the init script lifts the block; if the client cannot start, internet access stays blocked until it is fixed or the service is stopped.",
-					"depends": [
-						{
-							"routing_mode": "/^(bypass_mainland_china|custom|global)$/"
-						}
-					],
-					"values": [],
-					"props": {
-						"default": "0",
-						"rmempty": false
-					}
-				},
-				{
-					"kind": "Flag",
-					"name": "block_https_rr",
-					"title": "Block HTTPS/SVCB DNS records",
-					"description": "Answer HTTPS (type 65) and SVCB (type 64) queries with an empty response. Keeps clients off HTTPS-RR/ECH, which this DNS chain cannot serve through some proxies; disable it if ECH is wanted.",
 					"depends": [],
 					"values": [],
 					"props": {
-						"default": "1",
+						"default": "0",
 						"rmempty": false
 					}
 				},
@@ -643,12 +334,7 @@
 					"kind": "SectionValue",
 					"name": "_routing",
 					"description": "routing",
-					"depends": [
-						[
-							"routing_mode",
-							"custom"
-						]
-					],
+					"depends": [],
 					"values": [],
 					"props": {},
 					"subsection": {
@@ -832,12 +518,7 @@
 					"kind": "SectionValue",
 					"name": "_routing_node",
 					"description": "routing_node",
-					"depends": [
-						[
-							"routing_mode",
-							"custom"
-						]
-					],
+					"depends": [],
 					"values": [],
 					"props": {},
 					"subsection": {
@@ -1140,12 +821,7 @@
 					"kind": "SectionValue",
 					"name": "_routing_rule",
 					"description": "routing_rule",
-					"depends": [
-						[
-							"routing_mode",
-							"custom"
-						]
-					],
+					"depends": [],
 					"values": [],
 					"props": {},
 					"subsection": {
@@ -2048,12 +1724,7 @@
 					"kind": "SectionValue",
 					"name": "_dns",
 					"description": "dns",
-					"depends": [
-						[
-							"routing_mode",
-							"custom"
-						]
-					],
+					"depends": [],
 					"values": [],
 					"props": {},
 					"subsection": {
@@ -2146,12 +1817,7 @@
 					"kind": "SectionValue",
 					"name": "_dns_server",
 					"description": "dns_server",
-					"depends": [
-						[
-							"routing_mode",
-							"custom"
-						]
-					],
+					"depends": [],
 					"values": [],
 					"props": {},
 					"subsection": {
@@ -2547,12 +2213,7 @@
 					"kind": "SectionValue",
 					"name": "_dns_rule",
 					"description": "dns_rule",
-					"depends": [
-						[
-							"routing_mode",
-							"custom"
-						]
-					],
+					"depends": [],
 					"values": [],
 					"props": {},
 					"subsection": {
@@ -3469,12 +3130,7 @@
 					"kind": "SectionValue",
 					"name": "_ruleset",
 					"description": "ruleset",
-					"depends": [
-						[
-							"routing_mode",
-							"custom"
-						]
-					],
+					"depends": [],
 					"values": [],
 					"props": {},
 					"subsection": {
@@ -3675,14 +3331,6 @@
 							[
 								"wan_ip_policy",
 								"WAN IP Policy"
-							],
-							[
-								"proxy_domain_list",
-								"Proxy Domain List"
-							],
-							[
-								"direct_domain_list",
-								"Direct Domain List"
 							]
 						],
 						"options": [
@@ -3853,48 +3501,6 @@
 							},
 							{
 								"kind": "DynamicList",
-								"name": "lan_global_proxy_ipv4_ips",
-								"title": "Global proxy IPv4 IP-s",
-								"description": null,
-								"depends": [
-									{
-										"homeproxy.config.routing_mode": "custom",
-										"!reverse": true
-									}
-								],
-								"values": [],
-								"props": {}
-							},
-							{
-								"kind": "DynamicList",
-								"name": "lan_global_proxy_ipv6_ips",
-								"title": "Global proxy IPv6 IP-s",
-								"description": null,
-								"depends": [
-									{
-										"homeproxy.config.routing_mode": "/^((?!custom).)+$/",
-										"homeproxy.config.ipv6_support": "1"
-									}
-								],
-								"values": [],
-								"props": {}
-							},
-							{
-								"kind": "DynamicList",
-								"name": "lan_global_proxy_mac_addrs",
-								"title": "Global proxy MAC-s",
-								"description": null,
-								"depends": [
-									{
-										"homeproxy.config.routing_mode": "custom",
-										"!reverse": true
-									}
-								],
-								"values": [],
-								"props": {}
-							},
-							{
-								"kind": "DynamicList",
 								"name": "wan_proxy_ipv4_ips",
 								"title": "Proxy IPv4 IP-s",
 								"description": null,
@@ -3946,40 +3552,6 @@
 								"props": {
 									"datatype": "or(ip6addr, cidr6)"
 								}
-							},
-							{
-								"kind": "TextValue",
-								"name": "_proxy_domain_list",
-								"description": null,
-								"depends": [
-									{
-										"homeproxy.config.routing_mode": "custom",
-										"!reverse": true
-									}
-								],
-								"values": [],
-								"props": {
-									"datatype": "hostname",
-									"monospace": true,
-									"rows": 10
-								}
-							},
-							{
-								"kind": "TextValue",
-								"name": "_direct_domain_list",
-								"description": null,
-								"depends": [
-									{
-										"homeproxy.config.routing_mode": "custom",
-										"!reverse": true
-									}
-								],
-								"values": [],
-								"props": {
-									"datatype": "hostname",
-									"monospace": true,
-									"rows": 10
-								}
 							}
 						],
 						"subsection": null
@@ -4004,18 +3576,14 @@
 								"title": "Optimistic DNS cache",
 								"description": "Return expired cache immediately and refresh in background (sing-box 1.14).",
 								"depends": [
-									{
-										"!reverse": true,
-										"homeproxy.config.routing_mode": "custom"
-									},
-									{
-										"disable_cache": "0",
-										"homeproxy.config.routing_mode": "custom"
-									},
-									{
-										"disable_cache_expire": "0",
-										"homeproxy.config.routing_mode": "custom"
-									}
+									[
+										"disable_cache",
+										"0"
+									],
+									[
+										"disable_cache_expire",
+										"0"
+									]
 								],
 								"values": [],
 								"props": {
@@ -4049,13 +3617,9 @@
 								"description": "Persist DNS cache across restarts (replaces Store RDRC).",
 								"depends": [
 									[
-										"homeproxy.config.routing_mode",
-										"bypass_mainland_china"
-									],
-									{
-										"disable_cache": "0",
-										"homeproxy.config.routing_mode": "custom"
-									}
+										"disable_cache",
+										"0"
+									]
 								],
 								"values": [],
 								"props": {

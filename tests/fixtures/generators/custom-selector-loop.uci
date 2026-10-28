@@ -5,7 +5,6 @@
 # would fail at startup; the generator has to refuse it.
 
 config homeproxy 'config'
-	option routing_mode 'custom'
 	option proxy_mode 'redirect_tproxy'
 	option ipv6_support '0'
 	option log_level 'error'

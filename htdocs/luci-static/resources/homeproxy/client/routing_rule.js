@@ -18,7 +18,6 @@ return baseclass.extend({
 
 		s.tab('routing_rule', _('Routing Rules'));
 		o = s.taboption('routing_rule', form.SectionValue, '_routing_rule', form.GridSection, 'routing_rule');
-		o.depends('routing_mode', 'custom');
 
 		ss = o.subsection;
 		ss.addremove = true;

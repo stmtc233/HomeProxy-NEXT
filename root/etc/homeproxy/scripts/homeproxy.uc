@@ -19,10 +19,7 @@ export const RUN_DIR = '/var/run/homeproxy';
  */
 export const DEFAULTS = {
 	config: {
-		routing_mode: 'bypass_mainland_china',
 		proxy_mode: 'redirect_tproxy',
-		main_node: 'nil',
-		main_udp_node: 'nil',
 		log_level: 'warn',
 		dashboard_listen: '0.0.0.0:9090'
 	},

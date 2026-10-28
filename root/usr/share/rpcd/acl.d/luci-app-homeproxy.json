@@ -10,7 +10,6 @@
 			"ubus": {
 				"service": [ "list" ],
 				"luci.homeproxy": [
-					"acllist_read",
 					"config_export",
 					"connection_check",
 					"plugin_list",
@@ -30,7 +29,6 @@
 			},
 			"ubus": {
 				"luci.homeproxy": [
-					"acllist_write",
 					"certificate_write",
 					"config_import",
 					"log_clean",

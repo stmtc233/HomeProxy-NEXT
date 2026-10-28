@@ -1,27 +1,31 @@
 # SPDX-License-Identifier: GPL-2.0-only
 #
 # Regression fixture for generate_client.uc: a node of every supported
-# protocol reachable through a single urltest main node, so one run exercises
-# all outbound builders (TLS, transport, reality, mux, obfuscation).
+# protocol reachable through a single urltest routing node, so one run
+# exercises all outbound builders (TLS, transport, reality, mux, obfuscation).
 
 config homeproxy 'config'
-	option routing_mode 'bypass_mainland_china'
 	option proxy_mode 'tun'
 	option ipv6_support '0'
 	option log_level 'error'
-	option main_node 'urltest'
-	option main_udp_node 'nil'
-	option dns_server 'https://cloudflare-dns.com/dns-query'
-	list main_urltest_nodes 'n_anytls'
-	list main_urltest_nodes 'n_vless_reality_ws'
-	list main_urltest_nodes 'n_vmess_http'
-	list main_urltest_nodes 'n_trojan_grpc'
-	list main_urltest_nodes 'n_ss'
-	list main_urltest_nodes 'n_hy2'
-	list main_urltest_nodes 'n_snell'
-	list main_urltest_nodes 'n_http'
-	list main_urltest_nodes 'n_socks'
-	list main_urltest_nodes 'n_shadowtls'
+
+config homeproxy 'routing'
+	option default_outbound 'rn_auto'
+
+config routing_node 'rn_auto'
+	option enabled '1'
+	option label 'auto'
+	option node 'urltest'
+	list urltest_nodes 'n_anytls'
+	list urltest_nodes 'n_vless_reality_ws'
+	list urltest_nodes 'n_vmess_http'
+	list urltest_nodes 'n_trojan_grpc'
+	list urltest_nodes 'n_ss'
+	list urltest_nodes 'n_hy2'
+	list urltest_nodes 'n_snell'
+	list urltest_nodes 'n_http'
+	list urltest_nodes 'n_socks'
+	list urltest_nodes 'n_shadowtls'
 
 config homeproxy 'infra'
 	option mixed_port '5330'

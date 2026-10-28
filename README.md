@@ -27,11 +27,11 @@ HomeProxy NEXT 是一个**以自用为主**的 LuCI 代理模块，源自 [Immor
 
 | 模块 | 内容 |
 | --- | --- |
-| **分流模式** | 绕过中国大陆、仅代理中国大陆、GFWList、全局、自定义路由（路由节点 / 路由规则 / 规则集） |
+| **分流** | 路由节点（单节点、URLTest 自动选优、Selector 手动选择）、路由规则与规则集；规则可只在某些模式下生效，在 Dashboard 中切换模式不用重启 |
 | **代理方式** | Redirect TCP、Redirect TCP + TProxy UDP、Redirect TCP + Tun UDP、Tun TCP/UDP |
 | **节点** | AnyTLS、HTTP、Hysteria / Hysteria2、Shadowsocks、ShadowTLS、Snell、Socks、SSH、Trojan、TUIC、VLESS、VMess、WireGuard；urltest 自动选优 |
 | **订阅** | 分享链接 / SIP008 导入，入库前校验，按订阅分组，可经代理更新 |
-| **DNS** | 国内外分流解析、自定义 DNS 服务器与规则、乐观缓存、劫持 LAN DNS |
+| **DNS** | 自定义 DNS 服务器与规则（同样可按模式生效）、乐观缓存、劫持 LAN DNS |
 | **服务端** | 常用协议的 inbound，支持 ACME 证书 |
 | **自定义插件** | 用 ucode 小脚本修改生成的 sing-box 配置，升级不会覆盖；可在界面上新增 / 编辑 / 启停 / 删除，见下文 |
 | **其他** | Kill switch（客户端未运行时阻断海外流量）、sing-box 原生 Dashboard、配置导入 / 导出、规则清单自动更新 |
@@ -62,7 +62,7 @@ opkg install luci-app-homeproxy-*.ipk luci-i18n-homeproxy-zh-cn-*.ipk
 
 - **管理**：在「自定义插件」页面新增、编辑、启用 / 停用、删除，点「应用」生效；也可以通过 SSH 直接改文件，然后执行 `/etc/init.d/homeproxy reload`。两边看到的是同一批文件。
 - **启停**：`名字.uc` 为启用，`名字.uc.disabled` 为停用。多个插件按文件名顺序执行，例如 `10-xxx.uc`、`20-yyy.uc`。
-- **写法**：脚本最后 `return` 一个对象。`client(config, ctx)` 拿到生成好的客户端 sing-box 配置，`server(config, ctx)` 拿到服务端配置，两者都在 `sing-box check` 之前调用。可以直接修改 `config`，也可以返回一个新对象；值设为 `null` 的字段会被去掉。客户端的 `ctx` 提供 `routing_mode`、`proxy_mode`、`ipv6_support` 和 `uci`（UCI cursor），服务端只有 `uci`。
+- **写法**：脚本最后 `return` 一个对象。`client(config, ctx)` 拿到生成好的客户端 sing-box 配置，`server(config, ctx)` 拿到服务端配置，两者都在 `sing-box check` 之前调用。可以直接修改 `config`，也可以返回一个新对象；值设为 `null` 的字段会被去掉。客户端的 `ctx` 提供 `proxy_mode`、`ipv6_support` 和 `uci`（UCI cursor），服务端只有 `uci`。
 
   ```js
   'use strict';
@@ -81,7 +81,7 @@ opkg install luci-app-homeproxy-*.ipk luci-i18n-homeproxy-zh-cn-*.ipk
 ## 已知限制
 
 - DNS 劫持只重定向 UDP/53，使用 DoT / DoH 的客户端会绕过它（与 OpenWrt 原生 `dns_redirect` 行为一致）。
-- `bypass_mainland_china` / `custom` / `global` 下 dnsmasq 被配成 `no-resolv` 并转发给 sing-box，此时选 `system-dns` 会绕回 sing-box 自身，建议使用 `default-dns`。
+- 客户端运行时 dnsmasq 被配成 `no-resolv` 并转发给 sing-box，此时 DNS 服务器选 `system-dns` 会绕回 sing-box 自身，建议使用 `default-dns`。
 - `update_via_proxy=0` 时，订阅更新期间服务处于停止状态；订阅多或源慢时停机时间会变长，需要零中断请开启 `update_via_proxy`。
 
 ## 开发

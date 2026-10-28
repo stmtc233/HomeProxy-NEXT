@@ -10,16 +10,11 @@ const cfgname = 'homeproxy';
 const uci = cursor();
 uci.load(cfgname);
 
-const routing_mode = uci.get(cfgname, 'config', 'routing_mode') || DEFAULTS.config.routing_mode,
-      proxy_mode = uci.get(cfgname, 'config', 'proxy_mode') || DEFAULTS.config.proxy_mode;
+const proxy_mode = uci.get(cfgname, 'config', 'proxy_mode') || DEFAULTS.config.proxy_mode;
 
-let outbound_node, tun_name;
+let tun_name;
 if (match(proxy_mode, /tun/)) {
-	if (routing_mode === 'custom')
-		outbound_node = uci.get(cfgname, 'routing', 'default_outbound') || DEFAULTS.routing.default_outbound;
-	else
-		outbound_node = uci.get(cfgname, 'config', 'main_node') || DEFAULTS.config.main_node;
-
+	const outbound_node = uci.get(cfgname, 'routing', 'default_outbound') || DEFAULTS.routing.default_outbound;
 	if (outbound_node !== 'nil') {
 		const raw_tun = trim(uci.get(cfgname, 'infra', 'tun_name') ?? '');
 		tun_name = match(raw_tun, /^[A-Za-z0-9._-]{1,15}$/) ? raw_tun : DEFAULTS.infra.tun_name;

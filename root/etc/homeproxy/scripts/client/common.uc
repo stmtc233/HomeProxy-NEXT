@@ -8,7 +8,7 @@
 
 import { isnan } from 'math';
 
-import { isEmpty, parseURL, strToBool, strToInt, validation } from '../homeproxy.uc';
+import { isEmpty, strToBool, strToInt } from '../homeproxy.uc';
 
 export function parse_port(strport) {
 	if (type(strport) !== 'array' || isEmpty(strport))
@@ -20,22 +20,6 @@ export function parse_port(strport) {
 
 	return ports;
 
-};
-
-export function parse_dnsserver(server_addr, default_protocol) {
-	if (isEmpty(server_addr))
-		return null;
-
-	if (!match(server_addr, /:\/\//))
-		server_addr = (default_protocol || 'udp') + '://' + (validation('ip6addr', server_addr) ? `[${server_addr}]` : server_addr);
-	server_addr = parseURL(server_addr);
-
-	return {
-		type: server_addr.protocol,
-		server: server_addr.hostname,
-		server_port: strToInt(server_addr.port),
-		path: (server_addr.pathname !== '/') ? server_addr.pathname : null,
-	}
 };
 
 export function parse_dnsquery(strquery) {

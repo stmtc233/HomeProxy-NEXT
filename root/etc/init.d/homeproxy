@@ -8,12 +8,12 @@ USE_PROCD=1
 START=99
 STOP=10
 
-# refresh_lists re-applies the on-disk resource lists (dnsmasq snippets + the
-# fw4 sets built from china_ip4/ip6.txt) without restarting sing-box. It is
-# called by update_crond.sh after a resource update, because a list update on
-# disk has no effect until the firewall/dnsmasq side is regenerated.
+# refresh_lists re-applies the fw4 sets built from china_ip4/ip6.txt without
+# restarting sing-box. It is called by update_crond.sh after a resource
+# update, because a list update on disk has no effect until the firewall side
+# is regenerated.
 EXTRA_COMMANDS="refresh_lists"
-EXTRA_HELP="	refresh_lists	Re-apply the updated resource lists (dnsmasq + fw4)"
+EXTRA_HELP="	refresh_lists	Re-apply the updated resource lists (fw4)"
 
 CONF="homeproxy"
 PROG="/usr/bin/sing-box"
@@ -74,47 +74,23 @@ dns_snippets_digest() {
 	done | md5sum
 }
 
-# Render the dnsmasq snippets that implement DNS-based routing for the current
-# routing_mode (the conf-dir include plus one snippet per mode). Shared by
-# start_service and refresh_lists; requires config_load to have run. The
-# snippets are rendered aside and only swapped in (with a dnsmasq restart)
-# when they differ from the live ones: a reload for a node or rule change
-# leaves them as they are, and restarting dnsmasq with the large gfwlist /
-# china_list snippets is slow.
+# Render the dnsmasq snippet that hands every query to sing-box (the conf-dir
+# include plus the redirect). Requires config_load to have run. The snippet
+# is rendered aside and only swapped in (with a dnsmasq restart) when it
+# differs from the live one: a reload for a node or rule change leaves it as
+# it is.
 render_dns_snippets() {
-	local ipv6_support dns_port
-	config_get_bool ipv6_support "config" "ipv6_support" "0"
+	local dns_port
 	config_get dns_port "infra" "dns_port" "$HP_DEFAULT_DNS_PORT"
 
 	local staging="$RUN_DIR/dnsmasq-staging"
 	rm -rf "$staging"
 	mkdir -p "$staging" || log "Warning: failed to create ${staging}."
-	case "$routing_mode" in
-	"bypass_mainland_china"|"custom"|"global")
-		cat <<-EOF > "$staging/redirect-dns.conf"
-			no-poll
-			no-resolv
-			server=127.0.0.1#$dns_port
-		EOF
-		;;
-	"gfwlist")
-		local gfw_nftset_v6
-		[ "$ipv6_support" -eq "0" ] || gfw_nftset_v6=",6#inet#fw4#homeproxy_gfw_list_v6"
-		sed -r -e "s/(.*)/server=\/\1\/127.0.0.1#$dns_port\nnftset=\/\1\\/4#inet#fw4#homeproxy_gfw_list_v4$gfw_nftset_v6/g" \
-			"$HP_DIR/resources/gfw_list.txt" > "$staging/gfw_list.conf"
-		;;
-	"proxy_mainland_china")
-		sed -r -e "s/(.*)/server=\/\1\/127.0.0.1#$dns_port/g" \
-			"$HP_DIR/resources/china_list.txt" > "$staging/china_list.conf"
-		;;
-	esac
-
-	if [ "$routing_mode" != "custom" ] && [ -s "$HP_DIR/resources/proxy_list.txt" ]; then
-		local wan_nftset_v6
-		[ "$ipv6_support" -eq "0" ] || wan_nftset_v6=",6#inet#fw4#homeproxy_wan_proxy_addr_v6"
-		sed -r -e '/^\s*$/d' -e "s/(.*)/server=\/\1\/127.0.0.1#$dns_port\nnftset=\/\1\\/4#inet#fw4#homeproxy_wan_proxy_addr_v4$wan_nftset_v6/g" \
-			"$HP_DIR/resources/proxy_list.txt" > "$staging/proxy_list.conf"
-	fi
+	cat <<-EOF > "$staging/redirect-dns.conf"
+		no-poll
+		no-resolv
+		server=127.0.0.1#$dns_port
+	EOF
 
 	if [ "$(cat "$DNSMASQ_DIR/../dnsmasq-homeproxy.conf" 2>"/dev/null")" = "conf-dir=$DNSMASQ_DIR" ] \
 		&& [ "$(dns_snippets_digest "$staging")" = "$(dns_snippets_digest "$DNSMASQ_DIR")" ]; then
@@ -181,8 +157,8 @@ unload_firewall() {
 }
 
 # (Re)render the fw4 snippets and reload the firewall. The nft sets that carry
-# the china/gfw address lists are built here from the resource files on disk,
-# so this must run again after a resource update (refresh_lists) as well.
+# the china address lists are built here from the resource files on disk, so
+# this must run again after a resource update (refresh_lists) as well.
 apply_firewall() {
 	local outbound_node="$1"
 
@@ -190,7 +166,7 @@ apply_firewall() {
 	local old_digest="$(fw4_snippets_digest)"
 
 	# Truncate first: firewall_pre.uc only writes a file when it has content,
-	# so a mode/server switch would otherwise keep the previous rules.
+	# so a server switch would otherwise keep the previous rules.
 	: > "$RUN_DIR/fw4_forward.nft"
 	: > "$RUN_DIR/fw4_input.nft"
 	: > "$RUN_DIR/fw4_post.nft"
@@ -235,22 +211,16 @@ apply_firewall() {
 	fi
 }
 
-# Outbound node the client routes through ("nil" when the client is not
+# Outbound the client routes through ("nil" when the client is not
 # configured); requires config_load.
 client_outbound_node() {
-	local mode node
-	config_get mode "config" "routing_mode" "$HP_DEFAULT_ROUTING_MODE"
-	if [ "$mode" != "custom" ]; then
-		config_get node "config" "main_node" "$HP_DEFAULT_MAIN_NODE"
-	else
-		config_get node "routing" "default_outbound" "$HP_DEFAULT_DEFAULT_OUTBOUND"
-	fi
+	local node
+	config_get node "routing" "default_outbound" "$HP_DEFAULT_DEFAULT_OUTBOUND"
 	echo "$node"
 }
 
 # 0 when the kill switch is switched on and there is a client it can watch;
-# requires config_load. The routing modes it cannot serve are filtered by
-# killswitch.sh itself.
+# requires config_load.
 killswitch_wanted() {
 	local kill_switch
 	config_get_bool kill_switch "config" "kill_switch" "0"
@@ -263,11 +233,9 @@ killswitch_wanted() {
 # env). While these stay the same, a reload only has to hand the running
 # sing-box its new config. Requires config_load.
 restart_fingerprint() {
-	local routing_mode proxy_mode main_udp_node ipv6_support dashboard server_enabled kill_switch
+	local proxy_mode ipv6_support dashboard server_enabled kill_switch
 	local table_mark tproxy_mark tun_mark tun_name jail=0
-	config_get routing_mode "config" "routing_mode" "$HP_DEFAULT_ROUTING_MODE"
 	config_get proxy_mode "config" "proxy_mode" "$HP_DEFAULT_PROXY_MODE"
-	config_get main_udp_node "config" "main_udp_node" "$HP_DEFAULT_MAIN_UDP_NODE"
 	config_get_bool ipv6_support "config" "ipv6_support" "0"
 	config_get dashboard "config" "dashboard" "0"
 	config_get_bool server_enabled "server" "enabled" "0"
@@ -278,11 +246,10 @@ restart_fingerprint() {
 	config_get tun_name "infra" "tun_name" "$HP_DEFAULT_TUN_NAME"
 	[ -x "/sbin/ujail" ] && jail=1
 	grep -Eq '"type": "(wireguard|tun)"' "$RUN_DIR/sing-box-c.json" 2>"/dev/null" && jail="$jail-off"
-	local client=on udp=on
+	local client=on
 	[ "$(client_outbound_node)" != "nil" ] || client=off
-	[ "$main_udp_node" != "nil" ] || udp=off
 
-	echo "$routing_mode $proxy_mode client=$client udp=$udp ipv6=$ipv6_support" \
+	echo "$proxy_mode client=$client ipv6=$ipv6_support" \
 		"dashboard=$dashboard server=$server_enabled ks=$kill_switch" \
 		"marks=$table_mark/$tproxy_mark/$tun_mark tun=$tun_name jail=$jail kernel=$(uname -r)"
 }
@@ -365,7 +332,7 @@ wait_for_wan() {
 # A reload in place keeps them: what they are built from is part of the
 # restart fingerprint, which matched. Requires config_load.
 setup_client_routing() {
-	local routing_mode="$1" proxy_mode="$2" ipv6_support="$3"
+	local proxy_mode="$1" ipv6_support="$2"
 
 	[ -z "$HP_INPLACE" ] || return 0
 
@@ -373,23 +340,19 @@ setup_client_routing() {
 	config_get table_mark "infra" "table_mark" "$HP_DEFAULT_TABLE_MARK"
 	case "$proxy_mode" in
 	"redirect_tproxy")
-		local outbound_udp_node
-		config_get outbound_udp_node "config" "main_udp_node" "$HP_DEFAULT_MAIN_UDP_NODE"
-		if [ "$outbound_udp_node" != "nil" ] || [ "$routing_mode" = "custom" ]; then
-			local tproxy_mark
-			config_get tproxy_mark "infra" "tproxy_mark" "$HP_DEFAULT_TPROXY_MARK"
+		local tproxy_mark
+		config_get tproxy_mark "infra" "tproxy_mark" "$HP_DEFAULT_TPROXY_MARK"
 
-			ip rule add fwmark "$tproxy_mark" table "$table_mark" 2>"/dev/null" \
-				|| log "Error: failed to add the tproxy ip rule (fwmark ${tproxy_mark}, table ${table_mark})."
-			ip route add local 0.0.0.0/0 dev lo table "$table_mark" 2>"/dev/null" \
-				|| log "Error: failed to add the tproxy local route (table ${table_mark})."
+		ip rule add fwmark "$tproxy_mark" table "$table_mark" 2>"/dev/null" \
+			|| log "Error: failed to add the tproxy ip rule (fwmark ${tproxy_mark}, table ${table_mark})."
+		ip route add local 0.0.0.0/0 dev lo table "$table_mark" 2>"/dev/null" \
+			|| log "Error: failed to add the tproxy local route (table ${table_mark})."
 
-			if [ "$ipv6_support" -eq "1" ]; then
-				ip -6 rule add fwmark "$tproxy_mark" table "$table_mark" 2>"/dev/null" \
-					|| log "Error: failed to add the tproxy IPv6 rule (fwmark ${tproxy_mark}, table ${table_mark})."
-				ip -6 route add local ::/0 dev lo table "$table_mark" 2>"/dev/null" \
-					|| log "Error: failed to add the tproxy IPv6 local route (table ${table_mark})."
-			fi
+		if [ "$ipv6_support" -eq "1" ]; then
+			ip -6 rule add fwmark "$tproxy_mark" table "$table_mark" 2>"/dev/null" \
+				|| log "Error: failed to add the tproxy IPv6 rule (fwmark ${tproxy_mark}, table ${table_mark})."
+			ip -6 route add local ::/0 dev lo table "$table_mark" 2>"/dev/null" \
+				|| log "Error: failed to add the tproxy IPv6 local route (table ${table_mark})."
 		fi
 		;;
 	"redirect_tun"|"tun")
@@ -429,7 +392,7 @@ close_singbox_instance() {
 }
 
 add_client_instance() {
-	local routing_mode="$1" dashboard="$2" disable_gso="$3"
+	local dashboard="$1" disable_gso="$2"
 
 	procd_open_instance "sing-box-c"
 
@@ -443,21 +406,16 @@ add_client_instance() {
 		procd_add_jail "sing-box-c" log procfs
 		procd_add_jail_mount "$RUN_DIR/sing-box-c.json"
 		procd_add_jail_mount_rw "$RUN_DIR/sing-box-c.log"
-		# custom routing may point a local rule-set at any path under
-		# HP_DIR, so the whole directory goes in read-only. procd orders
-		# the mounts by path, so this parent cannot shadow the read-write
-		# cache.db below.
+		# A local rule-set may point at any path under HP_DIR, so the
+		# whole directory goes in read-only. procd orders the mounts by
+		# path, so this parent cannot shadow the read-write cache.db below.
 		procd_add_jail_mount "$HP_DIR/"
-		case "$routing_mode" in
-		"bypass_mainland_china"|"custom")
-			procd_add_jail_mount_rw "$HP_DIR/cache.db" ;;
-		esac
+		procd_add_jail_mount_rw "$HP_DIR/cache.db"
 		[ "$dashboard" = "1" ] && procd_add_jail_mount_rw "$DASHBOARD_DIR/"
 		procd_add_jail_mount "$HP_DIR/certs/"
 		procd_add_jail_mount "/etc/acme/"
 		procd_add_jail_mount "/etc/ssl/"
-		# custom routing's find_neighbor reads LAN hostnames from the
-		# dnsmasq lease file.
+		# find_neighbor reads LAN hostnames from the dnsmasq lease file.
 		procd_add_jail_mount "/tmp/dhcp.leases"
 		procd_add_jail_mount "/etc/localtime"
 		procd_add_jail_mount "/etc/TZ"
@@ -475,7 +433,7 @@ add_client_instance() {
 # Generate the client config, then set up everything around it and register
 # the instance. Requires config_load.
 start_client() {
-	local routing_mode="$1" proxy_mode="$2" ipv6_support="$3" dashboard="$4" disable_gso="$5"
+	local proxy_mode="$1" ipv6_support="$2" dashboard="$3" disable_gso="$4"
 
 	wait_for_wan
 
@@ -504,8 +462,8 @@ start_client() {
 	sync_autoupdate_cron "$autoupdate_cron"
 
 	render_dns_snippets
-	setup_client_routing "$routing_mode" "$proxy_mode" "$ipv6_support"
-	add_client_instance "$routing_mode" "$dashboard" "$disable_gso"
+	setup_client_routing "$proxy_mode" "$ipv6_support"
+	add_client_instance "$dashboard" "$disable_gso"
 }
 
 start_server() {
@@ -557,7 +515,7 @@ add_helper_instances() {
 	procd_close_instance
 
 	rm -f "$RUN_DIR/ks_hold"
-	if killswitch_wanted && "$KILLSWITCH" supported; then
+	if killswitch_wanted; then
 		procd_open_instance "killswitch-guard"
 		procd_set_param command "$KILLSWITCH" guard
 		procd_set_param respawn
@@ -567,24 +525,17 @@ add_helper_instances() {
 
 # Files and directories the jailed sing-box (user sing-box) reads or writes.
 prepare_runtime_files() {
-	local routing_mode="$1" outbound_node="$2" server_enabled="$3" dashboard="$4"
+	local outbound_node="$1" server_enabled="$2" dashboard="$3"
 
-	# cache_file is enabled for bypass_mainland_china and custom alike, and the
-	# file has to exist before the client jail binds it read-write.
-	case "$routing_mode" in
-	"bypass_mainland_china"|"custom")
-		[ -e "$HP_DIR/cache.db" ] || touch "$HP_DIR/cache.db" \
-			|| log "Warning: failed to create ${HP_DIR}/cache.db."
-		;;
-	esac
-	if [ "$routing_mode" = "custom" ]; then
-		[ -d "$HP_DIR/ruleset" ] || mkdir -p "$HP_DIR/ruleset" \
-			|| log "Warning: failed to create ${HP_DIR}/ruleset."
-		# A local rule-set is opened by the client, which is jailed and no
-		# longer root, so the documented directory has to be readable by it.
-		chown -R sing-box:sing-box "$HP_DIR/ruleset" 2>"/dev/null" \
-			|| log "Warning: failed to hand ${HP_DIR}/ruleset to sing-box."
-	fi
+	# The file has to exist before the client jail binds it read-write.
+	[ -e "$HP_DIR/cache.db" ] || touch "$HP_DIR/cache.db" \
+		|| log "Warning: failed to create ${HP_DIR}/cache.db."
+	[ -d "$HP_DIR/ruleset" ] || mkdir -p "$HP_DIR/ruleset" \
+		|| log "Warning: failed to create ${HP_DIR}/ruleset."
+	# A local rule-set is opened by the client, which is jailed and no longer
+	# root, so the documented directory has to be readable by it.
+	chown -R sing-box:sing-box "$HP_DIR/ruleset" 2>"/dev/null" \
+		|| log "Warning: failed to hand ${HP_DIR}/ruleset to sing-box."
 
 	# The jailed client has no writable /tmp, and the flash overlay is often too
 	# small for the dashboard, so it lives in RAM under RUN_DIR (re-downloaded
@@ -603,8 +554,8 @@ prepare_runtime_files() {
 		mkdir -p "$HP_DIR/certs" || log "Warning: failed to create ${HP_DIR}/certs."
 	fi
 
-	# chown only what is actually there: a mode that does not create one of
-	# these paths is not an error worth logging on every start.
+	# chown only what is actually there: a server-only setup has no client
+	# config or log, which is not an error worth logging on every start.
 	local hp_file
 	for hp_file in "$RUN_DIR"/sing-box-*.json "$RUN_DIR"/sing-box-*.log "$HP_DIR"/cache.db; do
 		[ -e "$hp_file" ] || continue
@@ -622,17 +573,11 @@ start_homeproxy() {
 	local sb_ver
 	check_singbox_version || return 1
 
-	local routing_mode proxy_mode ipv6_support
-	config_get routing_mode "config" "routing_mode" "$HP_DEFAULT_ROUTING_MODE"
+	local proxy_mode ipv6_support
 	config_get proxy_mode "config" "proxy_mode" "$HP_DEFAULT_PROXY_MODE"
 	config_get_bool ipv6_support "config" "ipv6_support" "0"
 
-	local outbound_node
-	if [ "$routing_mode" != "custom" ]; then
-		config_get outbound_node "config" "main_node" "$HP_DEFAULT_MAIN_NODE"
-	else
-		config_get outbound_node "routing" "default_outbound" "$HP_DEFAULT_DEFAULT_OUTBOUND"
-	fi
+	local outbound_node="$(client_outbound_node)"
 
 	local server_enabled dashboard
 	config_get_bool server_enabled "server" "enabled" "0"
@@ -649,7 +594,7 @@ start_homeproxy() {
 	uname -r | grep -Eq "^6\.6" && disable_gso=1
 
 	if [ "$outbound_node" != "nil" ]; then
-		start_client "$routing_mode" "$proxy_mode" "$ipv6_support" "$dashboard" "$disable_gso" || return 1
+		start_client "$proxy_mode" "$ipv6_support" "$dashboard" "$disable_gso" || return 1
 	else
 		# server only: what a restart left behind from the client goes now
 		sync_autoupdate_cron ""
@@ -661,7 +606,7 @@ start_homeproxy() {
 	fi
 
 	add_helper_instances
-	prepare_runtime_files "$routing_mode" "$outbound_node" "$server_enabled" "$dashboard"
+	prepare_runtime_files "$outbound_node" "$server_enabled" "$dashboard"
 
 	apply_firewall "$outbound_node"
 	restart_fingerprint > "$RUN_DIR/restart.fingerprint"
@@ -735,15 +680,7 @@ reload_service() {
 	log "Reloading service..."
 
 	config_load "$CONF"
-	local routing_mode
-	config_get routing_mode "config" "routing_mode" "$HP_DEFAULT_ROUTING_MODE"
-
-	local outbound_node
-	if [ "$routing_mode" != "custom" ]; then
-		config_get outbound_node "config" "main_node" "$HP_DEFAULT_MAIN_NODE"
-	else
-		config_get outbound_node "routing" "default_outbound" "$HP_DEFAULT_DEFAULT_OUTBOUND"
-	fi
+	local outbound_node="$(client_outbound_node)"
 
 	local old_client old_server
 	old_client="$(md5sum < "$RUN_DIR/sing-box-c.json" 2>"/dev/null")"
@@ -813,24 +750,17 @@ reload_service() {
 }
 
 # Re-apply the resource lists that were refreshed on disk (called by
-# update_crond.sh). Only the firewall sets and the dnsmasq snippets depend on
-# those files, so sing-box itself is left running.
+# update_crond.sh). Only the firewall sets depend on those files, so sing-box
+# itself is left running.
 refresh_lists() {
 	config_load "$CONF"
 
-	local routing_mode outbound_node
-	config_get routing_mode "config" "routing_mode" "$HP_DEFAULT_ROUTING_MODE"
-	if [ "$routing_mode" != "custom" ]; then
-		config_get outbound_node "config" "main_node" "$HP_DEFAULT_MAIN_NODE"
-	else
-		config_get outbound_node "routing" "default_outbound" "$HP_DEFAULT_DEFAULT_OUTBOUND"
-	fi
+	local outbound_node="$(client_outbound_node)"
 	[ "$outbound_node" != "nil" ] || return 0
 
-	render_dns_snippets
 	apply_firewall "$outbound_node"
 
-	log "Resource list changes applied (dnsmasq snippets + fw4 sets)."
+	log "Resource list changes applied (fw4 sets)."
 }
 
 service_triggers() {

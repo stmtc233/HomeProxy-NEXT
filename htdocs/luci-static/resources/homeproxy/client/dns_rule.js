@@ -19,7 +19,6 @@ return baseclass.extend({
 
 		s.tab('dns_rule', _('DNS Rules'));
 		o = s.taboption('dns_rule', form.SectionValue, '_dns_rule', form.GridSection, 'dns_rule');
-		o.depends('routing_mode', 'custom');
 
 		ss = o.subsection;
 		ss.addremove = true;

@@ -18,7 +18,6 @@ return baseclass.extend({
 
 		s.tab('ruleset', _('Rule Set'));
 		o = s.taboption('ruleset', form.SectionValue, '_ruleset', form.GridSection, 'ruleset');
-		o.depends('routing_mode', 'custom');
 
 		ss = o.subsection;
 		ss.addremove = true;

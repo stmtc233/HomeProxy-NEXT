@@ -61,7 +61,7 @@ const TEMPLATE = `'use strict';
  * client(config, ctx) gets the generated sing-box client config and
  * server(config, ctx) the server one, right before \`sing-box check\`.
  * Change config in place or return a new object; a null value is dropped.
- * ctx of client(): routing_mode, proxy_mode, ipv6_support, uci (cursor).
+ * ctx of client(): proxy_mode, ipv6_support, uci (cursor).
  * ctx of server(): uci.
  * Should the result fail the check, the service starts without plugins.
  */

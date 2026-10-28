@@ -15,57 +15,10 @@
 			{
 				"tag": "system-dns",
 				"type": "local"
-			},
-			{
-				"tag": "main-dns",
-				"domain_resolver": {
-					"server": "default-dns",
-					"strategy": "ipv4_only"
-				},
-				"detour": "main-out",
-				"type": "https",
-				"server": "cloudflare-dns.com",
-				"server_port": 443,
-				"path": "/dns-query"
-			},
-			{
-				"tag": "china-dns",
-				"domain_resolver": {
-					"server": "default-dns",
-					"strategy": "ipv4_only"
-				},
-				"type": "udp",
-				"server": "223.5.5.5"
 			}
 		],
 		"rules": [
-			{
-				"query_type": [
-					64,
-					65
-				],
-				"action": "reject"
-			},
-			{
-				"query_type": [
-					35
-				],
-				"domain_suffix": [
-					"r.10086.cn",
-					"10086.cn",
-					"pub.3gppnetwork.org"
-				],
-				"action": "route",
-				"server": "default-dns"
-			},
-			{
-				"rule_set": "geosite-cn",
-				"action": "route",
-				"server": "china-dns"
-			}
-		],
-		"strategy": "ipv4_only",
-		"final": "main-dns"
+		]
 	},
 	"inbounds": [
 		{
@@ -104,7 +57,7 @@
 		},
 		{
 			"type": "urltest",
-			"tag": "main-out",
+			"tag": "auto",
 			"outbounds": [
 				"anytls",
 				"vless-reality-ws",
@@ -116,7 +69,11 @@
 				"http",
 				"socks",
 				"shadowtls"
-			]
+			],
+			"url": "https://www.gstatic.com/generate_204",
+			"interval": "180s",
+			"tolerance": 50,
+			"idle_timeout": "1800s"
 		},
 		{
 			"type": "anytls",
@@ -285,48 +242,14 @@
 			},
 			{
 				"action": "sniff"
-			},
-			{
-				"action": "resolve",
-				"strategy": "prefer_ipv4"
-			},
-			{
-				"rule_set": "geoip-cn",
-				"action": "route",
-				"outbound": "direct-out"
-			}
-		],
-		"rule_set": [
-			{
-				"type": "remote",
-				"tag": "geoip-cn",
-				"format": "binary",
-				"url": "https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set/geoip-cn.srs",
-				"update_interval": "24h",
-				"http_client": "hp-main-out"
-			},
-			{
-				"type": "remote",
-				"tag": "geosite-cn",
-				"format": "binary",
-				"url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-geolocation-cn.srs",
-				"update_interval": "24h",
-				"http_client": "hp-main-out"
 			}
 		],
 		"auto_detect_interface": true,
 		"default_domain_resolver": {
-			"server": "default-dns",
-			"strategy": "prefer_ipv4"
+			"server": "default-dns"
 		},
-		"final": "main-out"
+		"final": "auto"
 	},
-	"http_clients": [
-		{
-			"tag": "hp-main-out",
-			"detour": "main-out"
-		}
-	],
 	"experimental": {
 		"cache_file": {
 			"enabled": true,

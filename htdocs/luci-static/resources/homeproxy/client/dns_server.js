@@ -20,7 +20,6 @@ return baseclass.extend({
 
 		s.tab('dns_server', _('DNS Servers'));
 		o = s.taboption('dns_server', form.SectionValue, '_dns_server', form.GridSection, 'dns_server');
-		o.depends('routing_mode', 'custom');
 
 		ss = o.subsection;
 		ss.addremove = true;

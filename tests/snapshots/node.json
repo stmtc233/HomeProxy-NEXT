@@ -29,19 +29,6 @@
 						"tabs": [],
 						"options": [
 							{
-								"kind": "Button",
-								"name": "_apply",
-								"title": "Apply",
-								"description": null,
-								"depends": [],
-								"values": [],
-								"props": {
-									"editable": true,
-									"inputstyle": "apply",
-									"modalonly": false
-								}
-							},
-							{
 								"kind": "Value",
 								"name": "label",
 								"title": "Label",

@@ -21,8 +21,6 @@ HP_FW4_CHAINS="
 HP_FW4_SETS="
 	homeproxy_local_addr_v4
 	homeproxy_local_addr_v6
-	homeproxy_gfw_list_v4
-	homeproxy_gfw_list_v6
 	homeproxy_mainland_addr_v4
 	homeproxy_mainland_addr_v6
 	homeproxy_wan_proxy_addr_v4

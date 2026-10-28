@@ -1,19 +1,15 @@
 # SPDX-License-Identifier: GPL-2.0-only
 #
-# Coverage fixture for the non-custom paths the other fixtures leave out:
-# global mode, redirect + tun with every tun/UDP option, a WireGuard main
-# node (endpoint), a dedicated direct UDP node carrying an override, a custom
-# NTP server, a bound interface and the dashboard. The keys are test-only.
+# Coverage fixture for the paths the other fixtures leave out: redirect + tun
+# with every tun/UDP option, a WireGuard routing node (endpoint) as the
+# default outbound, a direct routing node carrying an override that a UDP
+# rule picks up, a custom NTP server, a bound interface and the dashboard
+# downloading through the default outbound. The keys are test-only.
 
 config homeproxy 'config'
-	option routing_mode 'global'
 	option proxy_mode 'redirect_tun'
 	option ipv6_support '1'
 	option log_level 'info'
-	option main_node 'n_wg'
-	option main_udp_node 'n_udp_direct'
-	option dns_server 'tls://1.1.1.1'
-	option block_https_rr '0'
 	option tun_dns_mode 'native'
 	option tun_dns_address '172.19.0.2'
 	option udp_mapping 'endpoint_independent'
@@ -33,11 +29,14 @@ config homeproxy 'infra'
 	option tun_addr4 '172.19.0.1/30'
 	option tun_addr6 'fdfe:dcba:9876::1/126'
 	option tun_mtu '1500'
-	option udp_timeout '300'
 	option ntp_server 'time.example.com'
 
 config homeproxy 'control'
 	option bind_interface 'eth1'
+
+config homeproxy 'routing'
+	option default_outbound 'rn_wg'
+	option udp_timeout '300'
 
 config node 'n_wg'
 	option label 'wg'
@@ -60,3 +59,20 @@ config node 'n_udp_direct'
 	option type 'direct'
 	option override_address '198.51.100.7'
 	option override_port '4433'
+
+config routing_node 'rn_wg'
+	option enabled '1'
+	option label 'rn-wg'
+	option node 'n_wg'
+
+config routing_node 'rn_udp'
+	option enabled '1'
+	option label 'rn-udp'
+	option node 'n_udp_direct'
+
+config routing_rule 'rr_udp'
+	option enabled '1'
+	option label 'rr-udp'
+	option network 'udp'
+	option action 'route'
+	option outbound 'rn_udp'

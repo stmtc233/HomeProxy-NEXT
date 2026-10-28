@@ -12,28 +12,12 @@ run_case() {
 	fixture="$2"
 	generator="$3"
 	outfile="$4"
-	local_rs="$5"
-	plugins="$6"
-	expect_error="$7"
+	plugins="$5"
+	expect_error="$6"
 	dir="$WORK/$name"
 
 	rm -rf "$dir"
-	mkdir -p "$dir/config" "$dir/run" "$dir/scripts" "$dir/resources" "$dir/ruleset"
-	: > "$dir/resources/direct_list.txt"
-	: > "$dir/resources/proxy_list.txt"
-	for list in direct_list proxy_list; do
-		[ -f "${fixture%.uci}.$list.txt" ] && cp "${fixture%.uci}.$list.txt" "$dir/resources/$list.txt"
-	done
-
-	if [ "$local_rs" = "1" ]; then
-		printf '%s' '{"version":1,"rules":[{"domain_suffix":["example.com"]}]}' > "$dir/rs-src.json"
-		if ! sing-box rule-set compile "$dir/rs-src.json" -o "$dir/resources/geoip_cn.srs" \
-			|| ! sing-box rule-set compile "$dir/rs-src.json" -o "$dir/resources/geosite_cn.srs"; then
-			echo "FAIL: $name: could not compile the local rule-set fixture"
-			FAILED=1
-			return
-		fi
-	fi
+	mkdir -p "$dir/config" "$dir/run" "$dir/scripts" "$dir/ruleset"
 
 	if grep -q "__RULESET_DIR__" "$fixture"; then
 		printf '%s' '{"version":1,"rules":[{"domain_suffix":["example.com"]}]}' > "$dir/ruleset/src.json"
@@ -124,24 +108,6 @@ check_golden() {
 
 check_golden client sing-box-c.json
 
-if grep -q '"detour": "direct-out"' "$WORK/client/run/sing-box-c.json"; then
-	echo "FAIL: client: a remote rule-set would still be downloaded directly"
-	FAILED=1
-fi
-if ! grep -q '"detour": "main-out"' "$WORK/client/run/sing-box-c.json"; then
-	echo "FAIL: client: no remote rule-set is configured to download through main-out"
-	FAILED=1
-fi
-
-run_case client-local "$ROOT/tests/fixtures/generators/client.uci" generate_client.uc sing-box-c.json 1
-if grep -q '"type": "local"' "$WORK/client-local/run/sing-box-c.json" \
-	&& ! grep -q '"type": "remote"' "$WORK/client-local/run/sing-box-c.json"; then
-	echo "PASS: client-local uses the local rule-sets"
-else
-	echo "FAIL: client-local did not switch the preset rule-sets to local files"
-	FAILED=1
-fi
-
 run_case client-sub "$ROOT/tests/fixtures/generators/client-sub.uci" generate_client.uc sing-box-c.json
 CLIENT_SUB_OUT="$WORK/client-sub/run/sing-box-c.json"
 assert_sub() {
@@ -190,7 +156,7 @@ run_case custom_labels "$ROOT/tests/fixtures/generators/custom-labels.uci" gener
 CUSTOM_OUT="$WORK/custom_labels/run/sing-box-c.json"
 assert_json "custom/labels: a node is tagged by its label" '"tag": "🇭🇰 香港 01"'
 assert_json "custom/labels: a duplicate label is suffixed" '"tag": "🇭🇰 香港 01 #2"'
-assert_json "custom/labels: a label equal to a built-in tag is suffixed" '"tag": "main-out #2"'
+assert_json "custom/labels: a label equal to a built-in tag is suffixed" '"tag": "direct-out #2"'
 assert_json "custom/labels: a node without label keeps the section name" '"tag": "cfg-n_nolabel-out"'
 assert_json "custom/labels: the urltest group is tagged by its label" '"tag": "🚀 自动选择"'
 assert_json "custom/labels: a routing rule points at the node label" '"outbound": "🇭🇰 香港 01"'
@@ -201,13 +167,13 @@ assert_json "custom/labels: dns.final points at the DNS label" '"final": "🌐 �
 assert_json "custom/labels: extra rule-set tags are kept verbatim" '"geosite"$'
 assert_json "custom/labels: a rule-set label clashing with an extra tag is suffixed" '"tag": "geosite #2"'
 
-run_case custom_selector_loop "$ROOT/tests/fixtures/generators/custom-selector-loop.uci" generate_client.uc sing-box-c.json "" "" \
+run_case custom_selector_loop "$ROOT/tests/fixtures/generators/custom-selector-loop.uci" generate_client.uc sing-box-c.json "" \
 	"Selector loop sel-a -> sel-b -> sel-a"
 
 run_case rules "$ROOT/tests/fixtures/generators/rules.uci" generate_client.uc sing-box-c.json
 check_golden rules sing-box-c.json
 
-for name in global-tun bypass-direct custom-extras; do
+for name in tun custom-extras; do
 	run_case "$name" "$ROOT/tests/fixtures/generators/$name.uci" generate_client.uc sing-box-c.json
 	check_golden "$name" sing-box-c.json
 done
@@ -225,11 +191,11 @@ check_plugins() {
 	ucode "$ROOT/tests/ucode/check_plugins.uc" "$mode" "$WORK/plugins-$mode/normalized.json" \
 		"$ROOT/tests/snapshots/$name.generated.json" "$WORK/plugins-$mode/run/plugins-$kind.json" || FAILED=1
 }
-run_case plugins-client "$ROOT/tests/fixtures/generators/client.uci" generate_client.uc sing-box-c.json "" "$ROOT/tests/fixtures/plugins/client"
+run_case plugins-client "$ROOT/tests/fixtures/generators/client.uci" generate_client.uc sing-box-c.json "$ROOT/tests/fixtures/plugins/client"
 check_plugins client client sing-box-c.json client
-run_case plugins-fallback "$ROOT/tests/fixtures/generators/client.uci" generate_client.uc sing-box-c.json "" "$ROOT/tests/fixtures/plugins/fallback"
+run_case plugins-fallback "$ROOT/tests/fixtures/generators/client.uci" generate_client.uc sing-box-c.json "$ROOT/tests/fixtures/plugins/fallback"
 check_plugins fallback client sing-box-c.json client
-run_case plugins-server "$ROOT/tests/fixtures/generators/server.uci" generate_server.uc sing-box-s.json "" "$ROOT/tests/fixtures/plugins/server"
+run_case plugins-server "$ROOT/tests/fixtures/generators/server.uci" generate_server.uc sing-box-s.json "$ROOT/tests/fixtures/plugins/server"
 check_plugins server server sing-box-s.json server
 
 exit $FAILED

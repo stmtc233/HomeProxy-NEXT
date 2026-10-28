@@ -27,7 +27,7 @@ function result(name) {
 if (mode === 'client') {
 	const rule = shift(out.route.rules);
 	check(rule?.domain_suffix?.[0] === 'plugin.example', 'a rule can be put in front of the built-in ones', rule);
-	check(rule?.domain_suffix?.[1] === 'bypass_mainland_china.tun.false.ctx.example', 'ctx carries routing_mode, proxy_mode and ipv6_support', rule);
+	check(rule?.domain_suffix?.[1] === 'tun.false.ctx.example', 'ctx carries proxy_mode and ipv6_support', rule);
 	check(out.log.level === 'debug' && !('timestamp' in out.log), 'a returned copy replaces the config, nulls are dropped', out.log);
 	out.log.level = golden.log.level;
 	out.log.timestamp = golden.log.timestamp;

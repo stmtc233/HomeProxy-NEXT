@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0-only
 #
-# Regression fixture for routing_mode='custom'. It reproduces two crashes
-# that only the custom path could hit:
+# Regression fixture for two crashes of the routing generator:
 #
 #   * a direct node with an override forces generate_outbound() to write into
 #     direct_overrides, and the routing rule below forces get_direct_override()
@@ -13,7 +12,6 @@
 # directory holding a real compiled .srs file.
 
 config homeproxy 'config'
-	option routing_mode 'custom'
 	option proxy_mode 'redirect_tproxy'
 	option ipv6_support '0'
 	option log_level 'error'

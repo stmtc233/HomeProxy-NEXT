@@ -9,7 +9,6 @@
 # directory holding a real compiled .srs file.
 
 config homeproxy 'config'
-	option routing_mode 'custom'
 	option proxy_mode 'redirect_tproxy'
 	option ipv6_support '1'
 	option log_level 'error'

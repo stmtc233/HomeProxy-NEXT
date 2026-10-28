@@ -61,7 +61,7 @@ if (ctx.dashboard_enabled === '1') {
 			enabled: true,
 			path: RUN_DIR + '/dashboard/web',
 			download_url: ctx.dashboard_url,
-			http_client: ctx.http_client_for(isEmpty(ctx.main_node) || ctx.main_node === 'nil' ? null : 'main-out')
+			http_client: ctx.http_client_for(null)
 		}
 	}];
 }
@@ -69,15 +69,13 @@ if (ctx.dashboard_enabled === '1') {
 if (length(ctx.http_clients))
 	config.http_clients = ctx.http_clients;
 
-if (ctx.routing_mode in ['bypass_mainland_china', 'custom']) {
-	config.experimental = {
-		cache_file: {
-			enabled: true,
-			path: '/etc/homeproxy/cache.db',
-			store_dns: (ctx.dns_store_dns === '1') ? true : null
-		}
-	};
-}
+config.experimental = {
+	cache_file: {
+		enabled: true,
+		path: '/etc/homeproxy/cache.db',
+		store_dns: (ctx.dns_store_dns === '1') ? true : null
+	}
+};
 
 /* clash_mode matches nothing without the mode manager the clash API brings,
    which listens nowhere without an external_controller */
@@ -89,7 +87,6 @@ if (ctx.uses_clash_mode)
 config['$schema'] = 'https://sing-box.sagernet.org/schema.json';
 
 const plugin_ctx = {
-	routing_mode: ctx.routing_mode,
 	proxy_mode: ctx.proxy_mode,
 	ipv6_support: (ctx.ipv6_support === '1'),
 	uci: uci

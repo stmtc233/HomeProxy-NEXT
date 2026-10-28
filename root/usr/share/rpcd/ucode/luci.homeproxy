@@ -35,7 +35,6 @@ const BACKUP_FORMAT = 'homeproxy-backup';
 const BACKUP_SKIP = ['infra', 'migration'];
 const BACKUP_TMPFILE = '/tmp/homeproxy_import.tmp';
 const BACKUP_NAME_RE = /^[A-Za-z0-9_]+$/;
-const MAIN_NODE_OPTIONS = ['main_node', 'main_udp_node', 'main_urltest_nodes', 'main_udp_urltest_nodes'];
 
 /* Custom plugins: the files are the state (<name>.uc on, <name>.uc.disabled
    off), so editing them over SSH and on the plugin page stay in sync. */
@@ -64,23 +63,21 @@ function backupIsNodeSection(name, type) {
 function backupStripNodeRefs(section, node_names) {
 	const isNodeRef = (v) => (v in node_names) || substr(v, 0, 4) === 'sub_';
 
-	if (section.name === 'config') {
-		for (let opt in MAIN_NODE_OPTIONS)
-			delete section.options[opt];
-	} else if (section.type === 'routing_node') {
-		const opts = section.options;
-		if (type(opts.node) === 'string' && !(opts.node in ['urltest', 'selector']) && isNodeRef(opts.node))
-			delete opts.node;
-		for (let list_opt in ['urltest_nodes', 'selector_nodes']) {
-			if (type(opts[list_opt]) === 'array') {
-				opts[list_opt] = filter(opts[list_opt], (v) => !isNodeRef(v));
-				if (!length(opts[list_opt]))
-					delete opts[list_opt];
-			}
+	if (section.type !== 'routing_node')
+		return;
+
+	const opts = section.options;
+	if (type(opts.node) === 'string' && !(opts.node in ['urltest', 'selector']) && isNodeRef(opts.node))
+		delete opts.node;
+	for (let list_opt in ['urltest_nodes', 'selector_nodes']) {
+		if (type(opts[list_opt]) === 'array') {
+			opts[list_opt] = filter(opts[list_opt], (v) => !isNodeRef(v));
+			if (!length(opts[list_opt]))
+				delete opts[list_opt];
 		}
-		if (type(opts.selector_default) === 'string' && isNodeRef(opts.selector_default))
-			delete opts.selector_default;
 	}
+	if (type(opts.selector_default) === 'string' && isNodeRef(opts.selector_default))
+		delete opts.selector_default;
 }
 
 const methods = {
@@ -176,49 +173,6 @@ const methods = {
 				return { result: false, error: 'both an enabled and a disabled copy exist' };
 
 			return rename(file, target) ? { result: true } : { result: false, error: error() };
-		}
-	},
-
-	acllist_read: {
-		args: { type: 'type' },
-		call: function(req) {
-			if (index(['direct_list', 'proxy_list'], req.args?.type) === -1)
-				return { content: null, error: 'illegal type' };
-
-			const filecontent = readfile(`${HP_DIR}/resources/${req.args?.type}.txt`);
-			return { content: filecontent };
-		}
-	},
-	acllist_write: {
-		args: { type: 'type', content: 'content' },
-		call: function(req) {
-			if (index(['direct_list', 'proxy_list'], req.args?.type) === -1)
-				return { result: false, error: 'illegal type' };
-
-			const file = `${HP_DIR}/resources/${req.args?.type}.txt`;
-			let content = req.args?.content;
-
-			/* Sanitize content */
-			if (content) {
-				content = trim(content);
-				content = replace(content, /\r\n?/g, '\n');
-				if (!match(content, /\n$/))
-					content += '\n';
-
-				/* Domains only: reject lines that could break the downstream
-				   dnsmasq/nftset injection (whitespace / shell or directive chars). */
-				for (let line in split(content, /\n/)) {
-					if (!trim(line))
-						continue;
-					if (match(line, /[ \t\/\\;<>="'&#|]/))
-						return { result: false, error: 'invalid character in domain list' };
-				}
-			}
-
-			system(`mkdir -p ${HP_DIR}/resources`);
-			writefile(file, content);
-
-			return { result: true };
 		}
 	},
 
@@ -391,7 +345,6 @@ const methods = {
 			uci.load('homeproxy');
 
 			let node_names = {};
-			let old_main = {};
 			let to_delete = [];
 
 			uci.foreach('homeproxy', null, (s) => {
@@ -408,13 +361,7 @@ const methods = {
 			});
 
 			if (!import_nodes) {
-				/* Keep the node selection of this device; the file's one may point at nodes we do not have */
-				for (let opt in MAIN_NODE_OPTIONS) {
-					const v = uci.get('homeproxy', 'config', opt);
-					if (v != null)
-						old_main[opt] = v;
-				}
-				/* ...and the file's own nodes, which are not imported either */
+				/* The file's own nodes are not imported either */
 				for (let s in backup.sections)
 					if (s.type === 'node')
 						node_names[s.name] = true;
@@ -429,11 +376,6 @@ const methods = {
 				uci.set('homeproxy', s.name, s.type);
 				for (let k, v in s.options)
 					uci.set('homeproxy', s.name, k, v);
-			}
-
-			if (!import_nodes && uci.get('homeproxy', 'config')) {
-				for (let k, v in old_main)
-					uci.set('homeproxy', 'config', k, v);
 			}
 
 			uci.commit('homeproxy');

@@ -58,7 +58,6 @@ return baseclass.extend({
 
 		s.tab('routing_node', _('Routing Nodes'));
 		o = s.taboption('routing_node', form.SectionValue, '_routing_node', form.GridSection, 'routing_node');
-		o.depends('routing_mode', 'custom');
 
 		ss = o.subsection;
 		ss.addremove = true;

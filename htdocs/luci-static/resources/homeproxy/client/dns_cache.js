@@ -15,19 +15,16 @@
  */
 return baseclass.extend({
 	render(s, ctx) {
-		const custom = { 'homeproxy.config.routing_mode': 'custom' };
 		let o, ss, so;
 
 		s.tab('dns_cache', _('DNS Cache (1.14)'));
 		o = s.taboption('dns_cache', form.SectionValue, '_dns_cache', form.NamedSection, 'dns', 'homeproxy');
 		ss = o.subsection;
 
-		/* outside the custom mode the DNS cache switches are not used */
 		so = ss.option(form.Flag, 'optimistic_cache', _('Optimistic DNS cache'),
 			_('Return expired cache immediately and refresh in background (sing-box 1.14).'));
-		so.depends(Object.assign({ '!reverse': true }, custom));
-		so.depends(Object.assign({ disable_cache: '0' }, custom));
-		so.depends(Object.assign({ disable_cache_expire: '0' }, custom));
+		so.depends('disable_cache', '0');
+		so.depends('disable_cache_expire', '0');
 		so.rmempty = false;
 
 		so = ss.option(form.Value, 'optimistic_timeout', _('Optimistic cache timeout'),
@@ -39,9 +36,7 @@ return baseclass.extend({
 
 		so = ss.option(form.Flag, 'cache_file_store_dns', _('Store DNS cache'),
 			_('Persist DNS cache across restarts (replaces Store RDRC).'));
-		/* the other modes run without a cache file (see generate_client.uc) */
-		so.depends('homeproxy.config.routing_mode', 'bypass_mainland_china');
-		so.depends(Object.assign({ disable_cache: '0' }, custom));
+		so.depends('disable_cache', '0');
 		so.rmempty = false;
 	}
 });

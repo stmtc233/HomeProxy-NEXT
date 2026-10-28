@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: GPL-2.0-only
 #
-# Regression fixture for the custom routing mode WITHOUT a default outbound.
+# Regression fixture for routing WITHOUT a default outbound.
 #
-# This is the shape the LuCI UI produces by default in custom mode: every
+# This is the shape the LuCI UI produces by default: every
 # routing rule names its own outbound, so `default_outbound` is left at 'nil'.
 # The generator used to select its config branch by asking whether
 # default_outbound was non-empty, so this configuration fell through the DNS,
@@ -18,7 +18,6 @@
 # so the user got no sing-box.json and no log.
 
 config homeproxy 'config'
-	option routing_mode 'custom'
 	option proxy_mode 'redirect_tproxy'
 	option ipv6_support '0'
 	option log_level 'error'

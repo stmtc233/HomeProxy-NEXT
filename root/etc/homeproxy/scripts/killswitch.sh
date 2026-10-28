@@ -18,18 +18,14 @@
 #   remove    delete the table
 #   guard     long-running watchdog: arm when sing-box is down, disarm once it
 #             has been up for a few seconds (and no hold file asks otherwise)
-#   supported exit 0 when the current routing mode can have a kill switch
 #   render    print the nft script and exit (no nft needed; used by the tests)
 #   status    print "armed", "disarmed" or "absent"
 #
-# "Overseas" is every destination that is neither local/private nor, for the
-# modes that have one, a mainland China address. Modes in which the proxied
-# set cannot be told apart in advance (gfwlist, proxy_mainland_china) do not
-# get a kill switch.
+# "Overseas" is every destination that is neither local/private nor a
+# mainland China address.
 
 HP_DIR="${HP_DIR:-/etc/homeproxy}"
 RUN_DIR="${RUN_DIR:-/var/run/homeproxy}"
-. "$(dirname "$0")/defaults.sh"
 LOG_PATH="$RUN_DIR/homeproxy.log"
 
 TABLE="homeproxy_killswitch"
@@ -41,22 +37,6 @@ HOLD_FILE="$RUN_DIR/ks_hold"
 log() {
 	mkdir -p "$RUN_DIR" 2>"/dev/null"
 	echo -e "$(date "+%Y-%m-%d %H:%M:%S") [KILLSWITCH] $*" >> "$LOG_PATH"
-}
-
-routing_mode() {
-	if [ -n "$KS_ROUTING_MODE" ]; then
-		echo "$KS_ROUTING_MODE"
-	else
-		uci -q get homeproxy.config.routing_mode || echo "$HP_DEFAULT_ROUTING_MODE"
-	fi
-}
-
-# 0 when the current routing mode can have a kill switch
-supported_mode() {
-	case "$(routing_mode)" in
-	"bypass_mainland_china"|"custom"|"global") return 0 ;;
-	*) return 1 ;;
-	esac
 }
 
 has_table() {
@@ -76,13 +56,9 @@ cidr_list() {
 }
 
 render() {
-	local mode v4 v6
-	mode="$(routing_mode)"
-
-	if [ "$mode" != "global" ]; then
-		v4="$(cidr_list "$HP_DIR/resources/china_ip4.txt" '^[0-9]{1,3}(\.[0-9]{1,3}){3}(/[0-9]{1,2})?$')"
-		v6="$(cidr_list "$HP_DIR/resources/china_ip6.txt" '^[0-9a-fA-F:]+(/[0-9]{1,3})?$')"
-	fi
+	local v4 v6
+	v4="$(cidr_list "$HP_DIR/resources/china_ip4.txt" '^[0-9]{1,3}(\.[0-9]{1,3}){3}(/[0-9]{1,2})?$')"
+	v6="$(cidr_list "$HP_DIR/resources/china_ip6.txt" '^[0-9a-fA-F:]+(/[0-9]{1,3})?$')"
 
 	# `table` creates the table when absent, so the delete that follows never
 	# fails and the whole replacement stays one atomic transaction.
@@ -142,11 +118,6 @@ remove() {
 install() {
 	local armed=1
 
-	if ! supported_mode; then
-		remove
-		return 0
-	fi
-
 	# keep the state across a rebuild; a table that did not exist starts armed
 	# because nothing proves sing-box is up yet (the guard disarms it)
 	if has_table && ! is_armed; then
@@ -202,15 +173,14 @@ status() {
 
 case "$1" in
 install) install ;;
-arm) supported_mode && arm ;;
+arm) arm ;;
 disarm) disarm ;;
 remove) remove ;;
 guard) guard ;;
 render) render ;;
 status) status ;;
-supported) supported_mode ;;
 *)
-	echo "usage: $0 {install|arm|disarm|remove|guard|render|status|supported}" >&2
+	echo "usage: $0 {install|arm|disarm|remove|guard|render|status}" >&2
 	exit 1
 	;;
 esac

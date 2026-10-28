@@ -161,11 +161,6 @@ msgstr ""
 msgid "Alibaba Cloud DNS"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:186
-#: htdocs/luci-static/resources/view/homeproxy/client.js:220
-msgid "Aliyun Public DNS (223.5.5.5)"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/client.js:266
 msgid "All ports"
 msgstr ""
@@ -241,10 +236,6 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1158
 msgid "Append self-signed certificate"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:427
-msgid "Applied"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:420
@@ -355,24 +346,12 @@ msgstr ""
 msgid "Bypass CN traffic"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:253
-msgid "Bypass mainland China"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/client.js:393
 msgid "Bypass mainland China traffic via firewall rules by default."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:666
 msgid "CA provider"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:301
-msgid "CN-IP DNS fallback (sing-box 1.14)"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:221
-msgid "CNNIC Public DNS (210.2.4.8)"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:739
@@ -400,10 +379,6 @@ msgstr ""
 msgid "Check update"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:217
-msgid "China DNS server"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/status.js:244
 msgid "China IPv4 list version"
 msgstr ""
@@ -425,10 +400,6 @@ msgstr ""
 msgid "Cipher suites"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:183
-msgid "Cisco Public DNS (208.67.222.222)"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/status.js:214
 msgid "Clean log"
 msgstr ""
@@ -443,10 +414,6 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:703
 msgid "Client version"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:182
-msgid "CloudFlare Public DNS (1.1.1.1)"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:680
@@ -482,10 +449,6 @@ msgstr ""
 
 #: root/usr/share/luci/menu.d/luci-app-homeproxy.json
 msgid "Custom Plugins"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:255
-msgid "Custom routing"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:666
@@ -611,10 +574,6 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1547
 #: htdocs/luci-static/resources/view/homeproxy/node.js:448
 msgid "Direct"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:1701
-msgid "Direct Domain List"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1615
@@ -1096,10 +1055,6 @@ msgstr ""
 msgid "GFW list version"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:252
-msgid "GFWList"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1633
 msgid "Gaming mode IPv4 IP-s"
 msgstr ""
@@ -1127,24 +1082,8 @@ msgstr ""
 msgid "GitHub token"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:256
-msgid "Global"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/node.js:798
 msgid "Global padding"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:1640
-msgid "Global proxy IPv4 IP-s"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:1643
-msgid "Global proxy IPv6 IP-s"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:1646
-msgid "Global proxy MAC-s"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:146
@@ -1153,10 +1092,6 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/status.js:238
 msgid "Google"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:184
-msgid "Google Public DNS (8.8.8.8)"
 msgstr ""
 
 #: root/usr/share/rpcd/acl.d/luci-app-homeproxy.json:3
@@ -1565,14 +1500,6 @@ msgstr ""
 msgid "MTU"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:150
-msgid "Main UDP node"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:122
-msgid "Main node"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/client.js:710
 msgid "Make IP CIDR in rule set used to match the source IP."
 msgstr ""
@@ -1973,10 +1900,6 @@ msgstr ""
 msgid "Only process traffic from specific interfaces. Leave empty for all."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:254
-msgid "Only proxy mainland China"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/client.js:996
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1739
 msgid "Optimistic DNS cache"
@@ -2199,10 +2122,6 @@ msgstr ""
 msgid ""
 "Protocol parameter. Will waste traffic randomly if enabled (enabled by "
 "default in v2ray and cannot be disabled)."
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:1669
-msgid "Proxy Domain List"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1624
@@ -2474,10 +2393,6 @@ msgstr ""
 msgid "Routing Settings"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:251
-msgid "Routing mode"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/client.js:453
 msgid "Routing node"
 msgstr ""
@@ -2535,10 +2450,6 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/node.js:597
 #: htdocs/luci-static/resources/view/homeproxy/server.js:292
 msgid "Salamander"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:152
-msgid "Same as main node"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/status.js:267
@@ -2762,11 +2673,6 @@ msgid ""
 "online configuration delivery standard."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:180
-msgid ""
-"Support UDP, TCP, DoH, DoQ, DoT. TCP protocol will be used if not specified."
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/client.js:362
 msgid "System"
 msgstr ""
@@ -2876,11 +2782,6 @@ msgid ""
 "Tell the client to use the BBR flow control algorithm instead of Hysteria CC."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:187
-#: htdocs/luci-static/resources/view/homeproxy/client.js:222
-msgid "Tencent Public DNS (119.29.29.29)"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/client.js:558
 msgid "Test URL"
 msgstr ""
@@ -2956,11 +2857,6 @@ msgid ""
 "code> &&<br/><code>(source_port || source_port_range)</code> &&<br/"
 "><code>other fields</code>.<br/>Additionally, included rule sets can be "
 "considered merged rather than as a single rule sub-item."
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:218
-msgid ""
-"The dns server for resolving China domains. Support UDP, TCP, DoH, DoQ, DoT."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:495
@@ -3106,11 +3002,6 @@ msgstr ""
 msgid ""
 "This is the TUIC port of the UDP over TCP protocol, designed to provide a "
 "QUIC stream based UDP relay mode that TUIC does not provide."
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:188
-#: htdocs/luci-static/resources/view/homeproxy/client.js:223
-msgid "ThreatBook Public DNS (117.50.10.10)"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:771
@@ -3357,11 +3248,6 @@ msgstr ""
 msgid "VMess"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:181
-#: htdocs/luci-static/resources/view/homeproxy/client.js:219
-msgid "WAN DNS (read from interface)"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1651
 msgid "WAN IP Policy"
 msgstr ""
@@ -3373,12 +3259,6 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/node.js:819
 #: htdocs/luci-static/resources/view/homeproxy/server.js:422
 msgid "WebSocket"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:302
-msgid ""
-"When the main DNS returns a mainland China IP, re-resolve via China DNS "
-"using evaluate/match_response."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1456
@@ -3605,13 +3485,6 @@ msgstr ""
 msgid "v6 only."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:207
-#: htdocs/luci-static/resources/view/homeproxy/client.js:211
-#: htdocs/luci-static/resources/view/homeproxy/client.js:241
-#: htdocs/luci-static/resources/view/homeproxy/client.js:245
-msgid "valid DNS server address"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/client.js:566
 #: htdocs/luci-static/resources/view/homeproxy/client.js:569
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1527
@@ -3623,11 +3496,6 @@ msgstr ""
 
 #: htdocs/luci-static/resources/homeproxy.js:271
 msgid "valid base64 key with %d characters"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:1694
-#: htdocs/luci-static/resources/view/homeproxy/client.js:1726
-msgid "valid hostname"
 msgstr ""
 
 #: htdocs/luci-static/resources/homeproxy.js:298
@@ -3669,17 +3537,6 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1573
 msgid "{tag} in initial path when extra tags are used"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:302
-msgid "Block HTTPS/SVCB DNS records"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:303
-msgid ""
-"Answer HTTPS (type 65) and SVCB (type 64) queries with an empty response. "
-"Keeps clients off HTTPS-RR/ECH, which this DNS chain cannot serve through "
-"some proxies; disable it if ECH is wanted."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/status.js:260

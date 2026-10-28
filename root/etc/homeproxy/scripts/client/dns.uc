@@ -9,9 +9,9 @@
 import { isEmpty, strToBool, strToInt, strToTime } from '../homeproxy.uc';
 
 import {
-	parse_dnsquery, parse_dnsserver, parse_headers, parse_hosts_predefined, restrict_to_modes, rule_match_fields
+	parse_dnsquery, parse_headers, parse_hosts_predefined, restrict_to_modes, rule_match_fields
 } from './common.uc';
-import { uciconfig, ucimain, ucidnsserver, ucidnsrule } from './context.uc';
+import { uciconfig, ucidnsserver, ucidnsrule } from './context.uc';
 
 function build_custom_servers(ctx, servers) {
 	const uci = ctx.uci;
@@ -148,9 +148,6 @@ function build_custom_rules(ctx) {
 }
 
 export function build(ctx) {
-	const uci = ctx.uci;
-	const routing_mode = ctx.routing_mode;
-
 	const dns = {
 		servers: [
 			{
@@ -177,81 +174,9 @@ export function build(ctx) {
 		timeout: !isEmpty(ctx.dns_query_timeout) ? strToTime(ctx.dns_query_timeout) : null
 	};
 
-	if (!isEmpty(ctx.main_node)) {
-		push(dns.servers, {
-			tag: 'main-dns',
-			domain_resolver: {
-				server: 'default-dns',
-				strategy: (ctx.ipv6_support !== '1') ? 'ipv4_only' : null
-			},
-			detour: 'main-out',
-			...parse_dnsserver(ctx.dns_server, 'tcp')
-		});
-		dns.final = 'main-dns';
-
-		if (length(ctx.direct_domain_list))
-			push(dns.rules, {
-				rule_set: 'direct-domain',
-				action: 'route',
-				server: (routing_mode === 'bypass_mainland_china') ? 'china-dns' : 'default-dns'
-			});
-
-		if (uci.get(uciconfig, ucimain, 'block_https_rr') !== '0')
-			push(dns.rules, {
-				query_type: [64, 65],
-				action: 'reject'
-			});
-
-		if (routing_mode === 'bypass_mainland_china') {
-			push(dns.servers, {
-				tag: 'china-dns',
-				domain_resolver: {
-					server: 'default-dns',
-					strategy: (ctx.ipv6_support !== '1') ? 'ipv4_only' : null
-				},
-				detour: ctx.self_mark ? 'direct-out' : null,
-				...parse_dnsserver(ctx.china_dns_server)
-			});
-
-			push(dns.rules, {
-				query_type: [35],
-				domain_suffix: ['r.10086.cn', '10086.cn', 'pub.3gppnetwork.org'],
-				action: 'route',
-				server: 'default-dns'
-			});
-
-			if (length(ctx.proxy_domain_list))
-				push(dns.rules, {
-					rule_set: 'proxy-domain',
-					action: 'route',
-					server: 'main-dns'
-				});
-
-			push(dns.rules, {
-				rule_set: 'geosite-cn',
-				action: 'route',
-				server: 'china-dns'
-			});
-
-			if (uci.get(uciconfig, ucimain, 'cn_ip_fallback') === '1') {
-				push(dns.rules, {
-					action: 'evaluate',
-					server: 'main-dns',
-					tag: 'cn-fallback'
-				});
-				push(dns.rules, {
-					match_response: 'cn-fallback',
-					rule_set: 'geoip-cn',
-					action: 'route',
-					server: 'china-dns'
-				});
-			}
-		}
-	} else if (ctx.is_custom_mode) {
-		build_custom_servers(ctx, dns.servers);
-		dns.rules = build_custom_rules(ctx);
-		dns.final = ctx.get_resolver(ctx.dns_default_server);
-	}
+	build_custom_servers(ctx, dns.servers);
+	dns.rules = build_custom_rules(ctx);
+	dns.final = ctx.get_resolver(ctx.dns_default_server);
 
 	return dns;
 };

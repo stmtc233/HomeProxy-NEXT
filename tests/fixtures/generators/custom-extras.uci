@@ -1,18 +1,17 @@
 # SPDX-License-Identifier: GPL-2.0-only
 #
-# Coverage fixture for the custom-mode settings the other fixtures leave out:
+# Coverage fixture for the routing settings the other fixtures leave out:
 # the global routing options (domain strategy, find_neighbor, tun stack,
 # endpoint-independent NAT, UDP timeout), the global DNS options, routing
 # nodes (WireGuard endpoint and a plain outbound) with bind_interface /
 # detour / domain_resolver, a selector over a routing node, a node of its own
 # and direct, a DoH server with headers, a hosts file server, a remote
-# rule-set with initial_path, the dashboard without a main node, and rules
-# limited to clash modes (one mode, several, with invert, without match
-# fields, and a DNS rule whose evaluate rule gets the modes too).
+# rule-set with initial_path, the dashboard, and rules limited to clash
+# modes (one mode, several, with invert, without match fields, and a DNS
+# rule whose evaluate rule gets the modes too).
 # The keys are test-only.
 
 config homeproxy 'config'
-	option routing_mode 'custom'
 	option proxy_mode 'redirect_tun'
 	option ipv6_support '1'
 	option log_level 'error'
