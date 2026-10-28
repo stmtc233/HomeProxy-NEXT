@@ -3744,7 +3744,7 @@ msgid "Slot identifier registered by the server (1-64 characters: letters, digit
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js
-msgid "1-64 characters of letters, digits, "_" or "-", not starting with "_" or "-""
+msgid "1-64 characters of letters, digits, \"_\" or \"-\", not starting with \"_\" or \"-\""
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js

@@ -3963,8 +3963,8 @@ msgid "Slot identifier registered by the server (1-64 characters: letters, digit
 msgstr "服务器注册的槽位标识（1-64 个字符：字母、数字、<code>_</code> 和 <code>-</code>）。客户端必须使用相同的 ID。"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js
-msgid "1-64 characters of letters, digits, "_" or "-", not starting with "_" or "-""
-msgstr "1-64 个字母、数字、"_" 或 "-"，且不以 "_" 或 "-" 开头"
+msgid "1-64 characters of letters, digits, \"_\" or \"-\", not starting with \"_\" or \"-\""
+msgstr "1-64 个字母、数字、\"_\" 或 \"-\"，且不以 \"_\" 或 \"-\" 开头"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js
 msgid "Realm token"

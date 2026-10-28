@@ -5,8 +5,10 @@
 #
 # Report how much of the gettext template (po/templates/homeproxy.pot) is
 # translated in po/zh_Hans/homeproxy.po. Missing, empty and fuzzy entries all
-# count as untranslated. The check only warns by default so it does not block
-# a build; pass --fail-below to turn the warning into a failure.
+# count as untranslated. The coverage check only warns by default so it does
+# not block a build; pass --fail-below to turn the warning into a failure. A
+# malformed string line (an unescaped quote inside it) always fails: gettext
+# tools would read a different msgid than the source has.
 #
 # Usage:
 #   tests/i18n-coverage.py                       # warn below 95%
@@ -16,6 +18,7 @@
 
 import argparse
 import os
+import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -37,6 +40,10 @@ def load_ignore(path):
     return ignored
 
 
+# a quote not escaped by a backslash (an escaped backslash does not count)
+UNESCAPED_QUOTE = re.compile(r'(?<!\\)(?:\\\\)*"')
+
+
 def unquote(value):
     value = value.strip()
     if len(value) >= 2 and value[0] == '"' and value[-1] == '"':
@@ -44,8 +51,15 @@ def unquote(value):
     return value
 
 
-def parse_po(path):
-    """Return {msgid: {'msgstr': str, 'fuzzy': bool}} for non-empty msgids."""
+def check_quoted(path, number, value, errors):
+    value = value.strip()
+    if len(value) < 2 or value[0] != '"' or value[-1] != '"' or UNESCAPED_QUOTE.search(value[1:-1]):
+        errors.append(f"{os.path.relpath(path, ROOT)}:{number}: malformed string {value}")
+
+
+def parse_po(path, errors):
+    """Return {msgid: {'msgstr': str, 'fuzzy': bool}} for non-empty msgids;
+    malformed string lines are added to errors."""
     entries = {}
     msgid = None
     msgstr = ""
@@ -58,7 +72,7 @@ def parse_po(path):
             entries[msgid] = {"msgstr": msgstr, "fuzzy": entry_fuzzy}
 
     with open(path, encoding="utf-8") as handle:
-        for raw in handle:
+        for number, raw in enumerate(handle, 1):
             line = raw.rstrip("\n")
 
             if line.startswith("#,"):
@@ -70,6 +84,7 @@ def parse_po(path):
                 continue
 
             if line.startswith("msgid "):
+                check_quoted(path, number, line[len("msgid "):], errors)
                 flush()
                 msgid = unquote(line[len("msgid "):])
                 msgstr = ""
@@ -77,9 +92,11 @@ def parse_po(path):
                 pending_fuzzy = False
                 state = "msgid"
             elif line.startswith("msgstr "):
+                check_quoted(path, number, line[len("msgstr "):], errors)
                 msgstr = unquote(line[len("msgstr "):])
                 state = "msgstr"
             elif line.startswith('"'):
+                check_quoted(path, number, line, errors)
                 if state == "msgid":
                     msgid += unquote(line)
                 elif state == "msgstr":
@@ -99,9 +116,15 @@ def main():
                         help="list at most this many untranslated entries (default: 10)")
     args = parser.parse_args()
 
-    template = parse_po(TEMPLATE)
-    translation = parse_po(TRANSLATION)
+    errors = []
+    template = parse_po(TEMPLATE, errors)
+    translation = parse_po(TRANSLATION, errors)
     ignored = load_ignore(IGNORE)
+
+    for error in errors:
+        print(f"::error title=Malformed translation file::{error}")
+    if errors:
+        return 1
 
     total = 0
     untranslated = []
