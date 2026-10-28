@@ -7,6 +7,7 @@
 'use strict';
 'require baseclass';
 'require dom';
+'require form';
 'require uci';
 'require ui';
 'require validation';
@@ -155,6 +156,57 @@ return baseclass.extend({
 			return value;
 		};
 		mode_option.rmempty = false;
+
+		/* a copy keeps the label, numbered when the target mode has it already */
+		ss.handleCopyTo = function(section_id, mode) {
+			const src = uci.get(uciconfig, section_id);
+			const taken = (label) => uci.sections(uciconfig, this.sectiontype).some((res) => res.routing_mode === mode && res.label === label);
+			let label = src.label || section_id;
+			for (let n = 2; taken(label); n++)
+				label = (src.label || section_id) + ' ' + n;
+
+			copySection(uciconfig, src, uniqueName(uciconfig, section_id + '_copy'), { routing_mode: mode, label: label });
+			return this.map.save(null, true);
+		};
+
+		ss.renderRowActions = function(section_id) {
+			const td = form.GridSection.prototype.renderRowActions.apply(this, arguments);
+			const buttons = td.lastElementChild;
+
+			buttons.insertBefore(E('button', {
+				'class': 'btn cbi-button cbi-button-neutral',
+				'title': _('Copy the rule to a routing mode'),
+				'click': ui.createHandlerFn(this, () => {
+					const others = modes().filter((m) => m[0] !== current);
+					const select = E('select', { 'class': 'cbi-input-select' },
+						modes().map((m) => E('option', {
+							'value': m[0],
+							'selected': (m[0] === (others.length ? others[0][0] : current)) ? '' : null
+						}, [ m[1] ])));
+
+					/* the copy is saved with the rows' unsaved edits, as an add would be */
+					ui.showModal(_('Copy to'), [
+						E('p', _('Copies %s to the routing mode chosen below.').format(uci.get(uciconfig, section_id, 'label') || section_id)),
+						E('div', { 'class': 'cbi-value' }, [
+							E('label', { 'class': 'cbi-value-title' }, [ _('Routing mode') ]),
+							E('div', { 'class': 'cbi-value-field' }, [ select ])
+						]),
+						E('div', { 'class': 'right' }, [
+							E('button', { 'class': 'btn', 'click': ui.hideModal }, [ _('Cancel') ]),
+							' ',
+							E('button', {
+								'class': 'btn cbi-button-positive',
+								'click': ui.createHandlerFn(this, () => this.map.parse()
+									.then(() => this.handleCopyTo(section_id, select.value))
+									.then(ui.hideModal))
+							}, [ _('Copy') ])
+						])
+					]);
+				})
+			}, [ _('Copy to') ]), buttons.lastElementChild);
+
+			return td;
+		};
 
 		o.renderWidget = function(section_id, option_index, cfgvalue) {
 			let list = settle();

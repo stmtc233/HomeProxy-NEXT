@@ -5,7 +5,8 @@
 // list the fixed choices first, then the enabled sections, and show a stored
 // value as its label in the grid, and keep a value whose section is deleted or
 // disabled, refusing it until another one is picked; the rule grids show one routing mode at a
-// time, and rule labels only need to be unique within their mode.
+// time, a rule can be copied to another mode, and rule labels only need to be
+// unique within their mode.
 
 'use strict';
 
@@ -47,6 +48,12 @@ const uci = {
 		if (cb)
 			list.forEach(cb);
 		return list;
+	},
+	add: (_conf, type, name) => {
+		(sections[type] = sections[type] || []).push({ '.name': name, '.type': type });
+	},
+	set: (_conf, name, opt, val) => {
+		Object.values(sections).flat().find((s) => s['.name'] === name)[opt] = val;
 	},
 	get: (_conf, name, opt) => {
 		const res = Object.values(sections).flat().find((s) => s['.name'] === name);
@@ -178,6 +185,21 @@ mode_option.stored = 'm_gone';
 mode_option.load('rr3');
 check(same(mode_option.listed.at(-1), [ 'm_gone', 'm_gone (deleted)' ]) && mode_option.validate('rr3', 'm_gone') !== true,
 	'modes: a rule whose mode is deleted keeps it until another one is picked', mode_option.listed);
+
+/* copy a rule to another mode */
+o.subsection.map = { save: () => 'saved' };
+sections.routing_rule[0]['.type'] = 'routing_rule';
+sections.routing_rule[0].domain = [ 'a.example' ];
+const copied = o.subsection.handleCopyTo('rr1', 'm_off');
+const copy = sections.routing_rule.find((r) => r['.name'] === 'rr1_copy');
+check(copied === 'saved' && copy && copy.routing_mode === 'm_off' && copy.label === 'ads 2' && same(copy.domain, [ 'a.example' ]),
+	'copy: the rule lands in the target mode, its label numbered when taken there', copy);
+check(copy.domain !== sections.routing_rule[0].domain && sections.routing_rule[0].routing_mode === 'm_rule',
+	'copy: the original is left as it is', sections.routing_rule[0]);
+o.subsection.handleCopyTo('rr1', 'm_rule');
+check(sections.routing_rule.some((r) => r['.name'] === 'rr1_copy_2' && r.label === 'ads 2' && r.routing_mode === 'm_rule'),
+	'copy: copying again picks the next free section name', sections.routing_rule.map((r) => r['.name']));
+sections.routing_rule = sections.routing_rule.filter((r) => !r['.name'].includes('_copy'));
 
 const unique = common.validateUniqueLabelInMode('homeproxy', 'routing_rule');
 const in_mode = (mode) => ({ section: { formvalue: (sid, opt) => (opt === 'routing_mode') ? mode : null } });

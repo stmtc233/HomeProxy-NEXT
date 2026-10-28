@@ -4173,3 +4173,15 @@ msgstr "%s（已禁用）"
 #: htdocs/luci-static/resources/homeproxy/client/common.js:20
 msgid "It is deleted or disabled, choose another one."
 msgstr "所选项已删除或已禁用，请重新选择。"
+
+#: htdocs/luci-static/resources/homeproxy/client/common.js:170
+msgid "Copy the rule to a routing mode"
+msgstr "把规则复制到某个路由模式"
+
+#: htdocs/luci-static/resources/homeproxy/client/common.js:170
+msgid "Copy to"
+msgstr "复制到"
+
+#: htdocs/luci-static/resources/homeproxy/client/common.js:170
+msgid "Copies %s to the routing mode chosen below."
+msgstr "把 %s 复制到下面选择的路由模式。"
