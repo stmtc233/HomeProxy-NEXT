@@ -14,6 +14,7 @@ run_case() {
 	outfile="$4"
 	plugins="$5"
 	expect_error="$6"
+	template="$7"
 	dir="$WORK/$name"
 
 	rm -rf "$dir"
@@ -47,6 +48,14 @@ run_case() {
 	for module in "$ROOT/root/etc/homeproxy/scripts/client/"*.uc; do
 		sed -e "$wan_stub" "$module" > "$dir/scripts/client/${module##*/}"
 	done
+
+	sed -e "s#const uci = cursor();#const uci = cursor('$dir/config');#" \
+	    "$ROOT/root/etc/homeproxy/scripts/apply_template.uc" > "$dir/scripts/apply_template.uc"
+	if [ -n "$template" ] && ! ( cd "$dir/scripts" && ucode apply_template.uc "$template" ); then
+		echo "FAIL: $name: apply_template.uc $template exited non-zero"
+		FAILED=1
+		return
+	fi
 
 	if [ -n "$expect_error" ]; then
 		if ( cd "$dir/scripts" && ucode "$generator" ) > "$dir/generator.log" 2>&1; then
@@ -200,6 +209,29 @@ for name in tun custom-extras; do
 	run_case "$name" "$ROOT/tests/fixtures/generators/$name.uci" generate_client.uc sing-box-c.json
 	check_golden "$name" sing-box-c.json
 done
+
+# the default template, seeded into a fresh install with two nodes
+run_case template "$ROOT/tests/fixtures/generators/template.uci" generate_client.uc sing-box-c.json "" "" seed
+check_golden template sing-box-c.json
+
+TPL_UCI="uci -c $WORK/template/config -q"
+$TPL_UCI delete homeproxy.rr_ads
+$TPL_UCI set homeproxy.rr_user=routing_rule
+$TPL_UCI commit homeproxy
+( cd "$WORK/template/scripts" && ucode apply_template.uc seed )
+if ! $TPL_UCI get homeproxy.rr_ads > "/dev/null" && $TPL_UCI get homeproxy.rr_user > "/dev/null"; then
+	echo "PASS: template: seeding leaves a config with routing sections alone"
+else
+	echo "FAIL: template: seeding changed a config that has routing sections"
+	FAILED=1
+fi
+( cd "$WORK/template/scripts" && ucode apply_template.uc )
+if $TPL_UCI get homeproxy.rr_ads > "/dev/null" && ! $TPL_UCI get homeproxy.rr_user > "/dev/null"; then
+	echo "PASS: template: applying it replaces every routing section"
+else
+	echo "FAIL: template: applying it did not replace the routing sections"
+	FAILED=1
+fi
 
 run_case server "$ROOT/tests/fixtures/generators/server.uci" generate_server.uc sing-box-s.json
 check_golden server sing-box-s.json

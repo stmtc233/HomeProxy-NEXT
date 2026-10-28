@@ -212,10 +212,13 @@ apply_firewall() {
 }
 
 # Outbound the client routes through ("nil" when the client is not
-# configured); requires config_load.
+# configured); requires config_load. Without a single node there is nothing
+# to route through yet (the template's groups would even be empty, which
+# sing-box refuses), so the client counts as not configured.
 client_outbound_node() {
 	local node
 	config_get node "routing" "default_outbound" "$HP_DEFAULT_DEFAULT_OUTBOUND"
+	uci -q show "$CONF" | grep -q "^$CONF\.[^.]*=node\$" || node="nil"
 	echo "$node"
 }
 
@@ -584,7 +587,7 @@ start_homeproxy() {
 	config_get dashboard "config" "dashboard" "0"
 
 	if [ "$outbound_node" = "nil" ] && [ "$server_enabled" = "0" ]; then
-		log "Neither client nor server is configured. Service not started."
+		log "Neither client (a default outbound and at least one node) nor server is configured. Service not started."
 		return 1
 	fi
 

@@ -476,6 +476,18 @@
 								"props": {}
 							},
 							{
+								"kind": "Button",
+								"name": "_template",
+								"title": "Default template",
+								"description": "Replaces the routing nodes, routing rules, DNS servers, DNS rules and rule-sets with the default template. Its default outbound Proxy picks Auto (the fastest of all nodes), a single node or direct; its modes, switched in the dashboard, are Rule (mainland China direct, ads blocked, the rest through Proxy), RuleAllowAds (the same without blocking ads), Global and Direct.",
+								"depends": [],
+								"values": [],
+								"props": {
+									"inputstyle": "reset",
+									"inputtitle": "Reset to the template"
+								}
+							},
+							{
 								"kind": "ListValue",
 								"name": "default_outbound",
 								"title": "Default outbound",

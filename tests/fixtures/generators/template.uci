@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# A fresh install with two nodes: the routing and dns sections are those of
+# the shipped config, and tests/ucode/test_generators.sh seeds the default
+# template (scripts/apply_template.uc seed) before generating, so the golden
+# locks what the template turns into.
+
+config homeproxy 'config'
+	option proxy_mode 'redirect_tproxy'
+	option ipv6_support '0'
+	option log_level 'error'
+
+config homeproxy 'infra'
+	option mixed_port '5330'
+	option dns_port '5333'
+	option redirect_port '5331'
+	option tproxy_port '5332'
+	option self_mark '100'
+	option ntp_server 'nil'
+
+config homeproxy 'routing'
+	option default_outbound 'nil'
+	option default_outbound_dns 'default-dns'
+	option find_neighbor '0'
+
+config homeproxy 'dns'
+	option default_strategy 'prefer_ipv4'
+	option default_server 'default-dns'
+
+config node 'n_hk'
+	option label 'hk'
+	option type 'shadowsocks'
+	option address 'hk.example.com'
+	option port '8388'
+	option shadowsocks_encrypt_method 'aes-128-gcm'
+	option password 'secret'
+
+config node 'n_jp'
+	option label 'jp'
+	option type 'trojan'
+	option address 'jp.example.com'
+	option port '443'
+	option password 'secret'
+	option tls '1'
+	option tls_sni 'jp.example.com'

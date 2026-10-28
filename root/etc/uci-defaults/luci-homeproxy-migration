@@ -1,5 +1,6 @@
 #!/bin/sh
 
 ucode "/etc/homeproxy/scripts/migrate_config.uc"
+ucode "/etc/homeproxy/scripts/apply_template.uc" seed
 
 exit 0

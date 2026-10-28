@@ -384,6 +384,17 @@ const methods = {
 		}
 	},
 
+	/* the change event makes procd reload a running service, as an apply from LuCI does */
+	template_apply: {
+		call: function() {
+			if (system(`${HP_DIR}/scripts/apply_template.uc`) !== 0)
+				return { result: false, error: 'failed to apply the template' };
+
+			system(`ubus call service event '{"type":"config.change","data":{"package":"homeproxy"}}'`);
+			return { result: true };
+		}
+	},
+
 	connection_check: {
 		args: { site: 'site' },
 		call: function(req) {

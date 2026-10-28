@@ -27,7 +27,7 @@ HomeProxy NEXT 是一个**以自用为主**的 LuCI 代理模块，源自 [Immor
 
 | 模块 | 内容 |
 | --- | --- |
-| **分流** | 路由节点（单节点、URLTest 自动选优、Selector 手动选择）、路由规则与规则集；规则可只在某些模式下生效，在 Dashboard 中切换模式不用重启 |
+| **分流** | 路由节点（单节点、URLTest 自动选优、Selector 手动选择）、路由规则与规则集；规则可只在某些模式下生效，在 Dashboard 中切换模式不用重启。装好即带默认模板：默认出站 Proxy（Auto 自动选优 / 单个节点 / 直连），模式 Rule（大陆直连、屏蔽广告）、RuleAllowAds、Global、Direct，随时可在「路由设置」里重置 |
 | **代理方式** | Redirect TCP、Redirect TCP + TProxy UDP、Redirect TCP + Tun UDP、Tun TCP/UDP |
 | **节点** | AnyTLS、HTTP、Hysteria / Hysteria2、Shadowsocks、ShadowTLS、Snell、Socks、SSH、Trojan、TUIC、VLESS、VMess、WireGuard；urltest 自动选优 |
 | **订阅** | 分享链接 / SIP008 导入，入库前校验，按订阅分组，可经代理更新 |

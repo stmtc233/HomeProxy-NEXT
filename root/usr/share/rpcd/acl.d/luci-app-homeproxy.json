@@ -36,7 +36,8 @@
 					"plugin_set_enabled",
 					"plugin_write",
 					"resources_update",
-					"singbox_generator"
+					"singbox_generator",
+					"template_apply"
 				]
 			},
 			"uci": [ "homeproxy" ]

@@ -4065,3 +4065,23 @@ msgstr "默认模式"
 #: htdocs/luci-static/resources/homeproxy/client/routing.js
 msgid "The mode sing-box starts in, Rule if empty. Once a mode has been switched in the dashboard, that one is kept across restarts instead."
 msgstr "sing-box 启动时所处的模式，留空为 Rule。在 Dashboard 中切换过模式后，重启时沿用切换后的模式。"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing.js
+msgid "Failed to apply the template: %s"
+msgstr "应用模板失败：%s"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing.js
+msgid "Default template"
+msgstr "默认模板"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing.js
+msgid "Replaces the routing nodes, routing rules, DNS servers, DNS rules and rule-sets with the default template. Its default outbound Proxy picks Auto (the fastest of all nodes), a single node or direct; its modes, switched in the dashboard, are Rule (mainland China direct, ads blocked, the rest through Proxy), RuleAllowAds (the same without blocking ads), Global and Direct."
+msgstr "用默认模板替换路由节点、路由规则、DNS 服务器、DNS 规则和规则集。模板的默认出站 Proxy 可选 Auto（所有节点中最快的）、单个节点或直连；模式在 Dashboard 中切换：Rule（中国大陆直连、屏蔽广告、其余走 Proxy）、RuleAllowAds（同 Rule 但不屏蔽广告）、Global 和 Direct。"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing.js
+msgid "Reset to the template"
+msgstr "重置为模板"
+
+#: htdocs/luci-static/resources/homeproxy/client/routing.js
+msgid "All routing nodes, routing rules, DNS servers, DNS rules and rule-sets are replaced by the template, and unsaved changes to HomeProxy are discarded."
+msgstr "所有路由节点、路由规则、DNS 服务器、DNS 规则和规则集都会被模板替换，HomeProxy 未保存的修改会被丢弃。"
