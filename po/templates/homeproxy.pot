@@ -387,10 +387,6 @@ msgstr ""
 msgid "China IPv6 list version"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/status.js:252
-msgid "China list version"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/client.js:677
 msgid "Chromium / Cronet"
 msgstr ""
@@ -1049,10 +1045,6 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:881
 msgid "GET"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/status.js:256
-msgid "GFW list version"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1633

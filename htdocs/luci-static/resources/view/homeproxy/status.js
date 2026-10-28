@@ -65,7 +65,7 @@ const callResUpdate = rpc.declare({
 	expect: { '': {} }
 });
 
-const resourceTypes = [ 'china_ip4', 'china_ip6', 'china_list', 'gfw_list', 'geoip_cn', 'geosite_cn' ];
+const resourceTypes = [ 'china_ip4', 'china_ip6', 'geoip_cn', 'geosite_cn' ];
 
 function getResVersion(o, type) {
 	const callResVersion = rpc.declare({
@@ -437,14 +437,6 @@ return view.extend({
 
 		o = s.option(form.DummyValue, '_china_ip6_version', _('China IPv6 list version'));
 		o.cfgvalue = L.bind(getResVersion, this, o, 'china_ip6');
-		o.rawhtml = true;
-
-		o = s.option(form.DummyValue, '_china_list_version', _('China list version'));
-		o.cfgvalue = L.bind(getResVersion, this, o, 'china_list');
-		o.rawhtml = true;
-
-		o = s.option(form.DummyValue, '_gfw_list_version', _('GFW list version'));
-		o.cfgvalue = L.bind(getResVersion, this, o, 'gfw_list');
 		o.rawhtml = true;
 
 		o = s.option(form.DummyValue, '_geoip_cn_version', _('GeoIP CN rule-set version'));

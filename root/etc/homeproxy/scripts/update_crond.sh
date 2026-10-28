@@ -6,7 +6,7 @@
 SCRIPTS_DIR="/etc/homeproxy/scripts"
 
 changed=0
-for i in "china_ip4" "china_ip6" "gfw_list" "china_list" "geoip_cn" "geosite_cn"; do
+for i in "china_ip4" "china_ip6" "geoip_cn" "geosite_cn"; do
 	"$SCRIPTS_DIR"/update_resources.sh "$i"
 	[ "$?" -eq 0 ] && changed=1
 done

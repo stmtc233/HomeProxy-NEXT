@@ -404,10 +404,6 @@ msgstr "国内 IPv4 库版本"
 msgid "China IPv6 list version"
 msgstr "国内 IPv6 库版本"
 
-#: htdocs/luci-static/resources/view/homeproxy/status.js:252
-msgid "China list version"
-msgstr "国内域名列表版本"
-
 #: htdocs/luci-static/resources/view/homeproxy/client.js:677
 msgid "Chromium / Cronet"
 msgstr "Chromium / Cronet"
@@ -1087,10 +1083,6 @@ msgstr "分片回退延迟"
 #: htdocs/luci-static/resources/view/homeproxy/node.js:881
 msgid "GET"
 msgstr "GET"
-
-#: htdocs/luci-static/resources/view/homeproxy/status.js:256
-msgid "GFW list version"
-msgstr "GFW 域名列表版本"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1633
 msgid "Gaming mode IPv4 IP-s"

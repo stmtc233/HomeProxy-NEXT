@@ -120,13 +120,6 @@ case "$1" in
 "china_ip6")
 	check_list_update "$1" "1715173329/IPCIDR-CHINA" "master" "ipv6.txt"
 	;;
-"gfw_list")
-	check_list_update "$1" "Loyalsoldier/v2ray-rules-dat" "release" "gfw.txt"
-	;;
-"china_list")
-	check_list_update "$1" "Loyalsoldier/v2ray-rules-dat" "release" "direct-list.txt" && \
-		sed -i -e "s/full://g" -e "/:/d" "$RESOURCES_DIR/china_list.txt"
-	;;
 "geoip_cn")
 	check_list_update "$1" "SagerNet/sing-geoip" "rule-set" "geoip-cn.srs"
 	;;
@@ -134,7 +127,7 @@ case "$1" in
 	check_list_update "$1" "SagerNet/sing-geosite" "rule-set" "geosite-geolocation-cn.srs"
 	;;
 *)
-	echo -e "Usage: $0 <china_ip4 / china_ip6 / gfw_list / china_list / geoip_cn / geosite_cn>"
+	echo -e "Usage: $0 <china_ip4 / china_ip6 / geoip_cn / geosite_cn>"
 	exit 1
 	;;
 esac
