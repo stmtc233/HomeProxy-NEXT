@@ -274,6 +274,11 @@ export function build(ctx) {
 
 		if (cfg.node === 'urltest') {
 			const cfg_urltest_nodes = expand_urltest_nodes(ctx, cfg.urltest_nodes);
+			if (isEmpty(cfg_urltest_nodes)) {
+				/* Deleted subscriptions must not break startup or fall back to direct. */
+				push(outbounds, { type: 'selector', tag: ctx.node_tag(cfg['.name']), outbounds: ['block-out'] });
+				return;
+			}
 			push(outbounds, {
 				type: 'urltest',
 				tag: ctx.node_tag(cfg['.name']),
@@ -291,13 +296,18 @@ export function build(ctx) {
 			push(outbounds, {
 				type: 'selector',
 				tag: ctx.node_tag(cfg['.name']),
-				outbounds: members.tags,
+				outbounds: isEmpty(members.tags) ? ['block-out'] : members.tags,
 				default: members.default_tag,
 				interrupt_exist_connections: strToBool(cfg.selector_interrupt_exist_connections)
 			});
 			add_group_nodes(members.nodes);
 		} else {
-			const outbound = uci.get_all(uciconfig, cfg.node) || {};
+			const outbound = uci.get_all(uciconfig, cfg.node);
+			if (!outbound || outbound['.type'] !== ucinode) {
+				warn(sprintf("homeproxy: routing node '%s' references a removed node, blocking traffic.\n", cfg['.name']));
+				push(outbounds, { type: 'block', tag: ctx.node_tag(cfg.node) });
+				return;
+			}
 			if (outbound.type === 'wireguard') {
 				push(endpoints, generate_endpoint(ctx, outbound));
 				endpoints[length(endpoints)-1].bind_interface = cfg.bind_interface;

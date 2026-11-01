@@ -3147,16 +3147,8 @@ msgstr ""
 msgid "Update nodes from subscriptions"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1432
-msgid "Update subscriptions via proxy."
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1425
 msgid "Update time"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1431
-msgid "Update via proxy"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1190
@@ -3973,4 +3965,13 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:180
 msgid "Open the dashboard in a new tab"
+msgstr ""
+
+msgid "Updating subscriptions..."
+msgstr ""
+
+msgid "Another subscription update is running."
+msgstr ""
+
+msgid "Failed to update subscriptions. Check the HomeProxy log."
 msgstr ""

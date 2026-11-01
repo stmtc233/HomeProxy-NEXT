@@ -1087,7 +1087,42 @@ return view.extend({
 		return this.handleSave(ev).then(() => hp.applyChanges(mode == '0'));
 	},
 
+	removeSubscriptionNodes(urls) {
+		const hashes = new Set((urls || []).map(url => hp.calcStringMD5(url.replace(/#.*$/, ''))));
+		const removed = new Set();
+		uci.sections('homeproxy', 'node', node => {
+			if (node.grouphash && !hashes.has(node.grouphash))
+				removed.add(node['.name']);
+		});
+		removed.forEach(name => uci.remove('homeproxy', name));
+		uci.sections('homeproxy', 'routing_node', node => {
+			for (const option of ['urltest_nodes', 'selector_nodes']) {
+				if (!Array.isArray(node[option]))
+					continue;
+				const members = node[option].filter(name => !removed.has(name) &&
+					(!name.startsWith('sub_') || hashes.has(name.slice(4))));
+				uci.set('homeproxy', node['.name'], option, members);
+			}
+		});
+	},
+
+	updateSubscriptions() {
+		ui.showModal(_('Update nodes from subscriptions'), [
+			E('p', { 'class': 'spinning' }, _('Updating subscriptions...'))
+		]);
+		return fs.exec('/etc/homeproxy/scripts/update_subscriptions.uc').then(res => {
+			if (res.code === 2)
+				throw new Error(_('Another subscription update is running.'));
+			if (res.code !== 0)
+				throw new Error(_('Failed to update subscriptions. Check the HomeProxy log.'));
+			location.reload();
+		}).catch(err => {
+			ui.addNotification(null, E('p', _('An error occurred during updating subscriptions: %s').format(err.message || err)));
+		}).finally(() => ui.hideModal());
+	},
+
 	render(data) {
+		const nodeview = this;
 		let m, s, o, ss, so;
 		let features = data[1];
 
@@ -1232,12 +1267,16 @@ return view.extend({
 		o.default = '2';
 		o.depends('auto_update', '1');
 
-		o = s.taboption('subscription', form.Flag, 'update_via_proxy', _('Update via proxy'),
-			_('Update subscriptions via proxy.'));
-		o.rmempty = false;
-
 		o = s.taboption('subscription', form.DynamicList, 'subscription_url', _('Subscription URL-s'),
 			_('Support Hysteria, Shadowsocks, Trojan, v2rayN (VMess), and XTLS (VLESS) online configuration delivery standard.'));
+		o.write = function(section_id, value) {
+			nodeview.removeSubscriptionNodes(value);
+			uci.set('homeproxy', section_id, 'subscription_url', value);
+		};
+		o.remove = function(section_id) {
+			nodeview.removeSubscriptionNodes([]);
+			uci.unset('homeproxy', section_id, 'subscription_url');
+		};
 		o.validate = function(section_id, value) {
 			if (section_id && value) {
 				try {
@@ -1302,14 +1341,7 @@ return view.extend({
 				return _('No subscription available')
 			}
 		}
-		o.onclick = function() {
-			return fs.exec_direct('/etc/homeproxy/scripts/update_subscriptions.uc').then((res) => {
-				return location.reload();
-			}).catch((err) => {
-				ui.addNotification(null, E('p', _('An error occurred during updating subscriptions: %s').format(err)));
-				return this.map.reset();
-			});
-		}
+		o.onclick = () => this.updateSubscriptions();
 
 		o = s.taboption('subscription', form.Button, '_remove_subscriptions', _('Remove all nodes from subscriptions'));
 		o.inputstyle = 'reset';

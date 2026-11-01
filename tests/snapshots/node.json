@@ -2778,17 +2778,6 @@
 					}
 				},
 				{
-					"kind": "Flag",
-					"name": "update_via_proxy",
-					"title": "Update via proxy",
-					"description": "Update subscriptions via proxy.",
-					"depends": [],
-					"values": [],
-					"props": {
-						"rmempty": false
-					}
-				},
-				{
 					"kind": "DynamicList",
 					"name": "subscription_url",
 					"title": "Subscription URL-s",

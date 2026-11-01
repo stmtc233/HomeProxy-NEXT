@@ -8,17 +8,27 @@
 'use strict';
 
 import { md5 } from 'digest';
-import { lstat, open } from 'fs';
+import { open } from 'fs';
 import { connect } from 'ubus';
 import { cursor } from 'uci';
 
 import { init_action } from 'luci.sys';
 
 import {
-	wGETVerbose, decodeBase64Str, getTime, isEmpty, shellQuote, DEFAULTS, HP_DIR, RUN_DIR
+	wGETVerbose, decodeBase64Str, getTime, isEmpty, DEFAULTS, RUN_DIR
 } from 'homeproxy';
 
 import { parse_uri } from 'parse_uri';
+
+system(`mkdir -p ${RUN_DIR}`);
+/* Keep the inode: unlinking a flock file can let two updaters run at once.
+ * A separate filename also avoids the legacy directory lock. */
+const update_lock = open(RUN_DIR + '/update_subscriptions.flock', 'a');
+
+if (!update_lock || !update_lock.lock('xn')) {
+	warn('Another subscription update is running.\n');
+	exit(2);
+}
 
 const uci = cursor();
 
@@ -33,8 +43,7 @@ const allow_insecure = uci.get(uciconfig, ucisubscription, 'allow_insecure') || 
       filter_keywords = uci.get(uciconfig, ucisubscription, 'filter_keywords') || [],
       packet_encoding = uci.get(uciconfig, ucisubscription, 'packet_encoding') || DEFAULTS.subscription.packet_encoding,
       subscription_urls = uci.get(uciconfig, ucisubscription, 'subscription_url') || [],
-      user_agent = uci.get(uciconfig, ucisubscription, 'user_agent'),
-      via_proxy = uci.get(uciconfig, ucisubscription, 'update_via_proxy') || '0';
+      user_agent = uci.get(uciconfig, ucisubscription, 'user_agent');
 
 function filter_check(name) {
 	if (isEmpty(name) || filter_mode === 'disabled' || isEmpty(filter_keywords))
@@ -66,7 +75,6 @@ const sing_features = ubus.call('luci.homeproxy', 'singbox_get_features', {}) ||
 if (isEmpty(sing_features))
 	log('Warning: Failed to query sing-box features via ubus, assuming defaults.');
 
-system(`mkdir -p ${RUN_DIR}`);
 function log(...args) {
 	const logfile = open(`${RUN_DIR}/homeproxy.log`, 'a');
 	logfile.write(`${getTime()} [SUBSCRIBE] ${join(' ', args)}\n`);
@@ -75,30 +83,6 @@ function log(...args) {
 
 function redact(url) {
 	return replace(url, /[?#].*$/, '');
-}
-
-const LOCK_DIR = RUN_DIR + '/update_subscriptions.lock';
-const LOCK_STALE = 600;
-
-function acquire_lock() {
-	if (system(sprintf('mkdir %s 2>/dev/null', shellQuote(LOCK_DIR))) === 0)
-		return true;
-
-	const st = lstat(LOCK_DIR);
-	const age = st ? max(0, time() - (st.mtime || 0)) : null;
-
-	if (age != null && age > LOCK_STALE) {
-		log(sprintf('Breaking a stale update lock (%s seconds old).', age));
-		system(sprintf('rmdir %s 2>/dev/null', shellQuote(LOCK_DIR)));
-
-		return system(sprintf('mkdir %s 2>/dev/null', shellQuote(LOCK_DIR))) === 0;
-	}
-
-	return false;
-}
-
-function release_lock() {
-	system(sprintf('rmdir %s 2>/dev/null', shellQuote(LOCK_DIR)));
 }
 
 function validation_port(port) {
@@ -147,11 +131,6 @@ function node_problem(cfg) {
 }
 
 function main() {
-	if (via_proxy !== '1') {
-		log('Stopping service...');
-		init_action('homeproxy', 'stop');
-	}
-
 	for (let url in subscription_urls) {
 		url = replace(url, /#.*$/, '');
 		const groupHash = md5(url);
@@ -241,12 +220,6 @@ function main() {
 
 	if (isEmpty(node_result)) {
 		log('Failed to update subscriptions: no valid node found.');
-
-		if (via_proxy !== '1') {
-			log('Starting service...');
-			init_action('homeproxy', 'start');
-		}
-
 		return false;
 	}
 
@@ -255,24 +228,26 @@ function main() {
 		if (!cfg.grouphash)
 			return null;
 
-		if (!node_cache[cfg.grouphash] || length(node_cache[cfg.grouphash]) === 0)
+		/* Preserve a configured subscription on download/parse failure. */
+		if (node_cache[cfg.grouphash] && length(node_cache[cfg.grouphash]) === 0)
 			return null;
 
-		if (!node_cache[cfg.grouphash][cfg['.name']]) {
+		if (!node_cache[cfg.grouphash]?.[cfg['.name']]) {
 			uci.delete(uciconfig, cfg['.name']);
 			removed++;
 			changed = true;
 
 			log(sprintf('Removing node: %s.', cfg.label || cfg['name']));
 		} else {
-			map(keys(cfg), (v) => {
+			const fresh_node = node_cache[cfg.grouphash][cfg['.name']];
+			map(uniq([...keys(cfg), ...keys(fresh_node)]), (v) => {
 				if (substr(v, 0, 1) === '.')
 					return null;
 
 				if (v in node_cache[cfg.grouphash][cfg['.name']]) {
 					const fresh = node_cache[cfg.grouphash][cfg['.name']][v];
 					const current = uci.get(uciconfig, cfg['.name'], v);
-					if (type(fresh) === 'array' ? (sprintf('%J', uci.get_all(uciconfig, cfg['.name'], v) || []) !== sprintf('%J', fresh))
+					if (type(fresh) === 'array' ? (sprintf('%J', current || []) !== sprintf('%J', fresh))
 					    : (current !== sprintf('%s', fresh))) {
 						uci.set(uciconfig, cfg['.name'], v, fresh);
 						changed = true;
@@ -298,9 +273,8 @@ function main() {
 			changed = true;
 			log(sprintf('Adding node: %s.', node.label));
 		});
-	uci.commit(uciconfig);
 
-	let need_restart = (via_proxy !== '1') || changed;
+	let need_restart = changed;
 
 	uci.foreach(uciconfig, 'routing_node', (cfg) => {
 		if (!(cfg.node in ['urltest', 'selector']))
@@ -326,12 +300,13 @@ function main() {
 		});
 		if (length(cleaned_nodes) !== length(cfg[list_option])) {
 			uci.set(uciconfig, cfg['.name'], list_option, cleaned_nodes);
-			uci.commit(uciconfig);
 			need_restart = true;
 
 			log(sprintf('Routing node %s: removed gone nodes from %s list.', cfg['.name'], cfg.node));
 		}
 	});
+
+	uci.commit(uciconfig);
 
 	if (need_restart) {
 		log('Restarting service...');
@@ -341,25 +316,20 @@ function main() {
 
 	log(sprintf('%s nodes added, %s removed.', added, removed));
 	log('Successfully updated subscriptions.');
+	return true;
 }
 
 if (!isEmpty(subscription_urls)) {
-	if (!acquire_lock()) {
-		log('Another subscription update is running, aborting.');
-		exit(0);
-	}
-
+	let success = false;
 	try {
-		call(main);
+		success = main();
 	} catch(e) {
-		log('[FATAL ERROR] An error occurred during updating subscriptions:');
-		log(sprintf('%s: %s', e.type, e.message));
-		log(e.stacktrace[0].context);
-
-		log('Restarting service...');
-		init_action('homeproxy', 'stop');
-		init_action('homeproxy', 'start');
+		log(sprintf('[FATAL ERROR] %s: %s', e.type, e.message));
 	}
 
-	release_lock();
+	update_lock.close();
+	if (!success) {
+		warn('Failed to update subscriptions. Check the HomeProxy log.\n');
+		exit(1);
+	}
 }

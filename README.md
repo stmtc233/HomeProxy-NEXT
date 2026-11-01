@@ -30,7 +30,7 @@ HomeProxy NEXT 是一个**以自用为主**的 LuCI 代理模块，源自 [Immor
 | **分流** | 路由模式、路由节点（单节点、URLTest 自动选优、Selector 手动选择）、路由规则与规则集。每个模式有自己的路由规则、DNS 规则和兜底出站 / DNS 服务器，在 Dashboard 中切换模式不用重启。装好即带默认模板：模式 Rule（大陆直连、屏蔽广告，其余走 Proxy）、RuleAllowAds、Global、Direct，Proxy 可选 Auto 自动选优 / 单个节点 / 直连，随时可在「路由设置」里重置 |
 | **代理方式** | Redirect TCP、Redirect TCP + TProxy UDP、Redirect TCP + Tun UDP、Tun TCP/UDP |
 | **节点** | AnyTLS、HTTP、Hysteria / Hysteria2、Shadowsocks、ShadowTLS、Snell、Socks、SSH、Trojan、TUIC、VLESS、VMess、WireGuard；urltest 自动选优 |
-| **订阅** | 分享链接 / SIP008 导入，入库前校验，按订阅分组，可经代理更新 |
+| **订阅** | 分享链接 / SIP008 导入，入库前校验，按订阅分组，更新时保持代理运行 |
 | **DNS** | 自定义 DNS 服务器与规则（同样可按模式生效）、乐观缓存、劫持 LAN DNS |
 | **服务端** | 常用协议的 inbound，支持 ACME 证书 |
 | **自定义插件** | 用 ucode 小脚本修改生成的 sing-box 配置，升级不会覆盖；可在界面上新增 / 编辑 / 启停 / 删除，见下文 |
@@ -82,7 +82,7 @@ opkg install luci-app-homeproxy-*.ipk luci-i18n-homeproxy-zh-cn-*.ipk
 
 - DNS 劫持只重定向 UDP/53，使用 DoT / DoH 的客户端会绕过它（与 OpenWrt 原生 `dns_redirect` 行为一致）。
 - 客户端运行时 dnsmasq 被配成 `no-resolv` 并转发给 sing-box，此时 DNS 服务器选 `system-dns` 会绕回 sing-box 自身，建议使用 `default-dns`。
-- `update_via_proxy=0` 时，订阅更新期间服务处于停止状态；订阅多或源慢时停机时间会变长，需要零中断请开启 `update_via_proxy`。
+- 订阅下载遵循路由器当前的路由与代理规则，下载期间不会停止服务；配置发生变化后才重启。若已删除全部节点且订阅无法直连，请先导入一个可用节点恢复代理，再更新订阅。
 
 ## 开发
 
