@@ -2873,26 +2873,24 @@
 				},
 				{
 					"kind": "Button",
-					"name": "_save_subscriptions",
-					"title": "Save subscriptions settings",
-					"description": "NOTE: Save current settings before updating subscriptions.",
+					"name": "_update_subscriptions",
+					"title": "Update nodes from subscriptions",
+					"description": "Unsaved changes on this page are saved and applied first.",
 					"depends": [],
 					"values": [],
 					"props": {
 						"inputstyle": "apply",
-						"inputtitle": "Save current settings"
+						"inputtitle": "Update now"
 					}
 				},
 				{
-					"kind": "Button",
-					"name": "_update_subscriptions",
-					"title": "Update nodes from subscriptions",
+					"kind": "DummyValue",
+					"name": "_subscription_status",
+					"title": "Last update",
 					"description": null,
 					"depends": [],
 					"values": [],
-					"props": {
-						"inputstyle": "apply"
-					}
+					"props": {}
 				},
 				{
 					"kind": "Button",

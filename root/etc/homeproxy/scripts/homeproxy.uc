@@ -4,7 +4,7 @@
  * Copyright (C) 2023 ImmortalWrt.org
  */
 
-import { access, lsdir, mkstemp, stat, writefile } from 'fs';
+import { access, lsdir, mkstemp, readfile, stat, writefile } from 'fs';
 import { urldecode_params } from 'luci.http';
 
 export const HP_DIR = '/etc/homeproxy';
@@ -701,4 +701,33 @@ export function writeConfig(kind, file, config, ctx) {
 	system('chmod 600 ' + shellQuote(file));
 
 	return true;
+};
+
+/*
+ * Progress and outcome of the last subscription update, written by
+ * update_subscriptions.uc and read by the node page. It holds hashes, counts
+ * and redacted errors only, never a subscription URL.
+ */
+export const SUBSCRIPTION_STATUS = RUN_DIR + '/subscriptions.json';
+
+/* A run whose process is gone (killed, reboot) reads as interrupted. */
+export function readSubscriptionStatus(file) {
+	let status;
+	try {
+		status = json(readfile(file || SUBSCRIPTION_STATUS) || 'null');
+	} catch (e) {
+		status = null;
+	}
+	if (type(status) !== 'object')
+		return { state: 'none' };
+
+	if (status.state === 'running') {
+		const cmdline = readfile(`/proc/${int(status.pid)}/cmdline`);
+		if (!cmdline || index(cmdline, 'update_subscriptions') < 0) {
+			status.state = 'failed';
+			status.error = 'interrupted';
+		}
+	}
+
+	return status;
 };

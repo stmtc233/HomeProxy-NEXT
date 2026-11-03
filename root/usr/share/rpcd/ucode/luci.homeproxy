@@ -10,7 +10,9 @@
 import { access, error, lstat, popen, readfile, rename, writefile, unlink } from 'fs';
 import { cursor } from 'uci';
 
-import { isBinary, isValidPEM, listPlugins, PLUGIN_NAME_RE } from '/etc/homeproxy/scripts/homeproxy.uc';
+import {
+	isBinary, isValidPEM, listPlugins, readSubscriptionStatus, PLUGIN_NAME_RE
+} from '/etc/homeproxy/scripts/homeproxy.uc';
 
 /* Kanged from ucode/luci */
 function shellquote(s) {
@@ -520,6 +522,28 @@ const methods = {
 			return { version: version, error: error() };
 		}
 	},
+	subscription_status: {
+		call: function() {
+			return readSubscriptionStatus();
+		}
+	},
+
+	/* In the background: a download can outlast the RPC timeout, and a
+	   blocking call would stall rpcd. The page polls subscription_status. */
+	subscription_update: {
+		call: function() {
+			const current = readSubscriptionStatus();
+			if (current.state === 'running')
+				return { id: current.id, running: true };
+
+			const id = trim(readfile('/proc/sys/kernel/random/uuid') || '') || `${time()}`;
+			if (system(`${HP_DIR}/scripts/update_subscriptions.uc ${shellquote(id)} </dev/null >/dev/null 2>&1 &`) !== 0)
+				return { error: 'failed to start the update' };
+
+			return { id: id };
+		}
+	},
+
 	resources_update: {
 		args: { type: 'type' },
 		call: function(req) {

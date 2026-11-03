@@ -39,7 +39,7 @@
 | `root/etc/homeproxy/scripts/generate_server.uc` | ucode | UCI → `sing-box-s.json` |
 | `root/etc/homeproxy/scripts/homeproxy.uc` | ucode | 后端共享模块：缺省值 `DEFAULTS`、命令执行、wget、URL/Base64 解析、TLS/传输层对象构建、校验，以及插件运行和配置写出（`writeConfig()`：执行插件 → `sing-box check` → 写入） |
 | `root/etc/homeproxy/scripts/parse_uri.uc` | ucode | 分享链接解析（每个协议一个函数） |
-| `root/etc/homeproxy/scripts/update_subscriptions.uc` | ucode | 订阅拉取、校验、入库 |
+| `root/etc/homeproxy/scripts/update_subscriptions.uc` | ucode | 订阅拉取、校验、入库；由 rpcd `subscription_update` 在后台启动，进度和结果写入 `/var/run/homeproxy/subscriptions.json`（`subscription_status` 读取） |
 | `root/etc/homeproxy/scripts/migrate_config.uc` | ucode | 升级时的 UCI 迁移（由 `uci-defaults/luci-homeproxy-migration` 调用） |
 | `root/etc/homeproxy/scripts/firewall_post.ut` | ucode 模板 | 生成 fw4 nft 规则 |
 | `root/etc/homeproxy/scripts/*.sh` | POSIX sh | kill switch、fw4 名称清单、缺省值（`defaults.sh`）、资源更新、日志清理 |

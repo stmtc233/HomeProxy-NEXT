@@ -12,9 +12,17 @@ msgstr ""
 msgid "%d updated, %d already up to date, %d failed."
 msgstr "%d 项已更新，%d 项已是最新，%d 项失败。"
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "%s added, %s updated, %s removed."
+msgstr "新增 %s 个，更新 %s 个，删除 %s 个。"
+
 #: htdocs/luci-static/resources/view/homeproxy/status.js:206
 msgid "%s log"
 msgstr "%s 日志"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "%s nodes"
+msgstr "%s 个节点"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1542
 msgid "%s nodes removed"
@@ -425,6 +433,10 @@ msgstr "客户端设置"
 msgid "Client version"
 msgstr "客户端版本"
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Close"
+msgstr "关闭"
+
 #: htdocs/luci-static/resources/view/homeproxy/server.js:680
 msgid "Cloudflare"
 msgstr "Cloudflare"
@@ -733,6 +745,10 @@ msgstr "下载带宽"
 #: htdocs/luci-static/resources/view/homeproxy/server.js:534
 msgid "Download bandwidth in Mbps."
 msgstr "下载带宽（单位：Mbps）。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Downloading subscriptions…"
+msgstr "正在下载订阅…"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:837
 #: htdocs/luci-static/resources/view/homeproxy/client.js:843
@@ -1451,6 +1467,10 @@ msgstr ""
 "仅为兼容目的提供旧协议（VMess MD5 认证）支持，不建议使用大于 1 的 alterId。提"
 "供旧协议支持（VMess MD5 身份验证）仅出于兼容性目的，不建议使用 alterId > 1。"
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Last update"
+msgstr "上次更新"
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:374
 msgid "Less compatibility and sometimes better performance."
 msgstr "有时性能更好。"
@@ -1826,10 +1846,6 @@ msgstr "多路复用协议。"
 msgid "NOT RUNNING"
 msgstr "未运行"
 
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1481
-msgid "NOTE: Save current settings before updating subscriptions."
-msgstr "注意：更新订阅前先保存当前配置。"
-
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1376
 msgid "NS"
 msgstr "NS"
@@ -1852,6 +1868,10 @@ msgstr "NaïveProxy"
 #: htdocs/luci-static/resources/view/homeproxy/server.js:905
 msgid "Network"
 msgstr "网络"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Never"
+msgstr "从未更新"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:740
 msgid "New Reno"
@@ -1877,9 +1897,9 @@ msgstr "没有 client() 或 server() 函数"
 msgid "No plugins yet."
 msgstr "还没有插件。"
 
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1498
-msgid "No subscription available"
-msgstr "无可用订阅"
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "No subscription could be updated, the existing nodes are kept."
+msgstr "没有订阅更新成功，已保留现有节点。"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1523
 msgid "No subscription node"
@@ -1901,6 +1921,14 @@ msgstr "节点设置"
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1303
 msgid "Nodes"
 msgstr "节点"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Nodes are already up to date."
+msgstr "节点已是最新。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Nodes were saved, but the service failed to reload. Check the HomeProxy log."
+msgstr "节点已保存，但服务重载失败，请查看 HomeProxy 日志。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1087
 #: htdocs/luci-static/resources/view/homeproxy/node.js:776
@@ -2304,6 +2332,10 @@ msgstr "重载失败（退出码 %d），请在“服务状态”页查看 HomeP
 msgid "Reload failed: %s"
 msgstr "重载失败：%s"
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Reloading service…"
+msgstr "正在重载服务…"
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1498
 msgid "Remote"
 msgstr "远程"
@@ -2461,6 +2493,10 @@ msgstr "规则集 IP CIDR 作为源 IP"
 msgid "Rule set URL"
 msgstr "规则集 URL"
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Saving nodes…"
+msgstr "正在保存节点…"
+
 #: htdocs/luci-static/resources/view/homeproxy/status.js
 msgid "See the HomeProxy log below."
 msgstr "详情见下方 HomeProxy 日志。"
@@ -2493,14 +2529,6 @@ msgstr "Salamander"
 #: htdocs/luci-static/resources/view/homeproxy/status.js:273
 msgid "Save"
 msgstr "保存"
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1483
-msgid "Save current settings"
-msgstr "保存当前设置"
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1480
-msgid "Save subscriptions settings"
-msgstr "保存订阅设置"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1302
 msgid "Send the query before pending race rules are judged (1.14)."
@@ -2686,6 +2714,10 @@ msgstr "抢先查询"
 #: htdocs/luci-static/resources/view/homeproxy/node.js:638
 msgid "Standard (default)"
 msgstr "标准（默认）"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Starting…"
+msgstr "正在启动…"
 
 #: htdocs/luci-static/resources/view/homeproxy/plugins.js
 msgid "Status"
@@ -3121,6 +3153,10 @@ msgstr ""
 "要启用 Tun 支持，你需要安装 <code>ip-full</code> 和 <code>kmod-tun</code>。要"
 "启用 Tun 支持，您需要安装 <code>ip-full</code> 和 <code>kmod-tun</code>。"
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "The update was interrupted, the existing nodes are kept."
+msgstr "更新被中断，已保留现有节点。"
+
 #: htdocs/luci-static/resources/view/homeproxy/status.js:135
 msgid "Trace"
 msgstr "跟踪"
@@ -3205,6 +3241,14 @@ msgstr "UDP 中继模式"
 msgid "UDP timeout"
 msgstr "UDP 超时"
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Unexpected error: %s"
+msgstr "意外错误：%s"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Unsaved changes on this page are saved and applied first."
+msgstr "会先保存并应用本页尚未保存的更改。"
+
 #: htdocs/luci-static/resources/view/homeproxy/status.js
 msgid "Update all"
 msgstr "全部更新"
@@ -3242,10 +3286,6 @@ msgstr "不设置（默认）"
 msgid "Unsupported fingerprint!"
 msgstr "不支持的指纹！"
 
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1495
-msgid "Update %s subscriptions"
-msgstr "更新 %s 个订阅"
-
 #: htdocs/luci-static/resources/view/homeproxy/status.js:89
 msgid "Update failed."
 msgstr "更新失败。"
@@ -3261,6 +3301,10 @@ msgstr "规则集更新间隔。"
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1490
 msgid "Update nodes from subscriptions"
 msgstr "从订阅更新节点"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Update now"
+msgstr "立即更新"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1425
 msgid "Update time"
@@ -3415,6 +3459,14 @@ msgstr "主动连接 UDP"
 msgid "default"
 msgstr "默认"
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "download failed: %s"
+msgstr "下载失败：%s"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "downloading…"
+msgstr "下载中…"
+
 #: htdocs/luci-static/resources/view/homeproxy/status.js:53
 msgid "failed"
 msgstr "失败"
@@ -3441,6 +3493,14 @@ msgstr "gVisor"
 #: htdocs/luci-static/resources/view/homeproxy/server.js:340
 msgid "http"
 msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "no subscription URL configured"
+msgstr "未配置订阅地址"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "no valid node"
+msgstr "没有可用的节点"
 
 #: htdocs/luci-static/resources/homeproxy.js:307
 #: htdocs/luci-static/resources/homeproxy.js:327
@@ -3515,6 +3575,14 @@ msgstr ""
 msgid "sing-box server"
 msgstr "sing-box 服务端"
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "the update did not start"
+msgstr "更新未能启动"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "the update did not start, check the HomeProxy log"
+msgstr "更新未能启动，请查看 HomeProxy 日志"
+
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1199
 msgid "uTLS fingerprint"
 msgstr "uTLS 指纹"
@@ -3549,6 +3617,10 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/server.js:347
 msgid "unshaped"
 msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "unsupported format (Clash/mihomo YAML)"
+msgstr "不支持的格式（Clash/mihomo YAML）"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:521
 #: htdocs/luci-static/resources/view/homeproxy/node.js:684
@@ -3608,6 +3680,10 @@ msgstr "有效端口值"
 #: htdocs/luci-static/resources/homeproxy.js:329
 msgid "valid uuid"
 msgstr "有效 uuid"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "waiting"
+msgstr "等待中"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:808
 msgid "wrong-ack"
@@ -4185,12 +4261,3 @@ msgstr "打开面板"
 #: htdocs/luci-static/resources/view/homeproxy/client.js:180
 msgid "Open the dashboard in a new tab"
 msgstr "在新标签页中打开面板"
-
-msgid "Updating subscriptions..."
-msgstr "正在更新订阅……"
-
-msgid "Another subscription update is running."
-msgstr "另一个订阅更新任务正在运行。"
-
-msgid "Failed to update subscriptions. Check the HomeProxy log."
-msgstr "订阅更新失败，请查看 HomeProxy 日志。"
