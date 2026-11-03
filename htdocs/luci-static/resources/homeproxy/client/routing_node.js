@@ -30,7 +30,9 @@ function loadSelectorChoices(uciconfig, fixed, nodes) {
 		for (let i in nodes)
 			this.value(i, nodes[i]);
 
-		return this.super('load', section_id);
+		let value = this.super('load', section_id);
+		common.listMissing(this, uciconfig, section_id, value);
+		return value;
 	};
 }
 
@@ -140,6 +142,11 @@ return baseclass.extend({
 			_('List of nodes to test.'));
 		for (let i in urltest_choices)
 			so.value(i, urltest_choices[i]);
+		so.load = function(section_id) {
+			let value = this.super('load', section_id);
+			common.listMissing(this, uciconfig, section_id, value);
+			return value;
+		};
 		so.depends('node', 'urltest');
 		so.validate = function(section_id) {
 			let value = this.section.formvalue(section_id, 'urltest_nodes');

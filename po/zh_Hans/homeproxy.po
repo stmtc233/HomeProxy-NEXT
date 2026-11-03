@@ -77,6 +77,10 @@ msgstr "ACME 配置档"
 msgid "ACME profile for certificate issuance (1.14). Example: shortlived."
 msgstr "证书签发使用的 ACME profile（1.14）。示例：shortlived。"
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Add subscription"
+msgstr "添加订阅"
+
 #: htdocs/luci-static/resources/view/homeproxy/status.js
 msgid "All resources"
 msgstr "全部资源"
@@ -1087,6 +1091,10 @@ msgstr "分片 TLS 握手。由于性能较差，请先尝试 <code>%s</code>。
 #: htdocs/luci-static/resources/view/homeproxy/client.js:790
 msgid "Fragment fallback delay"
 msgstr "分片回退延迟"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "From the URL"
+msgstr "取自订阅地址"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:881
 msgid "GET"
@@ -2737,8 +2745,8 @@ msgstr "字符串"
 msgid "Sub (%s)"
 msgstr "订阅（%s）"
 
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1435
-msgid "Subscription URL-s"
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Subscription URL"
 msgstr "订阅地址"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1419
@@ -3029,6 +3037,10 @@ msgstr "基于 sing-box 1.14 的精简代理：化繁为简，够用就好，把
 #: htdocs/luci-static/resources/view/homeproxy/server.js:914
 msgid "The network interface to bind to."
 msgstr "绑定到的网络接口。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "The nodes of a subscription and the routing nodes picking it stay when its URL changes."
+msgstr "更换订阅地址后，订阅的节点和选用它的路由节点保持不变。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1061
 msgid "The path of the DNS server."
@@ -3432,6 +3444,10 @@ msgstr "您的 %s 已成功上传。大小：%sB。"
 #: htdocs/luci-static/resources/view/homeproxy/server.js:669
 msgid "ZeroSSL"
 msgstr "ZeroSSL"
+
+#: htdocs/luci-static/resources/homeproxy/client/common.js
+msgid "[Subscription] %s (deleted)"
+msgstr "[订阅] %s（已删除）"
 
 #: htdocs/luci-static/resources/view/homeproxy/plugins.js
 msgid "a name of letters, digits, - and _ (up to 64)"

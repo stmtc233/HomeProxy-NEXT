@@ -34,20 +34,6 @@ const callUciCommit = rpc.declare({
 	reject: true
 });
 
-/* hash (as the backend reports it) and display name of each subscription URL */
-function subscriptionInfo(urls) {
-	return (urls || []).map((suburl) => {
-		let title;
-		try {
-			const url = new URL(suburl);
-			title = url.hash ? decodeURIComponent(url.hash.slice(1)) : url.hostname;
-		} catch (e) {
-			title = suburl;
-		}
-		return { hash: hp.calcStringMD5(suburl.replace(/#.*$/, '')), title: title };
-	});
-}
-
 function subscriptionError(entry) {
 	switch (entry.error) {
 	case 'fetch':
@@ -92,7 +78,7 @@ function subscriptionSummary(status) {
 function renderSubscriptionStatus(status, info) {
 	const titles = {};
 	for (const sub of info)
-		titles[sub.hash] = sub.title;
+		titles[sub.id] = sub.title;
 
 	const summary = [ subscriptionSummary(status) ];
 	if (status.finished)
@@ -1198,13 +1184,13 @@ return view.extend({
 	},
 
 	/*
-	 * Remove the subscription nodes whose URL is gone (all of them with
-	 * `all`) and the group members pointing at them or at such a
+	 * Remove the nodes of the subscriptions not in `ids` (of all of them
+	 * with `all`) and the group members pointing at them or at such a
 	 * subscription. Routing nodes keep a removed single node: the generator
 	 * blocks it instead of silently going direct.
 	 */
-	removeSubscriptionNodes(urls, all) {
-		const hashes = new Set(subscriptionInfo(urls).map((sub) => sub.hash));
+	removeSubscriptionNodes(ids, all) {
+		const hashes = new Set(ids || []);
 		const removed = new Set();
 		uci.sections('homeproxy', 'node', (node) => {
 			if (node.grouphash && (all || !hashes.has(node.grouphash)))
@@ -1234,7 +1220,7 @@ return view.extend({
 			if (changes && changes.homeproxy)
 				return callUciCommit('homeproxy');
 		}).then(() => {
-			if (!(uci.get('homeproxy', 'subscription', 'subscription_url') || []).length)
+			if (!uci.sections('homeproxy', 'subscription_source').some((res) => res.url))
 				throw new Error(_('no subscription URL configured'));
 
 			return callSubscriptionUpdate();
@@ -1270,8 +1256,7 @@ return view.extend({
 					return wait().then(poll);
 			}
 
-			const info = subscriptionInfo(uci.get('homeproxy', 'subscription', 'subscription_url'));
-			const report = renderSubscriptionStatus(status, info);
+			const report = renderSubscriptionStatus(status, hp.getSubscriptions('homeproxy'));
 			if (status.state === 'running') {
 				dom.content(body, report);
 				return wait().then(poll);
@@ -1303,7 +1288,7 @@ return view.extend({
 		let features = data[1];
 		const subStatus = data[2] || {};
 
-		const subinfo = subscriptionInfo(uci.get(data[0], 'subscription', 'subscription_url'));
+		const subinfo = hp.getSubscriptions(data[0]);
 
 		m = new form.Map('homeproxy', _('Edit nodes'));
 
@@ -1315,7 +1300,7 @@ return view.extend({
 		ss.addremove = true;
 		ss.filter = function(section_id) {
 			for (let info of subinfo)
-				if (info.hash === uci.get(data[0], section_id, 'grouphash'))
+				if (info.id === uci.get(data[0], section_id, 'grouphash'))
 					return false;
 
 			return true;
@@ -1418,15 +1403,50 @@ return view.extend({
 		}
 
 		for (const info of subinfo) {
-			s.tab('sub_' + info.hash, _('Sub (%s)').format(info.title));
-			o = s.taboption('sub_' + info.hash, form.SectionValue, '_sub_' + info.hash, form.GridSection, 'node');
+			s.tab('sub_' + info.id, _('Sub (%s)').format(info.title));
+			o = s.taboption('sub_' + info.id, form.SectionValue, '_sub_' + info.id, form.GridSection, 'node');
 			ss = renderNodeSettings(o.subsection, data, features);
 			ss.filter = function(section_id) {
-				return (uci.get(data[0], section_id, 'grouphash') === info.hash);
+				return (uci.get(data[0], section_id, 'grouphash') === info.id);
 			}
 		}
 
 		s.tab('subscription', _('Subscriptions'));
+
+		o = s.taboption('subscription', form.SectionValue, '_subscription_sources', form.GridSection, 'subscription_source',
+			null, _('Support Hysteria, Shadowsocks, Trojan, v2rayN (VMess), and XTLS (VLESS) online configuration delivery standard.') +
+			'<br/>' + _('The nodes of a subscription and the routing nodes picking it stay when its URL changes.'));
+		ss = o.subsection;
+		ss.addremove = true;
+		ss.anonymous = true;
+		ss.nodescriptions = true;
+		ss.addbtntitle = _('Add subscription');
+		ss.handleAdd = function(ev) {
+			return form.GridSection.prototype.handleAdd.call(this, ev, hp.newSubscriptionId());
+		};
+		ss.handleRemove = function(section_id) {
+			nodeview.removeSubscriptionNodes(hp.getSubscriptions(data[0])
+				.map((sub) => sub.id).filter((id) => id !== section_id));
+			return form.GridSection.prototype.handleRemove.apply(this, arguments);
+		};
+
+		so = ss.option(form.Value, 'label', _('Label'));
+		so.placeholder = _('From the URL');
+
+		so = ss.option(form.Value, 'url', _('Subscription URL'));
+		so.rmempty = false;
+		so.validate = function(section_id, value) {
+			if (section_id) {
+				try {
+					if (!new URL(value).hostname)
+						return _('Expecting: %s').format(_('valid URL'));
+				} catch(e) {
+					return _('Expecting: %s').format(_('valid URL'));
+				}
+			}
+
+			return true;
+		};
 
 		o = s.taboption('subscription', form.Flag, 'auto_update', _('Auto update'),
 			_('Auto update subscriptions and geodata.'));
@@ -1437,31 +1457,6 @@ return view.extend({
 			o.value(i, i + ':00');
 		o.default = '2';
 		o.depends('auto_update', '1');
-
-		o = s.taboption('subscription', form.DynamicList, 'subscription_url', _('Subscription URL-s'),
-			_('Support Hysteria, Shadowsocks, Trojan, v2rayN (VMess), and XTLS (VLESS) online configuration delivery standard.'));
-		o.write = function(section_id, value) {
-			nodeview.removeSubscriptionNodes(value);
-			uci.set('homeproxy', section_id, 'subscription_url', value);
-		};
-		o.remove = function(section_id) {
-			nodeview.removeSubscriptionNodes([]);
-			uci.unset('homeproxy', section_id, 'subscription_url');
-		};
-		o.validate = function(section_id, value) {
-			if (section_id && value) {
-				try {
-					let url = new URL(value);
-					if (!url.hostname)
-						return _('Expecting: %s').format(_('valid URL'));
-				}
-				catch(e) {
-					return _('Expecting: %s').format(_('valid URL'));
-				}
-			}
-
-			return true;
-		}
 
 		o = s.taboption('subscription', form.ListValue, 'filter_nodes', _('Filter nodes'),
 			_('Drop/keep specific nodes from subscriptions.'));
@@ -1517,7 +1512,7 @@ return view.extend({
 		}
 		o.onclick = function() {
 			const count = nodeview.removeSubscriptionNodes(
-				uci.get(data[0], 'subscription', 'subscription_url'), true);
+				hp.getSubscriptions(data[0]).map((sub) => sub.id), true);
 
 			this.inputtitle = _('%s nodes removed').format(count);
 			this.readonly = true;

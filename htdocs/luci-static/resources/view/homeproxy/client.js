@@ -84,19 +84,11 @@ return view.extend({
 		let features = data[1],
 		    hosts = data[2]?.hosts;
 
-		let subinfo = [];
-		for (let suburl of (uci.get(data[0], 'subscription', 'subscription_url') || [])) {
-			try {
-				const url = new URL(suburl);
-				const urlhash = hp.calcStringMD5(suburl.replace(/#.*$/, ''));
-				const title = url.hash ? decodeURIComponent(url.hash.slice(1)) : url.hostname;
-				subinfo.push({ hash: urlhash, title: title });
-			} catch(e) {}
-		}
+		const subinfo = hp.getSubscriptions(data[0]);
 
 		let sub_nodes = {};
 		for (let info of subinfo)
-			sub_nodes[info.hash] = [];
+			sub_nodes[info.id] = [];
 
 		let orphan_sub_nodes = {};
 		let manual_nodes = [];
@@ -126,8 +118,8 @@ return view.extend({
 		let urltest_choices = { 'all-nodes': _('[All nodes]') };
 
 		for (let info of subinfo) {
-			urltest_choices['sub_' + info.hash] = String.format(_('[Subscription] %s (All nodes)'), info.title);
-			for (let node of sub_nodes[info.hash]) {
+			urltest_choices['sub_' + info.id] = String.format(_('[Subscription] %s (All nodes)'), info.title);
+			for (let node of sub_nodes[info.id]) {
 				let text = String.format('[%s] [%s] %s', info.title, node.type, node.label);
 				proxy_nodes[node.id] = text;
 				urltest_choices[node.id] = text;

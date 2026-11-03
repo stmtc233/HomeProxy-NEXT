@@ -7,7 +7,9 @@
 
 'use strict';
 
+import { md5 } from 'digest';
 import { cursor } from 'uci';
+import { urldecode } from 'luci.http';
 import { isEmpty, parseURL, validation } from 'homeproxy';
 
 const uci = cursor();
@@ -237,6 +239,30 @@ uci.foreach(uciconfig, uciserver, (cfg) => {
 	if (!isEmpty(cfg.domain_strategy))
 		uci.delete(uciconfig, cfg['.name'], 'domain_strategy');
 });
+
+/*
+ * Subscriptions used to be a list of URLs and were told apart by the md5 of
+ * the URL, so a new link of the same subscription was a new one: its nodes
+ * and the groups picking it (sub_<md5>) were lost. Each is a section now, its
+ * name the id the nodes (grouphash) and groups refer to. A migrated one keeps
+ * the md5 as its id, so nothing that points at it changes.
+ */
+const legacy_subscription_urls = uci.get(uciconfig, 'subscription', 'subscription_url');
+if (!isEmpty(legacy_subscription_urls)) {
+	for (let suburl in legacy_subscription_urls) {
+		const url = replace(suburl, /#.*$/, ''),
+		      name = match(suburl, /#(.+)$/)?.[1],
+		      id = md5(url);
+		if (uci.get(uciconfig, id))
+			continue;
+
+		uci.set(uciconfig, id, 'subscription_source');
+		uci.set(uciconfig, id, 'url', url);
+		if (name)
+			uci.set(uciconfig, id, 'label', urldecode(name));
+	}
+	uci.delete(uciconfig, 'subscription', 'subscription_url');
+}
 
 if (!isEmpty(uci.changes(uciconfig)))
 	uci.commit(uciconfig);

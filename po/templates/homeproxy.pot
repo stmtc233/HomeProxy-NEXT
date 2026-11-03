@@ -65,6 +65,10 @@ msgstr ""
 msgid "ACME profile for certificate issuance (1.14). Example: shortlived."
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Add subscription"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/status.js
 msgid "All resources"
 msgstr ""
@@ -1049,6 +1053,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:790
 msgid "Fragment fallback delay"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "From the URL"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:881
@@ -2666,8 +2674,8 @@ msgstr ""
 msgid "Sub (%s)"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1435
-msgid "Subscription URL-s"
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Subscription URL"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1419
@@ -2925,6 +2933,10 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/client.js:502
 #: htdocs/luci-static/resources/view/homeproxy/server.js:914
 msgid "The network interface to bind to."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "The nodes of a subscription and the routing nodes picking it stay when its URL changes."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1061
@@ -3316,6 +3328,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:669
 msgid "ZeroSSL"
+msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy/client/common.js
+msgid "[Subscription] %s (deleted)"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/plugins.js

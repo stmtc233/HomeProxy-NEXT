@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: GPL-2.0-only
 //
 // hp.calcStringMD5() must agree with a real MD5 over the UTF-8 bytes: the
-// frontend hashes subscription URLs into sub_<hash> urltest entries and
-// update_subscriptions.uc drops every entry whose hash matches no URL.
+// node names of imported share links are the MD5 of their label, as the
+// backend names subscription nodes.
 
 'use strict';
 

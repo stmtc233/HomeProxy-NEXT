@@ -393,6 +393,31 @@ return baseclass.extend({
 		return o;
 	},
 
+	/*
+	 * The subscriptions as the pages show them. The section name is the id
+	 * that their nodes (grouphash) and the groups picking them (sub_<id>)
+	 * refer to, so a subscription keeps both when its URL changes.
+	 */
+	getSubscriptions(uciconfig) {
+		return uci.sections(uciconfig, 'subscription_source').map((res) => {
+			let title = res.label;
+			if (!title) {
+				try {
+					const url = new URL(res.url);
+					title = url.hash ? decodeURIComponent(url.hash.slice(1)) : url.hostname;
+				} catch (e) {}
+			}
+			return { id: res['.name'], title: title || res['.name'] };
+		});
+	},
+
+	/* a new subscription id, not derived from the URL so that it can change */
+	newSubscriptionId() {
+		const bytes = new Uint8Array(16);
+		crypto.getRandomValues(bytes);
+		return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+	},
+
 	calcStringMD5(e) {
 		let h = (a, b) => {
 			let c, d, e, f, g;

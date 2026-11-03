@@ -31,6 +31,7 @@ const INIT_SCRIPT = '/etc/init.d/homeproxy';
 
 const uciconfig = 'homeproxy',
       ucinode = 'node',
+      ucisource = 'subscription_source',
       ucisubscription = 'subscription';
 
 const FIXED_MEMBERS = ['all-nodes', 'direct-out', 'block-out'];
@@ -88,18 +89,22 @@ function read_settings() {
 	uci.load(uciconfig);
 
 	const get = (option) => uci.get(uciconfig, ucisubscription, option);
-	const subs = [], seen = {};
-	for (let url in (get('subscription_url') || [])) {
-		url = strip_fragment(url);
-		const hash = md5(url);
-		if (!seen[hash]) {
-			seen[hash] = true;
-			push(subs, { url, hash, shown_url: redact(url) });
-		}
-	}
+	/*
+	 * The section name is the subscription's id: the grouphash of its nodes
+	 * and the sub_<id> of the groups. One without URL keeps both.
+	 */
+	const subs = [], known = {};
+	uci.foreach(uciconfig, ucisource, (cfg) => {
+		known[cfg['.name']] = true;
+		if (isEmpty(cfg.url))
+			return;
+		const url = strip_fragment(cfg.url);
+		push(subs, { url, hash: cfg['.name'], shown_url: redact(url) });
+	});
 
 	return {
 		subs,
+		known,
 		allow_insecure: get('allow_insecure') || '0',
 		filter_mode: get('filter_nodes') || DEFAULTS.subscription.filter_nodes,
 		filter_keywords: get('filter_keywords') || [],
@@ -291,14 +296,10 @@ function fetch_subscription(sub, settings, features) {
 
 /*
  * results[hash] holds the fresh nodes of a subscription, or nothing when it
- * failed: those keep their nodes. Nodes of subscriptions that are no longer
- * configured go away.
+ * failed (or has no URL): those keep their nodes. Nodes of subscriptions that
+ * are no longer configured go away.
  */
-function merge_nodes(uci, subs, results) {
-	const configured = {};
-	for (let sub in subs)
-		configured[sub.hash] = true;
-
+function merge_nodes(uci, subs, configured, results) {
 	const sections = [];
 	uci.foreach(uciconfig, ucinode, (cfg) => {
 		if (cfg.grouphash)
@@ -355,11 +356,7 @@ function merge_nodes(uci, subs, results) {
 }
 
 /* drop group members that point at removed nodes or subscriptions */
-function clean_groups(uci, subs) {
-	const configured = {};
-	for (let sub in subs)
-		configured['sub_' + sub.hash] = true;
-
+function clean_groups(uci, configured) {
 	const groups = [];
 	uci.foreach(uciconfig, 'routing_node', (cfg) => {
 		if (cfg.node in ['urltest', 'selector'] && !isEmpty(cfg[cfg.node + '_nodes']))
@@ -373,7 +370,7 @@ function clean_groups(uci, subs) {
 			if (v in FIXED_MEMBERS)
 				return true;
 			if (substr(v, 0, 4) === 'sub_')
-				return !!configured[v];
+				return !!configured[substr(v, 4)];
 			return !!uci.get(uciconfig, v);
 		});
 		if (length(members) !== length(cfg[option])) {
@@ -436,8 +433,8 @@ function main() {
 	/* a fresh cursor: the downloads may have taken a while */
 	const uci = cursor();
 	uci.load(uciconfig);
-	const counts = merge_nodes(uci, settings.subs, results);
-	const groups_changed = clean_groups(uci, settings.subs);
+	const counts = merge_nodes(uci, settings.subs, settings.known, results);
+	const groups_changed = clean_groups(uci, settings.known);
 	uci.commit(uciconfig);
 
 	let reload_failed = false;

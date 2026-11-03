@@ -62,10 +62,17 @@ UC
 sed -i -e "s#__WORK__#$WORK#g" -e "s#__SCRIPTS__#$SCRIPTS#g" "$SCRIPTS/testenv.uc"
 
 fail_url='https://example.com/fail?token=secret'
+# ids as the migration gives them (the md5 of the URL), see the end
+sub_hash="$(printf %s 'https://example.com/sub' | md5sum | cut -c1-32)"
+failed_hash="$(printf %s "$fail_url" | md5sum | cut -c1-32)"
 cat > "$WORK/config/homeproxy" <<UCI
 config homeproxy 'subscription'
- list subscription_url 'https://example.com/sub#name'
- list subscription_url '$fail_url'
+config subscription_source '$sub_hash'
+ option label 'name'
+ option url 'https://example.com/sub'
+config subscription_source '$failed_hash'
+ option url '$fail_url'
+config subscription_source 'nourl'
 config node 'manual'
  option label 'Manual'
  option address 'manual.example'
@@ -79,9 +86,13 @@ config routing_node 'auto'
  option node 'urltest'
  list urltest_nodes 'all-nodes'
  list urltest_nodes 'orphan'
+ list urltest_nodes 'sub_$sub_hash'
+ list urltest_nodes 'sub_gone'
+ list urltest_nodes 'sub_nourl'
+config node 'nourl_node'
+ option grouphash 'nourl'
+ option label 'Kept without URL'
 UCI
-sub_hash="$(printf %s 'https://example.com/sub' | md5sum | cut -c1-32)"
-failed_hash="$(printf %s "$fail_url" | md5sum | cut -c1-32)"
 printf "\nconfig node 'failed'\n option grouphash '%s'\n option label 'Preserved on fetch failure'\n" "$failed_hash" >> "$WORK/config/homeproxy"
 
 run_update() { ucode "$SCRIPTS/update_subscriptions.uc" "$@"; }
@@ -104,6 +115,7 @@ UC
 printf '%s' '[{"type":"trojan","label":"A","address":"example.com","port":443,"password":"one","tls_sni":null,"tls_alpn":[]}]' > "$WORK/run/response"
 run_update run-1
 check "s.id === 'run-1' && s.state === 'done' && s.added === 1 && s.removed === 1" 'first run summary'
+check "length(s.subscriptions) === 2" 'a subscription without URL is left out'
 check "sub.state === 'done' && sub.nodes === 1" 'per-subscription count'
 check "failed.state === 'failed' && failed.error === 'fetch' && index(failed.detail, 'ERROR 404') >= 0" 'per-subscription failure'
 ! grep -q secret "$WORK/run/subscriptions.json" "$WORK/run/homeproxy.log" || fail 'subscription token leaked into status or log'
@@ -128,7 +140,8 @@ check "(function() {
 check "!!u.get('homeproxy', 'failed')" 'failed subscription lost its old nodes'
 check "!u.get('homeproxy', 'orphan') && !!u.get('homeproxy', 'manual')" 'wrong node deleted'
 check "u.get('homeproxy', 'single', 'node') === 'orphan'" 'routing reference was silently reassigned'
-check "join(',', u.get('homeproxy', 'auto', 'urltest_nodes') || []) === 'all-nodes'" 'dangling group member'
+check "join(',', u.get('homeproxy', 'auto', 'urltest_nodes') || []) === 'all-nodes,sub_$sub_hash,sub_nourl'" 'dangling group member'
+check "!!u.get('homeproxy', 'nourl_node')" 'a subscription without URL lost its nodes'
 cp "$WORK/config/homeproxy" "$WORK/before"
 rm "$WORK/run/actions"
 
@@ -177,6 +190,21 @@ echo 1 > "$WORK/run/reload_rc"
 run_update
 rm "$WORK/run/reload_rc" "$WORK/run/actions"
 check "s.state === 'done' && s.reload_failed === true && s.added === 1 && s.removed === 1" 'reload failure reported'
+
+# A new URL of the same subscription keeps its nodes and the groups picking it.
+cat > "$WORK/move.uc" <<UC
+import { cursor } from 'uci';
+const u = cursor('$WORK/config');
+u.set('homeproxy', '$sub_hash', 'url', 'https://example.com/moved?token=new');
+u.commit('homeproxy');
+UC
+ucode "$WORK/move.uc"
+cp "$WORK/config/homeproxy" "$WORK/moved"
+run_update
+check "s.state === 'done' && !s.added && !s.removed && sub.nodes === 1" 'a moved subscription is the same one'
+check "!!u.get('homeproxy', md5('$sub_hash' + 'B'))" 'the node of a moved subscription kept its name'
+check "index(u.get('homeproxy', 'auto', 'urltest_nodes'), 'sub_$sub_hash') >= 0" 'the group kept the moved subscription'
+cmp "$WORK/moved" "$WORK/config/homeproxy" || fail 'a moved subscription changed the config'
 
 # Deleting all nodes must not prevent repopulating from the subscription.
 cat > "$WORK/clear.uc" <<UC
@@ -233,4 +261,38 @@ kill -9 "$holder"
 wait "$holder" 2>/dev/null || true
 trap - EXIT
 
-echo 'PASS: subscription lifecycle, status reporting, field updates, failure preservation, no-op update, process lock and background start'
+# Migration: the old list of URLs becomes one section per subscription, named
+# by the md5 of its URL: the grouphash its nodes and groups already use.
+mkdir -p "$WORK/legacy"
+cat > "$WORK/legacy/homeproxy" <<UCI
+config homeproxy 'migration'
+ option crontab '1'
+config homeproxy 'subscription'
+ option auto_update '0'
+ list subscription_url 'https://example.com/sub#My%20Sub'
+ list subscription_url 'https://example.com/sub#again'
+ list subscription_url '$fail_url'
+UCI
+sed -e "s#cursor()#cursor('$WORK/legacy')#" \
+    -e "s#from 'homeproxy'#from '$SCRIPTS/homeproxy.uc'#" \
+    "$ROOT/root/etc/homeproxy/scripts/migrate_config.uc" > "$SCRIPTS/migrate_config.uc"
+grep -q "cursor('$WORK/legacy')" "$SCRIPTS/migrate_config.uc" || fail 'migration cursor not redirected'
+ucode "$SCRIPTS/migrate_config.uc"
+cat > "$WORK/check-migration.uc" <<UC
+import { cursor } from 'uci';
+const u = cursor('$WORK/legacy');
+const ids = [];
+u.foreach('homeproxy', 'subscription_source', (s) => push(ids, s['.name']));
+if (join(',', ids) !== '$sub_hash,$failed_hash') die(sprintf('ids: %J', ids));
+if (u.get('homeproxy', '$sub_hash', 'url') !== 'https://example.com/sub') die('url keeps the fragment');
+if (u.get('homeproxy', '$sub_hash', 'label') !== 'My Sub') die('label not taken from the fragment');
+if (u.get('homeproxy', '$failed_hash', 'url') !== '$fail_url' || u.get('homeproxy', '$failed_hash', 'label')) die('second subscription');
+if (u.get('homeproxy', 'subscription', 'subscription_url')) die('the list is left behind');
+if (u.get('homeproxy', 'subscription', 'auto_update') !== '0') die('other settings lost');
+UC
+ucode "$WORK/check-migration.uc" || fail 'migration'
+cp "$WORK/legacy/homeproxy" "$WORK/migrated"
+ucode "$SCRIPTS/migrate_config.uc"
+cmp "$WORK/migrated" "$WORK/legacy/homeproxy" || fail 'migrating again changed the config'
+
+echo 'PASS: subscription lifecycle, status reporting, stable ids across URL changes, migration, field updates, failure preservation, no-op update, process lock and background start'

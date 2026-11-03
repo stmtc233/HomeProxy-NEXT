@@ -2654,6 +2654,45 @@
 					}
 				},
 				{
+					"kind": "SectionValue",
+					"name": "_subscription_sources",
+					"description": "subscription_source",
+					"depends": [],
+					"values": [],
+					"props": {},
+					"subsection": {
+						"id": "GridSection:_subscription_sources#2",
+						"kind": "GridSection",
+						"name": "_subscription_sources",
+						"tabs": [],
+						"options": [
+							{
+								"kind": "Value",
+								"name": "label",
+								"title": "Label",
+								"description": null,
+								"depends": [],
+								"values": [],
+								"props": {
+									"placeholder": "From the URL"
+								}
+							},
+							{
+								"kind": "Value",
+								"name": "url",
+								"title": "Subscription URL",
+								"description": null,
+								"depends": [],
+								"values": [],
+								"props": {
+									"rmempty": false
+								}
+							}
+						],
+						"subsection": null
+					}
+				},
+				{
 					"kind": "Flag",
 					"name": "auto_update",
 					"title": "Auto update",
@@ -2776,15 +2815,6 @@
 					"props": {
 						"default": "2"
 					}
-				},
-				{
-					"kind": "DynamicList",
-					"name": "subscription_url",
-					"title": "Subscription URL-s",
-					"description": "Support Hysteria, Shadowsocks, Trojan, v2rayN (VMess), and XTLS (VLESS) online configuration delivery standard.",
-					"depends": [],
-					"values": [],
-					"props": {}
 				},
 				{
 					"kind": "ListValue",
