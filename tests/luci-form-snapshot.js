@@ -148,7 +148,7 @@ const uci = {
 	get: () => undefined,
 	get_first: () => null,
 	get_all: () => ({}),
-	sections: () => {},
+	sections: () => [],
 	foreach: () => {},
 	set: () => {}, add: () => 'section', remove: () => {}, save: () => Promise.resolve()
 };

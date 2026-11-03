@@ -19,6 +19,10 @@
  * setting behind the user's back on the next save.
  */
 function missingLabel(uciconfig, value) {
+	/* a whole subscription that is gone, nodes and all */
+	if (value.startsWith('sub_') && !uci.get(uciconfig, value))
+		return _('[Subscription] %s (deleted)').format(value.slice(4, 12));
+
 	let target = uci.get(uciconfig, value);
 	return target ? _('%s (disabled)').format(target.label || value) : _('%s (deleted)').format(value);
 }
@@ -91,6 +95,7 @@ function copySection(uciconfig, src, name, overrides) {
 }
 
 return baseclass.extend({
+	listMissing: listMissing,
 	uniqueName: uniqueName,
 	copySection: copySection,
 

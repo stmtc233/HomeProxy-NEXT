@@ -5,8 +5,16 @@ msgstr "Content-Type: text/plain; charset=UTF-8"
 msgid "%d updated, %d already up to date, %d failed."
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "%s added, %s updated, %s removed."
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/status.js:206
 msgid "%s log"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "%s nodes"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1542
@@ -55,6 +63,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:654
 msgid "ACME profile for certificate issuance (1.14). Example: shortlived."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Add subscription"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/status.js
@@ -408,6 +420,10 @@ msgstr ""
 msgid "Client version"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Close"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/server.js:680
 msgid "Cloudflare"
 msgstr ""
@@ -713,6 +729,10 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1029
 #: htdocs/luci-static/resources/view/homeproxy/server.js:534
 msgid "Download bandwidth in Mbps."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Downloading subscriptions…"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:837
@@ -1033,6 +1053,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:790
 msgid "Fragment fallback delay"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "From the URL"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:881
@@ -1406,6 +1430,10 @@ msgid ""
 "compatibility purposes only, use of alterId > 1 is not recommended."
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Last update"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:374
 msgid "Less compatibility and sometimes better performance."
 msgstr ""
@@ -1773,10 +1801,6 @@ msgstr ""
 msgid "NOT RUNNING"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1481
-msgid "NOTE: Save current settings before updating subscriptions."
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1376
 msgid "NS"
 msgstr ""
@@ -1798,6 +1822,10 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1192
 #: htdocs/luci-static/resources/view/homeproxy/server.js:905
 msgid "Network"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Never"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:740
@@ -1824,8 +1852,8 @@ msgstr ""
 msgid "No plugins yet."
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1498
-msgid "No subscription available"
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "No subscription could be updated, the existing nodes are kept."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1523
@@ -1847,6 +1875,14 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1303
 msgid "Nodes"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Nodes are already up to date."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Nodes were saved, but the service failed to reload. Check the HomeProxy log."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1087
@@ -2251,6 +2287,10 @@ msgstr ""
 msgid "Reload failed: %s"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Reloading service…"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1498
 msgid "Remote"
 msgstr ""
@@ -2408,6 +2448,10 @@ msgstr ""
 msgid "Rule set URL"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Saving nodes…"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/status.js
 msgid "See the HomeProxy log below."
 msgstr ""
@@ -2439,14 +2483,6 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/status.js:267
 #: htdocs/luci-static/resources/view/homeproxy/status.js:273
 msgid "Save"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1483
-msgid "Save current settings"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1480
-msgid "Save subscriptions settings"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1302
@@ -2616,6 +2652,10 @@ msgstr ""
 msgid "Standard (default)"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Starting…"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/plugins.js
 msgid "Status"
 msgstr ""
@@ -2634,8 +2674,8 @@ msgstr ""
 msgid "Sub (%s)"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1435
-msgid "Subscription URL-s"
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Subscription URL"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1419
@@ -2895,6 +2935,10 @@ msgstr ""
 msgid "The network interface to bind to."
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "The nodes of a subscription and the routing nodes picking it stay when its URL changes."
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1061
 msgid "The path of the DNS server."
 msgstr ""
@@ -3006,6 +3050,10 @@ msgid ""
 "<code>kmod-tun</code>"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "The update was interrupted, the existing nodes are kept."
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/status.js:135
 msgid "Trace"
 msgstr ""
@@ -3090,6 +3138,14 @@ msgstr ""
 msgid "UDP timeout"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Unexpected error: %s"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Unsaved changes on this page are saved and applied first."
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/status.js
 msgid "Update all"
 msgstr ""
@@ -3127,10 +3183,6 @@ msgstr ""
 msgid "Unsupported fingerprint!"
 msgstr ""
 
-#: htdocs/luci-static/resources/view/homeproxy/node.js:1495
-msgid "Update %s subscriptions"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/homeproxy/status.js:89
 msgid "Update failed."
 msgstr ""
@@ -3145,6 +3197,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1490
 msgid "Update nodes from subscriptions"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Update now"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1425
@@ -3274,6 +3330,10 @@ msgstr ""
 msgid "ZeroSSL"
 msgstr ""
 
+#: htdocs/luci-static/resources/homeproxy/client/common.js
+msgid "[Subscription] %s (deleted)"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/plugins.js
 msgid "a name of letters, digits, - and _ (up to 64)"
 msgstr ""
@@ -3298,6 +3358,14 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/server.js:588
 #: htdocs/luci-static/resources/view/homeproxy/server.js:596
 msgid "default"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "download failed: %s"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "downloading…"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/status.js:53
@@ -3325,6 +3393,14 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1063
 #: htdocs/luci-static/resources/view/homeproxy/server.js:340
 msgid "http"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "no subscription URL configured"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "no valid node"
 msgstr ""
 
 #: htdocs/luci-static/resources/homeproxy.js:307
@@ -3394,6 +3470,14 @@ msgstr ""
 msgid "sing-box server"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "the update did not start"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "the update did not start, check the HomeProxy log"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1199
 msgid "uTLS fingerprint"
 msgstr ""
@@ -3425,6 +3509,10 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1075
 #: htdocs/luci-static/resources/view/homeproxy/server.js:347
 msgid "unshaped"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "unsupported format (Clash/mihomo YAML)"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:521
@@ -3484,6 +3572,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/homeproxy.js:329
 msgid "valid uuid"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "waiting"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:808
@@ -3965,13 +4057,4 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:180
 msgid "Open the dashboard in a new tab"
-msgstr ""
-
-msgid "Updating subscriptions..."
-msgstr ""
-
-msgid "Another subscription update is running."
-msgstr ""
-
-msgid "Failed to update subscriptions. Check the HomeProxy log."
 msgstr ""

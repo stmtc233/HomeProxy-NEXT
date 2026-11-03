@@ -188,6 +188,14 @@ common.loadSectionChoices('homeproxy', 'dns_server', {}).call(copy_of_o, 'cfg');
 check(copy_of_o.isValid('cfg') === true && o.missing.cfg.length === 2,
 	'list: a copy of the option (as a modal makes) keeps its own record', copy_of_o.missing);
 
+/* a group member pointing at a subscription that is gone (listMissing, as the routing node lists use it) */
+o = option({ stored: [ 'rn1', 'sub_e9564bd4e1f4cddab025d0a2190368ca' ], formvalue(sid) { return this.form[sid]; },
+	form: { cfg: [ 'rn1', 'sub_e9564bd4e1f4cddab025d0a2190368ca' ] }, keylist: [ 'rn1' ],
+	isValid: () => true, getValidationError: () => '' });
+common.listMissing(o, 'homeproxy', 'cfg', o.stored);
+check(same(o.listed, [ [ 'sub_e9564bd4e1f4cddab025d0a2190368ca', '[Subscription] e9564bd4 (deleted)' ] ]) && o.isValid('cfg') === false,
+	'list: a deleted subscription is named as such and refused, not shown as its raw id', o.listed);
+
 /* rule grids by mode */
 o = { subsection: { sectiontype: 'routing_rule' } };
 const mode_option = option();

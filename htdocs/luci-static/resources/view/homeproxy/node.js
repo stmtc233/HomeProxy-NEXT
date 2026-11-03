@@ -5,14 +5,109 @@
  */
 
 'use strict';
+'require dom';
 'require form';
-'require fs';
+'require rpc';
 'require uci';
 'require ui';
 'require view';
 
 'require homeproxy as hp';
 'require tools.widgets as widgets';
+
+const callSubscriptionStatus = rpc.declare({
+	object: 'luci.homeproxy',
+	method: 'subscription_status',
+	expect: { '': {} }
+});
+
+const callSubscriptionUpdate = rpc.declare({
+	object: 'luci.homeproxy',
+	method: 'subscription_update',
+	expect: { '': {} }
+});
+
+const callUciCommit = rpc.declare({
+	object: 'uci',
+	method: 'commit',
+	params: [ 'config' ],
+	reject: true
+});
+
+function subscriptionError(entry) {
+	switch (entry.error) {
+	case 'fetch':
+		return _('download failed: %s').format(entry.detail || '-');
+	case 'format':
+		return _('unsupported format (Clash/mihomo YAML)');
+	case 'no_nodes':
+		return _('no valid node');
+	default:
+		return entry.error || '-';
+	}
+}
+
+function subscriptionSummary(status) {
+	switch (status.state) {
+	case 'running':
+		return {
+			saving: _('Saving nodes…'),
+			reloading: _('Reloading service…')
+		}[status.stage] || _('Downloading subscriptions…');
+	case 'done':
+		if (status.reload_failed)
+			return _('Nodes were saved, but the service failed to reload. Check the HomeProxy log.');
+		if (!status.added && !status.updated && !status.removed)
+			return _('Nodes are already up to date.');
+		return _('%s added, %s updated, %s removed.').format(status.added || 0, status.updated || 0, status.removed || 0);
+	case 'failed':
+		switch (status.error) {
+		case 'no_nodes':
+			return _('No subscription could be updated, the existing nodes are kept.');
+		case 'interrupted':
+			return _('The update was interrupted, the existing nodes are kept.');
+		default:
+			return _('Unexpected error: %s').format(status.detail || status.error || '-');
+		}
+	default:
+		return _('Never');
+	}
+}
+
+/* `status` as subscription_status returns it */
+function renderSubscriptionStatus(status, info) {
+	const titles = {};
+	for (const sub of info)
+		titles[sub.id] = sub.title;
+
+	const summary = [ subscriptionSummary(status) ];
+	if (status.finished)
+		summary.unshift(new Date(status.finished * 1000).toLocaleString(), ' · ');
+
+	const items = Object.keys(status.subscriptions || {}).map((hash) => {
+		const entry = status.subscriptions[hash];
+		let text;
+		switch (entry.state) {
+		case 'pending':
+			text = _('waiting');
+			break;
+		case 'fetching':
+			text = E('em', { 'class': 'spinning' }, _('downloading…'));
+			break;
+		case 'done':
+			text = _('%s nodes').format(entry.nodes);
+			break;
+		default:
+			text = E('span', { 'style': 'color:#d9534f' }, subscriptionError(entry));
+		}
+		return E('li', [ E('strong', [ titles[hash] || hash.slice(0, 8) ]), ': ', text ]);
+	});
+
+	return E('div', [
+		E('p', { 'class': (status.state === 'running') ? 'spinning' : '' }, summary),
+		items.length ? E('ul', items) : ''
+	]);
+}
 
 function allowInsecureConfirm(ev, _section_id, value) {
 	if (value === '1' && !confirm(_('Are you sure to allow insecure?')))
@@ -1079,7 +1174,8 @@ return view.extend({
 	load() {
 		return Promise.all([
 			uci.load('homeproxy'),
-			hp.getBuiltinFeatures()
+			hp.getBuiltinFeatures(),
+			L.resolveDefault(callSubscriptionStatus(), {})
 		]);
 	},
 
@@ -1087,52 +1183,112 @@ return view.extend({
 		return this.handleSave(ev).then(() => hp.applyChanges(mode == '0'));
 	},
 
-	removeSubscriptionNodes(urls) {
-		const hashes = new Set((urls || []).map(url => hp.calcStringMD5(url.replace(/#.*$/, ''))));
+	/*
+	 * Remove the nodes of the subscriptions not in `ids` (of all of them
+	 * with `all`) and the group members pointing at them or at such a
+	 * subscription. Routing nodes keep a removed single node: the generator
+	 * blocks it instead of silently going direct.
+	 */
+	removeSubscriptionNodes(ids, all) {
+		const hashes = new Set(ids || []);
 		const removed = new Set();
-		uci.sections('homeproxy', 'node', node => {
-			if (node.grouphash && !hashes.has(node.grouphash))
+		uci.sections('homeproxy', 'node', (node) => {
+			if (node.grouphash && (all || !hashes.has(node.grouphash)))
 				removed.add(node['.name']);
 		});
-		removed.forEach(name => uci.remove('homeproxy', name));
-		uci.sections('homeproxy', 'routing_node', node => {
-			for (const option of ['urltest_nodes', 'selector_nodes']) {
+		removed.forEach((name) => uci.remove('homeproxy', name));
+		uci.sections('homeproxy', 'routing_node', (node) => {
+			for (const option of [ 'urltest_nodes', 'selector_nodes' ]) {
 				if (!Array.isArray(node[option]))
 					continue;
-				const members = node[option].filter(name => !removed.has(name) &&
+				const members = node[option].filter((name) => !removed.has(name) &&
 					(!name.startsWith('sub_') || hashes.has(name.slice(4))));
-				uci.set('homeproxy', node['.name'], option, members);
+				if (members.length !== node[option].length)
+					uci.set('homeproxy', node['.name'], option, members);
 			}
+		});
+		return removed.size;
+	},
+
+	/*
+	 * The updater reads the committed config, so pending changes of this
+	 * config are committed first. It runs in the background (a download can
+	 * outlast any RPC timeout) and is followed through its status file.
+	 */
+	updateSubscriptions(map) {
+		return map.save(null, true).then(() => L.resolveDefault(uci.changes(), {})).then((changes) => {
+			if (changes && changes.homeproxy)
+				return callUciCommit('homeproxy');
+		}).then(() => {
+			if (!uci.sections('homeproxy', 'subscription_source').some((res) => res.url))
+				throw new Error(_('no subscription URL configured'));
+
+			return callSubscriptionUpdate();
+		}).then((res) => {
+			if (!res || !res.id)
+				throw new Error((res && res.error) || _('the update did not start'));
+
+			return this.followSubscriptionUpdate(res.id);
+		}).catch((err) => {
+			ui.hideModal();
+			ui.addNotification(null, E('p', _('An error occurred during updating subscriptions: %s').format(
+				(err && err.message) || err)));
 		});
 	},
 
-	updateSubscriptions() {
-		ui.showModal(_('Update nodes from subscriptions'), [
-			E('p', { 'class': 'spinning' }, _('Updating subscriptions...'))
-		]);
-		return fs.exec('/etc/homeproxy/scripts/update_subscriptions.uc').then(res => {
-			if (res.code === 2)
-				throw new Error(_('Another subscription update is running.'));
-			if (res.code !== 0)
-				throw new Error(_('Failed to update subscriptions. Check the HomeProxy log.'));
-			location.reload();
-		}).catch(err => {
-			ui.addNotification(null, E('p', _('An error occurred during updating subscriptions: %s').format(err.message || err)));
-		}).finally(() => ui.hideModal());
+	followSubscriptionUpdate(id) {
+		const body = E('div', [ E('p', { 'class': 'spinning' }, _('Starting…')) ]);
+		const started = Date.now();
+		const wait = () => new Promise((resolve) => setTimeout(resolve, this.pollInterval));
+		let failures = 0;
+
+		ui.showModal(_('Update nodes from subscriptions'), [ body ]);
+
+		const poll = () => callSubscriptionStatus().then((status) => {
+			failures = 0;
+			if (status.id !== id) {
+				/* lost the lock to an update already running (auto update) */
+				if (status.state === 'running')
+					id = status.id;
+				else if (Date.now() - started > 15000)
+					throw new Error(_('the update did not start, check the HomeProxy log'));
+				else
+					return wait().then(poll);
+			}
+
+			const report = renderSubscriptionStatus(status, hp.getSubscriptions('homeproxy'));
+			if (status.state === 'running') {
+				dom.content(body, report);
+				return wait().then(poll);
+			}
+
+			const clean = (status.state === 'done') && !status.reload_failed &&
+				Object.values(status.subscriptions || {}).every((entry) => entry.state === 'done');
+			if (clean)
+				return location.reload();
+
+			dom.content(body, [ report, E('div', { 'class': 'right' }, [
+				E('button', { 'class': 'btn', 'click': () => location.reload() }, [ _('Close') ])
+			]) ]);
+		}, (err) => {
+			/* rpcd can be briefly busy while the service reloads */
+			if (++failures > 5)
+				throw err;
+			return wait().then(poll);
+		});
+
+		return poll();
 	},
+
+	pollInterval: 1000,
 
 	render(data) {
 		const nodeview = this;
 		let m, s, o, ss, so;
 		let features = data[1];
+		const subStatus = data[2] || {};
 
-		let subinfo = [];
-		for (let suburl of (uci.get(data[0], 'subscription', 'subscription_url') || [])) {
-			const url = new URL(suburl);
-			const urlhash = hp.calcStringMD5(suburl.replace(/#.*$/, ''));
-			const title = url.hash ? decodeURIComponent(url.hash.slice(1)) : url.hostname;
-			subinfo.push({ 'hash': urlhash, 'title': title });
-		}
+		const subinfo = hp.getSubscriptions(data[0]);
 
 		m = new form.Map('homeproxy', _('Edit nodes'));
 
@@ -1144,7 +1300,7 @@ return view.extend({
 		ss.addremove = true;
 		ss.filter = function(section_id) {
 			for (let info of subinfo)
-				if (info.hash === uci.get(data[0], section_id, 'grouphash'))
+				if (info.id === uci.get(data[0], section_id, 'grouphash'))
 					return false;
 
 			return true;
@@ -1247,15 +1403,50 @@ return view.extend({
 		}
 
 		for (const info of subinfo) {
-			s.tab('sub_' + info.hash, _('Sub (%s)').format(info.title));
-			o = s.taboption('sub_' + info.hash, form.SectionValue, '_sub_' + info.hash, form.GridSection, 'node');
+			s.tab('sub_' + info.id, _('Sub (%s)').format(info.title));
+			o = s.taboption('sub_' + info.id, form.SectionValue, '_sub_' + info.id, form.GridSection, 'node');
 			ss = renderNodeSettings(o.subsection, data, features);
 			ss.filter = function(section_id) {
-				return (uci.get(data[0], section_id, 'grouphash') === info.hash);
+				return (uci.get(data[0], section_id, 'grouphash') === info.id);
 			}
 		}
 
 		s.tab('subscription', _('Subscriptions'));
+
+		o = s.taboption('subscription', form.SectionValue, '_subscription_sources', form.GridSection, 'subscription_source',
+			null, _('Support Hysteria, Shadowsocks, Trojan, v2rayN (VMess), and XTLS (VLESS) online configuration delivery standard.') +
+			'<br/>' + _('The nodes of a subscription and the routing nodes picking it stay when its URL changes.'));
+		ss = o.subsection;
+		ss.addremove = true;
+		ss.anonymous = true;
+		ss.nodescriptions = true;
+		ss.addbtntitle = _('Add subscription');
+		ss.handleAdd = function(ev) {
+			return form.GridSection.prototype.handleAdd.call(this, ev, hp.newSubscriptionId());
+		};
+		ss.handleRemove = function(section_id) {
+			nodeview.removeSubscriptionNodes(hp.getSubscriptions(data[0])
+				.map((sub) => sub.id).filter((id) => id !== section_id));
+			return form.GridSection.prototype.handleRemove.apply(this, arguments);
+		};
+
+		so = ss.option(form.Value, 'label', _('Label'));
+		so.placeholder = _('From the URL');
+
+		so = ss.option(form.Value, 'url', _('Subscription URL'));
+		so.rmempty = false;
+		so.validate = function(section_id, value) {
+			if (section_id) {
+				try {
+					if (!new URL(value).hostname)
+						return _('Expecting: %s').format(_('valid URL'));
+				} catch(e) {
+					return _('Expecting: %s').format(_('valid URL'));
+				}
+			}
+
+			return true;
+		};
 
 		o = s.taboption('subscription', form.Flag, 'auto_update', _('Auto update'),
 			_('Auto update subscriptions and geodata.'));
@@ -1266,31 +1457,6 @@ return view.extend({
 			o.value(i, i + ':00');
 		o.default = '2';
 		o.depends('auto_update', '1');
-
-		o = s.taboption('subscription', form.DynamicList, 'subscription_url', _('Subscription URL-s'),
-			_('Support Hysteria, Shadowsocks, Trojan, v2rayN (VMess), and XTLS (VLESS) online configuration delivery standard.'));
-		o.write = function(section_id, value) {
-			nodeview.removeSubscriptionNodes(value);
-			uci.set('homeproxy', section_id, 'subscription_url', value);
-		};
-		o.remove = function(section_id) {
-			nodeview.removeSubscriptionNodes([]);
-			uci.unset('homeproxy', section_id, 'subscription_url');
-		};
-		o.validate = function(section_id, value) {
-			if (section_id && value) {
-				try {
-					let url = new URL(value);
-					if (!url.hostname)
-						return _('Expecting: %s').format(_('valid URL'));
-				}
-				catch(e) {
-					return _('Expecting: %s').format(_('valid URL'));
-				}
-			}
-
-			return true;
-		}
 
 		o = s.taboption('subscription', form.ListValue, 'filter_nodes', _('Filter nodes'),
 			_('Drop/keep specific nodes from subscriptions.'));
@@ -1320,56 +1486,35 @@ return view.extend({
 		o.value('packetaddr', _('packet addr (v2ray-core v5+)'));
 		o.value('xudp', _('Xudp (Xray-core)'));
 
-		o = s.taboption('subscription', form.Button, '_save_subscriptions', _('Save subscriptions settings'),
-			_('NOTE: Save current settings before updating subscriptions.'));
+		o = s.taboption('subscription', form.Button, '_update_subscriptions', _('Update nodes from subscriptions'),
+			_('Unsaved changes on this page are saved and applied first.'));
 		o.inputstyle = 'apply';
-		o.inputtitle = _('Save current settings');
-		o.onclick = function() {
-			return this.map.save(null, true).then(() => {
-				hp.applyChanges(true);
-			});
-		}
+		o.inputtitle = _('Update now');
+		o.onclick = () => this.updateSubscriptions(m);
 
-		o = s.taboption('subscription', form.Button, '_update_subscriptions', _('Update nodes from subscriptions'));
-		o.inputstyle = 'apply';
-		o.inputtitle = function(section_id) {
-			let sublist = uci.get(data[0], section_id, 'subscription_url') || [];
-			if (sublist.length > 0) {
-				return _('Update %s subscriptions').format(sublist.length);
-			} else {
-				this.readonly = true;
-				return _('No subscription available')
-			}
-		}
-		o.onclick = () => this.updateSubscriptions();
+		o = s.taboption('subscription', form.DummyValue, '_subscription_status', _('Last update'));
+		o.renderWidget = () => renderSubscriptionStatus(subStatus, subinfo);
 
 		o = s.taboption('subscription', form.Button, '_remove_subscriptions', _('Remove all nodes from subscriptions'));
 		o.inputstyle = 'reset';
 		o.inputtitle = function() {
-			let subnodes = [];
+			let count = 0;
 			uci.sections(data[0], 'node', (res) => {
 				if (res.grouphash)
-					subnodes = subnodes.concat(res['.name'])
+					count++;
 			});
 
-			if (subnodes.length > 0) {
-				return _('Remove %s nodes').format(subnodes.length);
-			} else {
-				this.readonly = true;
-				return _('No subscription node');
-			}
+			if (count > 0)
+				return _('Remove %s nodes').format(count);
+
+			this.readonly = true;
+			return _('No subscription node');
 		}
 		o.onclick = function() {
-			let subnodes = [];
-			uci.sections(data[0], 'node', (res) => {
-				if (res.grouphash)
-					subnodes = subnodes.concat(res['.name'])
-			});
+			const count = nodeview.removeSubscriptionNodes(
+				hp.getSubscriptions(data[0]).map((sub) => sub.id), true);
 
-			for (let i in subnodes)
-				uci.remove(data[0], subnodes[i]);
-
-			this.inputtitle = _('%s nodes removed').format(subnodes.length);
+			this.inputtitle = _('%s nodes removed').format(count);
 			this.readonly = true;
 
 			return this.map.save(null, true);

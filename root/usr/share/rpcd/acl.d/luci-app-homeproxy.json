@@ -15,7 +15,8 @@
 					"plugin_list",
 					"plugin_read",
 					"resources_get_version",
-					"singbox_get_features"
+					"singbox_get_features",
+					"subscription_status"
 				]
 			},
 			"uci": [ "homeproxy" ]
@@ -24,7 +25,6 @@
 			"file": {
 				"/tmp/homeproxy_certificate.tmp": [ "write" ],
 				"/tmp/homeproxy_import.tmp": [ "write" ],
-				"/etc/homeproxy/scripts/update_subscriptions.uc": [ "exec" ],
 				"/etc/init.d/homeproxy": [ "exec" ]
 			},
 			"ubus": {
@@ -37,8 +37,10 @@
 					"plugin_write",
 					"resources_update",
 					"singbox_generator",
+					"subscription_update",
 					"template_apply"
-				]
+				],
+				"uci": [ "commit" ]
 			},
 			"uci": [ "homeproxy" ]
 		}
