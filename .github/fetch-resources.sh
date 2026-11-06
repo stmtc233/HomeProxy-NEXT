@@ -19,6 +19,7 @@ printf "config homeproxy 'config'\n\toption github_token '%s'\n" "$GITHUB_TOKEN"
 
 sed -e "s#^RESOURCES_DIR=.*#RESOURCES_DIR=\"$ROOT/root/etc/homeproxy/resources\"#" \
     -e "s#^RUN_DIR=.*#RUN_DIR=\"$WORK/run\"#" \
+    -e "s#^SCRIPTS_DIR=.*#SCRIPTS_DIR=\"$ROOT/root/etc/homeproxy/scripts\"#" \
     "$ROOT/root/etc/homeproxy/scripts/update_resources.sh" > "$WORK/update_resources.sh"
 
 FAILED=0
