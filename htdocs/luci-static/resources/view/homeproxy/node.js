@@ -95,7 +95,7 @@ function renderSubscriptionStatus(status, info) {
 			text = E('em', { 'class': 'spinning' }, _('downloading…'));
 			break;
 		case 'done':
-			text = _('%s nodes').format(entry.nodes);
+			text = entry.fallback ? _('%s nodes (downloaded directly)').format(entry.nodes) : _('%s nodes').format(entry.nodes);
 			break;
 		default:
 			text = E('span', { 'style': 'color:#d9534f' }, subscriptionError(entry));
@@ -1457,6 +1457,17 @@ return view.extend({
 			o.value(i, i + ':00');
 		o.default = '2';
 		o.depends('auto_update', '1');
+
+		o = s.taboption('subscription', form.Flag, 'update_via_proxy', _('Update through proxy'),
+			_('Download subscriptions and geodata following the routing rules. When disabled, they are always downloaded directly.'));
+		o.default = o.enabled;
+		o.rmempty = false;
+
+		o = s.taboption('subscription', form.Flag, 'update_fallback_direct', _('Fall back to direct connection'),
+			_('Retry directly when a download through the proxy fails.'));
+		o.default = o.enabled;
+		o.rmempty = false;
+		o.depends('update_via_proxy', '1');
 
 		o = s.taboption('subscription', form.ListValue, 'filter_nodes', _('Filter nodes'),
 			_('Drop/keep specific nodes from subscriptions.'));

@@ -5,6 +5,9 @@
 
 NAME="homeproxy"
 
+SCRIPTS_DIR="/etc/$NAME/scripts"
+. "$SCRIPTS_DIR/defaults.sh"
+
 RESOURCES_DIR="/etc/$NAME/resources"
 mkdir -p "$RESOURCES_DIR"
 
@@ -22,6 +25,40 @@ to_upper() {
 
 WGET="wget --timeout=10 -q"
 
+UPDATE_VIA_PROXY="$(uci -q get "$NAME.subscription.update_via_proxy" || echo "$HP_DEFAULT_UPDATE_VIA_PROXY")"
+UPDATE_FALLBACK_DIRECT="$(uci -q get "$NAME.subscription.update_fallback_direct" || echo "$HP_DEFAULT_UPDATE_FALLBACK_DIRECT")"
+
+# The client's direct-in as a proxy URL, empty when the client is not running
+# with it: then nothing intercepts the downloads, they go direct anyway.
+direct_proxy() {
+	[ "$(ubus call service list '{"name":"homeproxy"}' 2>"/dev/null" | \
+		jsonfilter -qe "@.homeproxy.instances['sing-box-c'].running")" = "true" ] || return 0
+	grep -q '"direct-in"' "$RUN_DIR/sing-box-c.json" 2>"/dev/null" || return 0
+	echo "http://127.0.0.1:$(uci -q get "$NAME.infra.direct_port" || echo "$HP_DEFAULT_DIRECT_PORT")"
+}
+DIRECT_PROXY="$(direct_proxy)"
+
+# fetch <listtype> <url> <output> [wget options]: through the routing rules,
+# then past them when that fails (update_via_proxy, update_fallback_direct).
+fetch() {
+	local listtype="$1" url="$2" output="$3"
+	shift 3
+
+	if [ "$UPDATE_VIA_PROXY" = "1" ]; then
+		$WGET "$@" -O "$output" "$url" && return 0
+		local wget_exit=$?
+		rm -f "$output"
+		[ "$UPDATE_FALLBACK_DIRECT" = "1" ] && [ -n "$DIRECT_PROXY" ] || return $wget_exit
+		log "[$(to_upper "$listtype")] Failed to fetch ${url%%\?*} through the proxy (wget exit $wget_exit), retrying directly."
+	fi
+
+	if [ -n "$DIRECT_PROXY" ]; then
+		http_proxy="$DIRECT_PROXY" https_proxy="$DIRECT_PROXY" $WGET "$@" -O "$output" "$url"
+	else
+		$WGET "$@" -O "$output" "$url"
+	fi
+}
+
 # Tried in order; the URL pins the commit, so every mirror serves the same file.
 MIRRORS="fastly.jsdelivr.net gcore.jsdelivr.net cdn.jsdelivr.net raw.githubusercontent.com"
 
@@ -37,7 +74,7 @@ download_list() {
 			url="https://$mirror/gh/$listrepo@$list_sha/$listname"
 		fi
 
-		if $WGET "$url" -O "$output" && [ -s "$output" ]; then
+		if fetch "$listtype" "$url" "$output" && [ -s "$output" ]; then
 			log "[$(to_upper "$listtype")] Downloaded from $mirror."
 			return 0
 		fi
@@ -63,13 +100,15 @@ check_list_update() {
 	fi
 
 	local api_url="https://api.github.com/repos/$listrepo/commits?sha=$listref&path=$listname&per_page=1"
-	local list_info
+	local info_file="$RUN_DIR/update_resources-$listtype.json"
 	if [ -n "$github_token" ]; then
-		list_info="$($WGET --header="Authorization: Bearer $github_token" -O- "$api_url")"
+		fetch "$listtype" "$api_url" "$info_file" --header="Authorization: Bearer $github_token"
 	else
-		list_info="$($WGET -O- "$api_url")"
+		fetch "$listtype" "$api_url" "$info_file"
 	fi
 	local wget_exit=$?
+	local list_info="$(cat "$info_file" 2>"/dev/null")"
+	rm -f "$info_file"
 
 	if [ $wget_exit -ne 0 ]; then
 		log "[$(to_upper "$listtype")] Failed to fetch version info (wget exit $wget_exit)."

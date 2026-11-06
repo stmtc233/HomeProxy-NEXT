@@ -142,6 +142,12 @@ export function load(uci, ubus) {
 
 	ctx.mixed_port = uci.get(uciconfig, uciinfra, 'mixed_port') || DEFAULTS.infra.mixed_port;
 
+	/* the subscription and resource updaters' way past the routing rules, only when they may go direct */
+	const update_via_proxy = uci.get(uciconfig, 'subscription', 'update_via_proxy') || DEFAULTS.subscription.update_via_proxy,
+	      update_fallback_direct = uci.get(uciconfig, 'subscription', 'update_fallback_direct') || DEFAULTS.subscription.update_fallback_direct;
+	if (update_via_proxy !== '1' || update_fallback_direct === '1')
+		ctx.direct_port = uci.get(uciconfig, uciinfra, 'direct_port') || DEFAULTS.infra.direct_port;
+
 	ctx.udp_timeout = uci.get(uciconfig, uciroutingsetting, 'udp_timeout');
 
 	if (match(proxy_mode, /redirect/)) {
