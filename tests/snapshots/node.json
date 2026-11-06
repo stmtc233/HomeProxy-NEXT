@@ -2817,6 +2817,35 @@
 					}
 				},
 				{
+					"kind": "Flag",
+					"name": "update_via_proxy",
+					"title": "Update through proxy",
+					"description": "Download subscriptions and geodata following the routing rules. When disabled, they are always downloaded directly.",
+					"depends": [],
+					"values": [],
+					"props": {
+						"default": "1",
+						"rmempty": false
+					}
+				},
+				{
+					"kind": "Flag",
+					"name": "update_fallback_direct",
+					"title": "Fall back to direct connection",
+					"description": "Retry directly when a download through the proxy fails.",
+					"depends": [
+						[
+							"update_via_proxy",
+							"1"
+						]
+					],
+					"values": [],
+					"props": {
+						"default": "1",
+						"rmempty": false
+					}
+				},
+				{
 					"kind": "ListValue",
 					"name": "filter_nodes",
 					"title": "Filter nodes",

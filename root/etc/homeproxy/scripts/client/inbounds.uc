@@ -28,6 +28,14 @@ export function build(ctx) {
 		set_system_proxy: false
 	});
 
+	if (ctx.direct_port)
+		push(inbounds, {
+			type: 'http',
+			tag: 'direct-in',
+			listen: '127.0.0.1',
+			listen_port: int(ctx.direct_port)
+		});
+
 	if (match(proxy_mode, /redirect/))
 		push(inbounds, {
 			type: 'redirect',

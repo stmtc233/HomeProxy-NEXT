@@ -17,6 +17,10 @@ msgstr ""
 msgid "%s nodes"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "%s nodes (downloaded directly)"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1542
 msgid "%s nodes removed"
 msgstr ""
@@ -732,6 +736,10 @@ msgid "Download bandwidth in Mbps."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Download subscriptions and geodata following the routing rules. When disabled, they are always downloaded directly."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
 msgid "Downloading subscriptions…"
 msgstr ""
 
@@ -999,6 +1007,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/homeproxy.js:261
 msgid "Failed to upload %s, error: %s."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Fall back to direct connection"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/status.js:140
@@ -2373,6 +2385,10 @@ msgstr ""
 msgid "Restart the HomeProxy service"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Retry directly when a download through the proxy fails."
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/server.js:919
 msgid "Reuse address"
 msgstr ""
@@ -3201,6 +3217,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js
 msgid "Update now"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Update through proxy"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1425

@@ -24,6 +24,10 @@ msgstr "%s 日志"
 msgid "%s nodes"
 msgstr "%s 个节点"
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "%s nodes (downloaded directly)"
+msgstr "%s 个节点（已直连下载）"
+
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1542
 msgid "%s nodes removed"
 msgstr "移除了 %s 个节点"
@@ -751,6 +755,10 @@ msgid "Download bandwidth in Mbps."
 msgstr "下载带宽（单位：Mbps）。"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Download subscriptions and geodata following the routing rules. When disabled, they are always downloaded directly."
+msgstr "按路由规则下载订阅和资源列表。关闭后总是直连下载。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
 msgid "Downloading subscriptions…"
 msgstr "正在下载订阅…"
 
@@ -1037,6 +1045,10 @@ msgstr "读取插件 %s 失败：%s"
 #: htdocs/luci-static/resources/homeproxy.js:261
 msgid "Failed to upload %s, error: %s."
 msgstr "上传 %s 失败，错误：%s。"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Fall back to direct connection"
+msgstr "失败时回退到直连"
 
 #: htdocs/luci-static/resources/view/homeproxy/status.js:140
 msgid "Fatal"
@@ -2426,6 +2438,10 @@ msgstr "重启失败：%s"
 msgid "Restart the HomeProxy service"
 msgstr "重启 HomeProxy 服务"
 
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Retry directly when a download through the proxy fails."
+msgstr "通过代理下载失败时改为直连重试。"
+
 #: htdocs/luci-static/resources/view/homeproxy/server.js:919
 msgid "Reuse address"
 msgstr "复用地址"
@@ -3317,6 +3333,10 @@ msgstr "从订阅更新节点"
 #: htdocs/luci-static/resources/view/homeproxy/node.js
 msgid "Update now"
 msgstr "立即更新"
+
+#: htdocs/luci-static/resources/view/homeproxy/node.js
+msgid "Update through proxy"
+msgstr "通过代理更新"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:1425
 msgid "Update time"

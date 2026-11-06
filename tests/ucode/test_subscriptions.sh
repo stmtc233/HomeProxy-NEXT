@@ -34,11 +34,11 @@ SH
 chmod +x "$WORK/init"
 
 cat > "$SCRIPTS/testenv.uc" <<'UC'
-import { popen, readfile } from 'fs';
-import { SUBSCRIPTION_STATUS as STATUS } from '__SCRIPTS__/homeproxy.uc';
+import { open, popen, readfile } from 'fs';
+import { SUBSCRIPTION_STATUS as STATUS, DEFAULTS as PRODUCTION_DEFAULTS } from '__SCRIPTS__/homeproxy.uc';
 export const SUBSCRIPTION_STATUS = STATUS;
 export const RUN_DIR = '__WORK__/run';
-export const DEFAULTS = { subscription: { filter_nodes: 'disabled', packet_encoding: 'xudp' } };
+export const DEFAULTS = PRODUCTION_DEFAULTS;
 function shellQuote(s) { return "'" + replace(s, /'/g, "'\\''") + "'"; }
 export function md5(s) {
 	const p = popen('printf %s ' + shellQuote(s) + ' | md5sum', 'r');
@@ -48,10 +48,21 @@ export function md5(s) {
 };
 export function getTime() { return 'test'; };
 export function isEmpty(v) { return v == null || v === '' || length(v) === 0; };
-export function connect() { return { call: () => ({ with_quic: true }) }; };
-export function wGETVerbose(url, ua) {
+/* the client runs while RUN_DIR/running exists */
+export function connect() {
+	return { call: (obj) => (obj === 'service')
+		? (readfile(RUN_DIR + '/running') ? { homeproxy: { instances: { 'sing-box-c': { running: true } } } } : {})
+		: { with_quic: true } };
+};
+/* every download goes to RUN_DIR/fetches; RUN_DIR/proxy_down fails the ones not sent to a proxy */
+export function wGETVerbose(url, ua, proxy) {
 	if (readfile(RUN_DIR + '/actions')) die('service reloaded before fetch');
 	if (readfile(RUN_DIR + '/throw')) die('fetch exception');
+	const f = open(RUN_DIR + '/fetches', 'a');
+	f.write(url + (proxy ? ' via ' + proxy : '') + '\n');
+	f.close();
+	if (!proxy && readfile(RUN_DIR + '/proxy_down'))
+		return { content: null, error: 'wget exited with status 4: ' + url + ': Connection timed out' };
 	if (index(url, 'https://example.com/fail') === 0)
 		return { content: null, error: 'wget exited with status 8: ' + url + ': ERROR 404' };
 	return { content: readfile(RUN_DIR + '/response') };
@@ -190,6 +201,56 @@ echo 1 > "$WORK/run/reload_rc"
 run_update
 rm "$WORK/run/reload_rc" "$WORK/run/actions"
 check "s.state === 'done' && s.reload_failed === true && s.added === 1 && s.removed === 1" 'reload failure reported'
+
+# A download failing through the proxy is retried directly, through direct-in
+# while the client runs with it; the options turn that off or go direct only.
+set_options() {
+	cat > "$WORK/options.uc" <<UC
+import { cursor } from 'uci';
+const u = cursor('$WORK/config');
+for (let o in ['update_via_proxy', 'update_fallback_direct'])
+	u.delete('homeproxy', 'subscription', o);
+for (let kv in ARGV) {
+	const p = split(kv, '=');
+	u.set('homeproxy', 'subscription', p[0], p[1]);
+}
+u.commit('homeproxy');
+UC
+	ucode "$WORK/options.uc" "$@"
+}
+fetches() { grep -c "$1" "$WORK/run/fetches" 2>/dev/null || true; }
+direct='via http://127.0.0.1:5334'
+cp "$WORK/config/homeproxy" "$WORK/before-fallback"
+echo 1 > "$WORK/run/proxy_down"
+rm -f "$WORK/run/fetches"
+if run_update; then fail 'a dead proxy without the client running succeeded'; fi
+check "sub.state === 'failed' && sub.error === 'fetch'" 'no direct-in to retry through without the client'
+[ "$(fetches "$direct")" -eq 0 ] || fail 'retried through direct-in while the client is not running'
+
+echo 1 > "$WORK/run/running"
+echo '{ "inbounds": [ { "tag": "direct-in" } ] }' > "$WORK/run/sing-box-c.json"
+rm -f "$WORK/run/fetches"
+run_update
+check "sub.state === 'done' && sub.nodes === 1 && sub.fallback === true" 'a dead proxy falls back to direct'
+[ "$(fetches "^https://example.com/sub $direct\$")" -eq 1 ] || fail 'the direct retry did not go through direct-in'
+grep -q 'example.com/sub through the proxy (wget exit.*Connection timed out), retrying directly' "$WORK/run/homeproxy.log" || fail 'the direct retry is not logged'
+! grep -q secret "$WORK/run/subscriptions.json" "$WORK/run/homeproxy.log" || fail 'subscription token leaked by the direct retry'
+cmp "$WORK/before-fallback" "$WORK/config/homeproxy" || fail 'the direct retry changed the nodes'
+
+set_options update_fallback_direct=0
+rm -f "$WORK/run/fetches"
+if run_update; then fail 'update_fallback_direct off still fell back'; fi
+[ "$(fetches via)" -eq 0 ] || fail 'retried directly with update_fallback_direct off'
+
+set_options update_via_proxy=0 update_fallback_direct=0
+rm -f "$WORK/run/fetches"
+run_update
+check "sub.state === 'done' && !sub.fallback" 'update_via_proxy off is no fallback'
+[ "$(fetches via)" -eq 2 ] && [ "$(wc -l < "$WORK/run/fetches")" -eq 2 ] || fail 'update_via_proxy off must download everything through direct-in'
+
+set_options
+rm -f "$WORK/run/proxy_down" "$WORK/run/running" "$WORK/run/sing-box-c.json" "$WORK/run/fetches"
+cmp "$WORK/before-fallback" "$WORK/config/homeproxy" || fail 'the option changes were not undone'
 
 # A new URL of the same subscription keeps its nodes and the groups picking it.
 cat > "$WORK/move.uc" <<UC

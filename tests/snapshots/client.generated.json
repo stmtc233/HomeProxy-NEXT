@@ -41,6 +41,12 @@
 			"set_system_proxy": false
 		},
 		{
+			"type": "http",
+			"tag": "direct-in",
+			"listen": "127.0.0.1",
+			"listen_port": 5334
+		},
+		{
 			"type": "tun",
 			"tag": "tun-in",
 			"interface_name": "singtun0",
@@ -245,6 +251,16 @@
 			{
 				"inbound": "dns-in",
 				"action": "hijack-dns"
+			},
+			{
+				"inbound": "direct-in",
+				"action": "resolve",
+				"server": "default-dns"
+			},
+			{
+				"inbound": "direct-in",
+				"action": "route",
+				"outbound": "direct-out"
 			},
 			{
 				"action": "sniff"

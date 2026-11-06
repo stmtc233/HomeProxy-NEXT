@@ -27,6 +27,10 @@ config homeproxy 'infra'
 	option tun_addr6 'fdfe:dcba:9876::1/126'
 	option tun_mtu '9000'
 	option ntp_server 'nil'
+	option direct_port '5335'
+
+config homeproxy 'subscription'
+	option update_via_proxy '0'
 
 config homeproxy 'routing'
 	option default_outbound_dns 'ds_doh'

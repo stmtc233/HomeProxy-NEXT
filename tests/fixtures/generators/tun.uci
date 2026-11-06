@@ -31,6 +31,9 @@ config homeproxy 'infra'
 	option tun_mtu '1500'
 	option ntp_server 'time.example.com'
 
+config homeproxy 'subscription'
+	option update_fallback_direct '0'
+
 config homeproxy 'control'
 	option bind_interface 'eth1'
 

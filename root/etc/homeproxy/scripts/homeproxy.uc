@@ -35,7 +35,9 @@ export const DEFAULTS = {
 	subscription: {
 		filter_nodes: 'disabled',
 		packet_encoding: 'xudp',
-		auto_update_time: '2'
+		auto_update_time: '2',
+		update_via_proxy: '1',
+		update_fallback_direct: '1'
 	},
 	server: {
 		log_level: 'warn'
@@ -46,6 +48,7 @@ export const DEFAULTS = {
 		redirect_port: '5331',
 		tproxy_port: '5332',
 		dns_port: '5333',
+		direct_port: '5334',
 		dns_redirect: '1',
 		ntp_server: 'nil',
 		tun_name: 'singtun0',
@@ -164,14 +167,16 @@ export function wgetFlavor() {
 	return wget_flavor;
 };
 
-export function wGETVerbose(url, ua) {
+/* `proxy`: an HTTP proxy URL to download through, e.g. the client's direct-in */
+export function wGETVerbose(url, ua, proxy) {
 	if (!url || type(url) !== 'string')
 		return { content: null, error: 'invalid URL' };
 
 	if (!ua)
 		ua = 'Wget/1.21 (HomeProxy, like v2rayN)';
 
-	const output = executeCommand(`/usr/bin/wget ${wgetFlavor() === 'gnu' ? '-nv' : '-q'} -O- -U ${shellQuote(ua)} -T 10 ${shellQuote(url)}`) || {};
+	const env = proxy ? `http_proxy=${shellQuote(proxy)} https_proxy=${shellQuote(proxy)} ` : '';
+	const output = executeCommand(`${env}/usr/bin/wget ${wgetFlavor() === 'gnu' ? '-nv' : '-q'} -O- -U ${shellQuote(ua)} -T 10 ${shellQuote(url)}`) || {};
 	if (output.exitcode !== 0) {
 		let reason = trim(output.stderr || '');
 		reason = reason ? replace(reason, /\s+/g, ' ') : 'no error output';

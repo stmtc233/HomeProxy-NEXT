@@ -8,7 +8,8 @@
  *
  * Downloads every subscription, then merges the nodes into UCI in one go and
  * reloads the service only when something changed. The service keeps running
- * meanwhile, so the downloads use the current routing. Progress goes to
+ * meanwhile, so the downloads use the current routing, and retry past it
+ * when that fails (update_via_proxy / update_fallback_direct). Progress goes to
  * SUBSCRIPTION_STATUS (see homeproxy.uc), which the node page polls: the
  * page starts this script in the background through rpcd, as a download can
  * take longer than any RPC timeout.
@@ -17,7 +18,7 @@
 'use strict';
 
 import { md5 } from 'digest';
-import { open, readlink, rename, writefile } from 'fs';
+import { open, readfile, readlink, rename, writefile } from 'fs';
 import { connect } from 'ubus';
 import { cursor } from 'uci';
 
@@ -84,6 +85,18 @@ function finish(state, extra) {
 	update_lock.close();
 }
 
+/*
+ * The client's direct-in as a proxy URL, null when the client is not running
+ * with it: then nothing intercepts the downloads, they go direct anyway.
+ */
+function direct_proxy(uci) {
+	const instance = connect()?.call('service', 'list', { name: 'homeproxy' })?.homeproxy?.instances?.['sing-box-c'];
+	if (!instance?.running || index(readfile(RUN_DIR + '/sing-box-c.json') || '', '"direct-in"') < 0)
+		return null;
+
+	return 'http://127.0.0.1:' + (uci.get(uciconfig, 'infra', 'direct_port') || DEFAULTS.infra.direct_port);
+}
+
 function read_settings() {
 	const uci = cursor();
 	uci.load(uciconfig);
@@ -109,7 +122,10 @@ function read_settings() {
 		filter_mode: get('filter_nodes') || DEFAULTS.subscription.filter_nodes,
 		filter_keywords: get('filter_keywords') || [],
 		packet_encoding: get('packet_encoding') || DEFAULTS.subscription.packet_encoding,
-		user_agent: get('user_agent')
+		user_agent: get('user_agent'),
+		via_proxy: (get('update_via_proxy') || DEFAULTS.subscription.update_via_proxy) === '1',
+		fallback_direct: (get('update_fallback_direct') || DEFAULTS.subscription.update_fallback_direct) === '1',
+		direct_proxy: direct_proxy(uci)
 	};
 }
 
@@ -213,11 +229,34 @@ function decode_entries(content) {
 	}
 }
 
-/* { nodes: { <section name>: config }, order: [...] }, or { error, detail } */
+function fetch_error(fetched, sub) {
+	return replace(fetched.error || 'empty response', sub.url, sub.shown_url);
+}
+
+/* wGETVerbose's result; `fallback` set when the direct retry delivered it */
+function download(sub, settings) {
+	if (settings.via_proxy) {
+		const fetched = wGETVerbose(sub.url, settings.user_agent);
+		if (!isEmpty(fetched.content) || !settings.fallback_direct || !settings.direct_proxy)
+			return fetched;
+
+		log(sprintf('Failed to fetch %s through the proxy (%s), retrying directly.', sub.shown_url, fetch_error(fetched, sub)));
+	}
+
+	const fetched = wGETVerbose(sub.url, settings.user_agent, settings.direct_proxy);
+	if (settings.via_proxy && !isEmpty(fetched.content)) {
+		log(sprintf('Fetched %s directly.', sub.shown_url));
+		fetched.fallback = true;
+	}
+
+	return fetched;
+}
+
+/* { nodes: { <section name>: config }, order: [...], fallback }, or { error, detail } */
 function fetch_subscription(sub, settings, features) {
-	const fetched = wGETVerbose(sub.url, settings.user_agent);
+	const fetched = download(sub, settings);
 	if (isEmpty(fetched.content)) {
-		const detail = replace(fetched.error || 'empty response', sub.url, sub.shown_url);
+		const detail = fetch_error(fetched, sub);
 		log(sprintf('Failed to fetch resources from %s: %s', sub.shown_url, detail));
 		return { error: 'fetch', detail };
 	}
@@ -291,7 +330,7 @@ function fetch_subscription(sub, settings, features) {
 	}
 
 	log(sprintf('Successfully fetched %s nodes of total %s from %s.', length(order), length(entries), sub.shown_url));
-	return { nodes, order, skipped, filtered };
+	return { nodes, order, skipped, filtered, fallback: fetched.fallback };
 }
 
 /*
@@ -415,6 +454,7 @@ function main() {
 		} else {
 			entry.state = 'done';
 			entry.nodes = length(res.order);
+			entry.fallback = res.fallback;
 			results[sub.hash] = res;
 			fetched++;
 		}

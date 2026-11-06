@@ -163,6 +163,18 @@ export function build(ctx) {
 		default_interface: ctx.default_interface
 	};
 
+	/* direct-in skips the routing rules, and the DNS servers they may send through a dead node */
+	if (ctx.direct_port)
+		splice(route.rules, 1, 0, {
+			inbound: 'direct-in',
+			action: 'resolve',
+			server: 'default-dns'
+		}, {
+			inbound: 'direct-in',
+			action: 'route',
+			outbound: 'direct-out'
+		});
+
 	build_custom(ctx, route);
 
 	if (isEmpty(route.rule_set))
