@@ -12,6 +12,7 @@
 				"luci.homeproxy": [
 					"config_export",
 					"connection_check",
+					"dashboard_status",
 					"plugin_list",
 					"plugin_read",
 					"resources_get_version",

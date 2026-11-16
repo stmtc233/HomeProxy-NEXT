@@ -7,7 +7,7 @@
 
 'use strict';
 
-import { access, error, lstat, popen, readfile, rename, writefile, unlink } from 'fs';
+import { access, error, lsdir, lstat, popen, readfile, rename, writefile, unlink } from 'fs';
 import { cursor } from 'uci';
 
 import {
@@ -25,6 +25,7 @@ function hasKernelModule(kmod) {
 
 const HP_DIR = '/etc/homeproxy';
 const RUN_DIR = '/var/run/homeproxy';
+const DASHBOARD_WEB = `${RUN_DIR}/dashboard/web`;
 
 /* Resource lists the status page may query/update; single source for the two
    methods below (the update path also validates the type against it to keep
@@ -523,6 +524,33 @@ const methods = {
 			return { version: version, error: error() };
 		}
 	},
+	/* sing-box downloads the dashboard in the background and, after a failed
+	   download, only tries again a day later; until then /dashboard/ is a 404
+	   with nothing on the page saying why. */
+	dashboard_status: {
+		call: function() {
+			if (access(`${DASHBOARD_WEB}/index.html`))
+				return { state: 'ready', updated: lstat(`${DASHBOARD_WEB}/.etag`)?.mtime };
+
+			/* unpacked, but not served: index.html is nested too deep in the archive */
+			if (length(filter(lsdir(DASHBOARD_WEB) || [], (f) => f !== '.etag')))
+				return { state: 'invalid' };
+
+			/* the log is cleared on every start, so an error in it is from this run */
+			let err;
+			const fd = popen(`grep -F 'update dashboard: ' ${RUN_DIR}/sing-box-c.log 2>/dev/null | tail -n 1`);
+			if (fd) {
+				const line = fd.read('all') || '';
+				fd.close();
+				const m = match(line, /update dashboard: (.*)/);
+				if (m)
+					err = trim(m[1]);
+			}
+
+			return err ? { state: 'failed', error: err } : { state: 'downloading' };
+		}
+	},
+
 	subscription_status: {
 		call: function() {
 			return readSubscriptionStatus();

@@ -463,6 +463,18 @@ msgstr ""
 msgid "Custom Plugins"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Dashboard download failed: %s. sing-box tries again in 24 hours; restart to try now."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Dashboard downloaded at %s"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Dashboard ready"
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:666
 msgid "DNS"
 msgstr ""
@@ -504,6 +516,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:674
 msgid "DNS01 challenge"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Downloading the dashboard…"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:667
@@ -2746,6 +2762,10 @@ msgstr ""
 msgid "TCP/IP stack."
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "The dashboard archive has no index.html at its top level, so the dashboard is not found. Check the dashboard download URL."
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:673
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1043
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1206
@@ -4078,3 +4098,4 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/client.js:180
 msgid "Open the dashboard in a new tab"
 msgstr ""
+

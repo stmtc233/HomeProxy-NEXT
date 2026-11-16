@@ -480,6 +480,18 @@ msgstr "保守"
 msgid "Custom Plugins"
 msgstr "自定义插件"
 
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Dashboard download failed: %s. sing-box tries again in 24 hours; restart to try now."
+msgstr "面板下载失败：%s。sing-box 将在 24 小时后重试；重启服务可立即重试。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Dashboard downloaded at %s"
+msgstr "面板下载于 %s"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Dashboard ready"
+msgstr "面板已就绪"
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:666
 msgid "DNS"
 msgstr "DNS"
@@ -522,6 +534,10 @@ msgstr "DNS 服务器"
 #: htdocs/luci-static/resources/view/homeproxy/server.js:674
 msgid "DNS01 challenge"
 msgstr "DNS01 验证"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Downloading the dashboard…"
+msgstr "正在下载面板…"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:667
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1200
@@ -2820,6 +2836,10 @@ msgstr "TCP/IP 协议栈"
 msgid "TCP/IP stack."
 msgstr "TCP/IP 协议栈。"
 
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "The dashboard archive has no index.html at its top level, so the dashboard is not found. Check the dashboard download URL."
+msgstr "面板压缩包的顶层没有 index.html，因此打不开面板。请检查面板下载地址。"
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:673
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1043
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1206
@@ -4297,3 +4317,4 @@ msgstr "打开面板"
 #: htdocs/luci-static/resources/view/homeproxy/client.js:180
 msgid "Open the dashboard in a new tab"
 msgstr "在新标签页中打开面板"
+

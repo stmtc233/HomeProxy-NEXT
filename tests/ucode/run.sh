@@ -144,6 +144,9 @@ fi
 echo "== rpcd plugin methods =="
 sh "$ROOT/tests/ucode/test_rpcd_plugins.sh" "$ROOT" "$WORK/rpcd_plugins" || FAILED=1
 
+echo "== rpcd dashboard status =="
+sh "$ROOT/tests/ucode/test_rpcd_dashboard.sh" "$ROOT" "$WORK/rpcd_dashboard" || FAILED=1
+
 echo "== empty subscription groups =="
 sh "$ROOT/tests/ucode/test_empty_groups.sh" "$ROOT" "$WORK/empty_groups" || FAILED=1
 

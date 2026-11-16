@@ -9,6 +9,7 @@
 'require fs';
 'require network';
 'require poll';
+'require rpc';
 'require uci';
 'require ui';
 'require view';
@@ -63,6 +64,32 @@ function dashboardUrl(uciconfig) {
 		host = '[' + host + ']';
 
 	return 'http://' + host + ':' + listen[2] + '/dashboard/';
+}
+
+const callDashboardStatus = rpc.declare({
+	object: 'luci.homeproxy',
+	method: 'dashboard_status',
+	expect: { '': {} }
+});
+
+/* sing-box retries a failed download only a day later, hence the hint to restart */
+function renderDashboardStatus(status) {
+	switch (status?.state) {
+	case 'ready':
+		return status.updated ?
+			_('Dashboard downloaded at %s').format(new Date(status.updated * 1000).toLocaleString()) :
+			_('Dashboard ready');
+	case 'downloading':
+		return E('em', { 'class': 'spinning' }, _('Downloading the dashboard…'));
+	case 'failed':
+		return E('span', { 'style': 'color:#d9534f' },
+			_('Dashboard download failed: %s. sing-box tries again in 24 hours; restart to try now.').format(status.error));
+	case 'invalid':
+		return E('span', { 'style': 'color:#d9534f' },
+			_('The dashboard archive has no index.html at its top level, so the dashboard is not found. Check the dashboard download URL.'));
+	default:
+		return '';
+	}
 }
 
 return view.extend({
@@ -146,6 +173,7 @@ return view.extend({
 		m = new form.Map('homeproxy', _('HomeProxy NEXT'),
 			_('A lean sing-box 1.14 proxy for ImmortalWrt: fewer features, each one done well.'));
 
+		const dashboard_enabled = (uci.get(data[0], 'config', 'dashboard') === '1');
 		const dashboard_url = dashboardUrl(data[0]);
 
 		s = m.section(form.TypedSection);
@@ -153,6 +181,10 @@ return view.extend({
 			const updateStatus = () => hp.getServiceStatus('sing-box-c').then((res) => {
 				let view = document.getElementById('service_status');
 				view.innerHTML = hp.renderStatus(_('HomeProxy NEXT'), features.version, res);
+
+				if (dashboard_enabled)
+					return (res ? L.resolveDefault(callDashboardStatus(), {}) : Promise.resolve({})).then((status) =>
+						document.getElementById('dashboard_status')?.replaceChildren(renderDashboardStatus(status)));
 			});
 			poll.add(updateStatus);
 
@@ -168,7 +200,8 @@ return view.extend({
 						class: 'btn cbi-button cbi-button-action',
 						title: _('Open the dashboard in a new tab'),
 						click: () => window.open(dashboard_url, '_blank', 'noopener')
-					}, [ _('Open dashboard') ]) : ''
+					}, [ _('Open dashboard') ]) : '',
+					dashboard_enabled ? E('span', { id: 'dashboard_status' }) : ''
 			]);
 		}
 
