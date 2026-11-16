@@ -480,6 +480,18 @@ msgstr "保守"
 msgid "Custom Plugins"
 msgstr "自定义插件"
 
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Dashboard download failed: %s."
+msgstr "面板下载失败：%s。"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Dashboard downloaded at %s"
+msgstr "面板下载于 %s"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Dashboard not downloaded yet"
+msgstr "面板尚未下载"
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:666
 msgid "DNS"
 msgstr "DNS"
@@ -522,6 +534,14 @@ msgstr "DNS 服务器"
 #: htdocs/luci-static/resources/view/homeproxy/server.js:674
 msgid "DNS01 challenge"
 msgstr "DNS01 验证"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Download the dashboard again"
+msgstr "重新下载面板"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Downloading the dashboard…"
+msgstr "正在下载面板…"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:667
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1200
@@ -2820,6 +2840,30 @@ msgstr "TCP/IP 协议栈"
 msgid "TCP/IP stack."
 msgstr "TCP/IP 协议栈。"
 
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "the archive could not be downloaded, see the HomeProxy log"
+msgstr "无法下载压缩包，详见 HomeProxy 日志"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "the archive has no index.html at its top level, check the dashboard download URL"
+msgstr "压缩包顶层没有 index.html，请检查面板下载地址"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "the download was interrupted"
+msgstr "下载被中断"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "the file is not a ZIP archive"
+msgstr "下载的文件不是 ZIP 压缩包"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "the files could not be installed, see the HomeProxy log"
+msgstr "文件安装失败，详见 HomeProxy 日志"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "The one downloaded at %s is still in use."
+msgstr "仍在使用 %s 下载的版本。"
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:673
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1043
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1206
@@ -3281,6 +3325,10 @@ msgstr "会先保存并应用本页尚未保存的更改。"
 msgid "Update all"
 msgstr "全部更新"
 
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Update dashboard"
+msgstr "更新面板"
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:124
 #: htdocs/luci-static/resources/view/homeproxy/client.js:153
 #: htdocs/luci-static/resources/view/homeproxy/client.js:469
@@ -3741,6 +3789,10 @@ msgstr "wrong-sequence（默认）"
 msgid "wrong-timestamp"
 msgstr ""
 
+#: htdocs/luci-static/resources/homeproxy/client/routing.js
+msgid "ZIP archive of the dashboard files. Leave empty to use the default sing-box dashboard. HomeProxy downloads it into /var/run/homeproxy/dashboard/web when the service starts (again after a reboot or a change of this URL) and with the scheduled update; the status bar at the top of this page shows the result."
+msgstr "面板文件的 ZIP 压缩包。留空则使用 sing-box 默认面板。HomeProxy 在服务启动时（重启路由器或修改此地址后会重新下载）以及定时更新时将其下载到 /var/run/homeproxy/dashboard/web；下载结果显示在本页顶部的状态栏。"
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1522
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1570
 msgid "{tag} in URL when extra tags are used"
@@ -3890,10 +3942,6 @@ msgstr "API 服务的监听地址和端口。填 127.0.0.1:9090 则仅限本机�
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Dashboard download URL"
 msgstr "Dashboard 下载 URL"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "ZIP archive of the dashboard files. Leave empty to use the default sing-box dashboard. Downloaded into /var/run/homeproxy/dashboard/web and refreshed daily."
-msgstr "Dashboard 文件的 ZIP 压缩包。留空则使用 sing-box 默认 Dashboard。下载到 /var/run/homeproxy/dashboard/web，每天刷新。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "[Subscription] %s (All nodes)"

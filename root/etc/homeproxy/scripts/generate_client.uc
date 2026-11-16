@@ -57,11 +57,10 @@ if (ctx.dashboard_enabled === '1') {
 		listen: listen_match ? listen_match[1] : '0.0.0.0',
 		listen_port: listen_match ? int(listen_match[2]) : 9090,
 		secret: ctx.dashboard_secret,
+		/* the files are downloaded by update_resources.sh, not by sing-box */
 		dashboard: {
 			enabled: true,
-			path: RUN_DIR + '/dashboard/web',
-			download_url: ctx.dashboard_url,
-			http_client: ctx.http_client_for(null)
+			path: RUN_DIR + '/dashboard/web'
 		}
 	}];
 }

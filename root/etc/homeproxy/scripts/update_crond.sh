@@ -13,4 +13,7 @@ done
 
 [ "$changed" -eq 0 ] || /etc/init.d/homeproxy refresh_lists
 
+# sing-box serves the new files right away, nothing to reload
+[ "$(uci -q get homeproxy.config.dashboard)" = "1" ] && "$SCRIPTS_DIR"/update_resources.sh dashboard
+
 "$SCRIPTS_DIR"/update_subscriptions.uc

@@ -12,6 +12,7 @@
 				"luci.homeproxy": [
 					"config_export",
 					"connection_check",
+					"dashboard_status",
 					"plugin_list",
 					"plugin_read",
 					"resources_get_version",
@@ -31,6 +32,7 @@
 				"luci.homeproxy": [
 					"certificate_write",
 					"config_import",
+					"dashboard_update",
 					"log_clean",
 					"plugin_remove",
 					"plugin_set_enabled",

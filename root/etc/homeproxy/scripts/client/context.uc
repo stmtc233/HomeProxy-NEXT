@@ -180,7 +180,6 @@ export function load(uci, ubus) {
 	ctx.dashboard_enabled = uci.get(uciconfig, ucimain, 'dashboard') || '0';
 	ctx.dashboard_listen = uci.get(uciconfig, ucimain, 'dashboard_listen') || DEFAULTS.config.dashboard_listen;
 	ctx.dashboard_secret = uci.get(uciconfig, ucimain, 'dashboard_secret');
-	ctx.dashboard_url = uci.get(uciconfig, ucimain, 'dashboard_url');
 
 	function uci_sections(section_type, cond) {
 		const sections = [];

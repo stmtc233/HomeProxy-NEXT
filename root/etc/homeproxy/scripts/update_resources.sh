@@ -28,11 +28,15 @@ WGET="wget --timeout=10 -q"
 UPDATE_VIA_PROXY="$(uci -q get "$NAME.subscription.update_via_proxy" || echo "$HP_DEFAULT_UPDATE_VIA_PROXY")"
 UPDATE_FALLBACK_DIRECT="$(uci -q get "$NAME.subscription.update_fallback_direct" || echo "$HP_DEFAULT_UPDATE_FALLBACK_DIRECT")"
 
+client_running() {
+	[ "$(ubus call service list '{"name":"homeproxy"}' 2>"/dev/null" | \
+		jsonfilter -qe "@.homeproxy.instances['sing-box-c'].running")" = "true" ]
+}
+
 # The client's direct-in as a proxy URL, empty when the client is not running
 # with it: then nothing intercepts the downloads, they go direct anyway.
 direct_proxy() {
-	[ "$(ubus call service list '{"name":"homeproxy"}' 2>"/dev/null" | \
-		jsonfilter -qe "@.homeproxy.instances['sing-box-c'].running")" = "true" ] || return 0
+	client_running || return 0
 	grep -q '"direct-in"' "$RUN_DIR/sing-box-c.json" 2>"/dev/null" || return 0
 	echo "http://127.0.0.1:$(uci -q get "$NAME.infra.direct_port" || echo "$HP_DEFAULT_DIRECT_PORT")"
 }
@@ -152,7 +156,116 @@ check_list_update() {
 	return 0
 }
 
+DASHBOARD_DIR="$RUN_DIR/dashboard"
+DASHBOARD_STATUS="$RUN_DIR/dashboard.json"
+
+# dashboard_state <running|done|failed> [<error>]: what the client page shows.
+# The time of the last good download is kept across later failures.
+dashboard_state() {
+	local updated="$(cat "$DASHBOARD_DIR/archive.time" 2>"/dev/null")"
+	printf '{"state":"%s","error":"%s","updated":%s}\n' "$1" "$2" "${updated:-null}" \
+		> "$DASHBOARD_STATUS.tmp" && mv -f "$DASHBOARD_STATUS.tmp" "$DASHBOARD_STATUS"
+}
+
+# Unpack the archive into the directory sing-box serves. sing-box finds files
+# there without its .etag, takes them as provided by the user and never
+# downloads on its own, so its once-a-day retry after a failure is out of the
+# way. update_dashboard [boot]: at boot, wait for the client and retry a few
+# times, the WAN or the nodes may not be up yet.
+update_dashboard() {
+	local url="$(uci -q get "$NAME.config.dashboard_url")"
+	[ -n "$url" ] || url="$HP_DEFAULT_DASHBOARD_URL"
+	local web="$DASHBOARD_DIR/web" zip="$DASHBOARD_DIR/archive.zip" new="$DASHBOARD_DIR/web.new"
+
+	exec 201>"$RUN_DIR/update_resources-dashboard.lock"
+	if ! flock -n 201 &> "/dev/null"; then
+		log "[DASHBOARD] A task is already running."
+		return 2
+	fi
+
+	mkdir -p "$DASHBOARD_DIR"
+	dashboard_state running
+
+	local attempts=1 waited=0
+	if [ "$1" = "boot" ]; then
+		attempts=3
+		while ! client_running && [ "$waited" -lt 30 ]; do
+			sleep 1
+			waited=$((waited + 1))
+		done
+		# give the inbounds a moment to listen
+		sleep 2
+		DIRECT_PROXY="$(direct_proxy)"
+	fi
+
+	while :; do
+		rm -f "$zip"
+		fetch dashboard "$url" "$zip" && [ -s "$zip" ] && break
+		rm -f "$zip"
+		attempts=$((attempts - 1))
+		if [ "$attempts" -le 0 ]; then
+			log "[DASHBOARD] Failed to download ${url%%\?*}."
+			dashboard_state failed download
+			return 1
+		fi
+		sleep 30
+	done
+
+	local md5="$(md5sum "$zip" | cut -d ' ' -f1)"
+	if [ "$md5 $url" = "$(cat "$DASHBOARD_DIR/archive.ver" 2>"/dev/null")" ] && [ -f "$web/index.html" ]; then
+		rm -f "$zip"
+		date "+%s" > "$DASHBOARD_DIR/archive.time"
+		dashboard_state done
+		log "[DASHBOARD] You're already at the latest version."
+		return 3
+	fi
+
+	rm -rf "$new"
+	if ! mkdir -p "$new" || ! unzip -qo "$zip" -d "$new" > "/dev/null" 2>&1; then
+		rm -rf "$zip" "$new"
+		log "[DASHBOARD] Failed to unpack the archive (is it a ZIP file? is unzip installed?)."
+		dashboard_state failed unzip
+		return 1
+	fi
+	rm -f "$zip"
+
+	# GitHub archives wrap every file in one <repo>-<branch>/ directory
+	local root="$new"
+	if [ ! -f "$new/index.html" ]; then
+		set -- "$new"/*
+		[ "$#" -eq 1 ] && [ -d "$1" ] && root="$1"
+	fi
+	if [ ! -f "$root/index.html" ]; then
+		rm -rf "$new"
+		log "[DASHBOARD] The archive has no index.html at its top level."
+		dashboard_state failed no_index
+		return 1
+	fi
+
+	# sing-box runs as its own user; unzip keeps the modes stored in the archive
+	chmod -R a+rX "$root"
+	rm -rf "$DASHBOARD_DIR/web.old"
+	[ ! -e "$web" ] || mv -f "$web" "$DASHBOARD_DIR/web.old"
+	if ! mv -f "$root" "$web"; then
+		[ -e "$web" ] || mv -f "$DASHBOARD_DIR/web.old" "$web"
+		rm -rf "$new"
+		log "[DASHBOARD] Failed to install the dashboard (mv failed)."
+		dashboard_state failed install
+		return 1
+	fi
+	rm -rf "$new" "$DASHBOARD_DIR/web.old"
+
+	echo "$md5 $url" > "$DASHBOARD_DIR/archive.ver"
+	date "+%s" > "$DASHBOARD_DIR/archive.time"
+	dashboard_state done
+	log "[DASHBOARD] Successfully updated."
+	return 0
+}
+
 case "$1" in
+"dashboard")
+	update_dashboard "$2"
+	;;
 "china_ip4")
 	check_list_update "$1" "1715173329/IPCIDR-CHINA" "master" "ipv4.txt"
 	;;
@@ -169,7 +282,7 @@ case "$1" in
 	check_list_update "$1" "SagerNet/sing-geosite" "rule-set" "geosite-category-ads-all.srs"
 	;;
 *)
-	echo -e "Usage: $0 <china_ip4 / china_ip6 / geoip_cn / geosite_cn / geosite_ads>"
+	echo -e "Usage: $0 <china_ip4 / china_ip6 / geoip_cn / geosite_cn / geosite_ads / dashboard [boot]>"
 	exit 1
 	;;
 esac

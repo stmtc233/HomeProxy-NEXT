@@ -42,7 +42,7 @@
 | `root/etc/homeproxy/scripts/update_subscriptions.uc` | ucode | 订阅拉取、校验、入库；由 rpcd `subscription_update` 在后台启动，进度和结果写入 `/var/run/homeproxy/subscriptions.json`（`subscription_status` 读取） |
 | `root/etc/homeproxy/scripts/migrate_config.uc` | ucode | 升级时的 UCI 迁移（由 `uci-defaults/luci-homeproxy-migration` 调用；包括把旧的 `subscription_url` 列表迁成 `subscription_source` 分段） |
 | `root/etc/homeproxy/scripts/firewall_post.ut` | ucode 模板 | 生成 fw4 nft 规则 |
-| `root/etc/homeproxy/scripts/*.sh` | POSIX sh | kill switch、fw4 名称清单、缺省值（`defaults.sh`）、资源更新、日志清理 |
+| `root/etc/homeproxy/scripts/*.sh` | POSIX sh | kill switch、fw4 名称清单、缺省值（`defaults.sh`）、资源更新（含面板下载，状态写入 `/var/run/homeproxy/dashboard.json`）、日志清理 |
 | `root/etc/init.d/homeproxy` | POSIX sh (procd) | 启动 / 停止 / 重载，jail 配置，dnsmasq 与 fw4 接入 |
 | `root/usr/share/rpcd/ucode/luci.homeproxy` | ucode | 前端调用的 rpcd 接口（导入导出、证书、生成器、资源更新） |
 | `root/etc/config/homeproxy` | UCI | 默认配置 |

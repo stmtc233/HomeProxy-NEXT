@@ -309,8 +309,7 @@
 			"listen_port": 9090,
 			"dashboard": {
 				"enabled": true,
-				"path": "__WORKDIR__/run/dashboard/web",
-				"http_client": "hp-ss"
+				"path": "__WORKDIR__/run/dashboard/web"
 			}
 		}
 	],
@@ -318,10 +317,6 @@
 		{
 			"tag": "hp-wg",
 			"detour": "wg"
-		},
-		{
-			"tag": "hp-ss",
-			"detour": "ss"
 		}
 	],
 	"experimental": {
