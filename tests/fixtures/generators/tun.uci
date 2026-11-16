@@ -4,7 +4,7 @@
 # with every tun/UDP option, a WireGuard routing node (endpoint) as the
 # default outbound, a direct routing node carrying an override that a UDP
 # rule picks up, a custom NTP server, a bound interface and the dashboard
-# downloading through the default outbound. The keys are test-only.
+# (its download URL no longer reaches sing-box). The keys are test-only.
 
 config homeproxy 'config'
 	option proxy_mode 'redirect_tun'

@@ -21,7 +21,8 @@ export const DEFAULTS = {
 	config: {
 		proxy_mode: 'redirect_tproxy',
 		log_level: 'warn',
-		dashboard_listen: '0.0.0.0:9090'
+		dashboard_listen: '0.0.0.0:9090',
+		dashboard_url: 'https://github.com/SagerNet/sing-box-dashboard/archive/refs/heads/gh-pages.zip'
 	},
 	routing: {
 		default_mode: 'nil',

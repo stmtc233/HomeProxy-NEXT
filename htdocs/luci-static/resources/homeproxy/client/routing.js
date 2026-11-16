@@ -130,7 +130,7 @@ return baseclass.extend({
 		o.rmempty = true;
 
 		o = s.taboption('routing', form.Value, 'dashboard_url', _('Dashboard download URL'),
-			_('ZIP archive of the dashboard files. Leave empty to use the default sing-box dashboard. Downloaded into /var/run/homeproxy/dashboard/web and refreshed daily.'));
+			_('ZIP archive of the dashboard files. Leave empty to use the default sing-box dashboard. HomeProxy downloads it into /var/run/homeproxy/dashboard/web when the service starts (again after a reboot or a change of this URL) and with the scheduled update; the status bar at the top of this page shows the result.'));
 		o.placeholder = 'https://example.com/dashboard.zip';
 		o.depends('dashboard', '1');
 		o.rmempty = true;

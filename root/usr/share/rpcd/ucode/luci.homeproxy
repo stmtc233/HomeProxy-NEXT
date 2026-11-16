@@ -7,7 +7,7 @@
 
 'use strict';
 
-import { access, error, lsdir, lstat, popen, readfile, rename, writefile, unlink } from 'fs';
+import { access, error, lstat, popen, readfile, rename, writefile, unlink } from 'fs';
 import { cursor } from 'uci';
 
 import {
@@ -25,7 +25,6 @@ function hasKernelModule(kmod) {
 
 const HP_DIR = '/etc/homeproxy';
 const RUN_DIR = '/var/run/homeproxy';
-const DASHBOARD_WEB = `${RUN_DIR}/dashboard/web`;
 
 /* Resource lists the status page may query/update; single source for the two
    methods below (the update path also validates the type against it to keep
@@ -524,30 +523,34 @@ const methods = {
 			return { version: version, error: error() };
 		}
 	},
-	/* sing-box downloads the dashboard in the background and, after a failed
-	   download, only tries again a day later; until then /dashboard/ is a 404
-	   with nothing on the page saying why. */
+	/* written by update_resources.sh, which downloads the dashboard */
 	dashboard_status: {
 		call: function() {
-			if (access(`${DASHBOARD_WEB}/index.html`))
-				return { state: 'ready', updated: lstat(`${DASHBOARD_WEB}/.etag`)?.mtime };
+			let status;
+			try {
+				status = json(readfile(`${RUN_DIR}/dashboard.json`) || 'null');
+			} catch (e) {}
+			if (type(status) !== 'object')
+				return { state: 'none' };
 
-			/* unpacked, but not served: index.html is nested too deep in the archive */
-			if (length(filter(lsdir(DASHBOARD_WEB) || [], (f) => f !== '.etag')))
-				return { state: 'invalid' };
-
-			/* the log is cleared on every start, so an error in it is from this run */
-			let err;
-			const fd = popen(`grep -F 'update dashboard: ' ${RUN_DIR}/sing-box-c.log 2>/dev/null | tail -n 1`);
-			if (fd) {
-				const line = fd.read('all') || '';
-				fd.close();
-				const m = match(line, /update dashboard: (.*)/);
-				if (m)
-					err = trim(m[1]);
+			/* killed halfway: nothing holds the lock any more */
+			if (status.state === 'running' &&
+			    system(`flock -n ${RUN_DIR}/update_resources-dashboard.lock true 2>/dev/null`) === 0) {
+				status.state = 'failed';
+				status.error = 'interrupted';
 			}
 
-			return err ? { state: 'failed', error: err } : { state: 'downloading' };
+			return status;
+		}
+	},
+
+	/* in the background: the archive can take longer than the RPC timeout */
+	dashboard_update: {
+		call: function() {
+			if (system(`${HP_DIR}/scripts/update_resources.sh dashboard </dev/null >/dev/null 2>&1 &`) !== 0)
+				return { result: false };
+
+			return { result: true };
 		}
 	},
 

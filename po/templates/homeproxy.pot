@@ -464,7 +464,7 @@ msgid "Custom Plugins"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "Dashboard download failed: %s. sing-box tries again in 24 hours; restart to try now."
+msgid "Dashboard download failed: %s."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
@@ -472,7 +472,7 @@ msgid "Dashboard downloaded at %s"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "Dashboard ready"
+msgid "Dashboard not downloaded yet"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:666
@@ -516,6 +516,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/server.js:674
 msgid "DNS01 challenge"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Download the dashboard again"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
@@ -2763,7 +2767,27 @@ msgid "TCP/IP stack."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "The dashboard archive has no index.html at its top level, so the dashboard is not found. Check the dashboard download URL."
+msgid "the archive could not be downloaded, see the HomeProxy log"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "the archive has no index.html at its top level, check the dashboard download URL"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "the download was interrupted"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "the file is not a ZIP archive"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "the files could not be installed, see the HomeProxy log"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "The one downloaded at %s is still in use."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:673
@@ -3184,6 +3208,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/status.js
 msgid "Update all"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+msgid "Update dashboard"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:124
@@ -3638,6 +3666,10 @@ msgstr ""
 msgid "wrong-timestamp"
 msgstr ""
 
+#: htdocs/luci-static/resources/homeproxy/client/routing.js
+msgid "ZIP archive of the dashboard files. Leave empty to use the default sing-box dashboard. HomeProxy downloads it into /var/run/homeproxy/dashboard/web when the service starts (again after a reboot or a change of this URL) and with the scheduled update; the status bar at the top of this page shows the result."
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1522
 #: htdocs/luci-static/resources/view/homeproxy/client.js:1570
 msgid "{tag} in URL when extra tags are used"
@@ -3689,10 +3721,6 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
 msgid "Dashboard download URL"
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js
-msgid "ZIP archive of the dashboard files. Leave empty to use the default sing-box dashboard. Downloaded into /var/run/homeproxy/dashboard/web and refreshed daily."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js
@@ -4098,4 +4126,3 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/client.js:180
 msgid "Open the dashboard in a new tab"
 msgstr ""
-

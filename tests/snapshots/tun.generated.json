@@ -161,16 +161,8 @@
 			"secret": "test-secret",
 			"dashboard": {
 				"enabled": true,
-				"path": "__WORKDIR__/run/dashboard/web",
-				"download_url": "https://example.com/dashboard.zip",
-				"http_client": "hp-wg"
+				"path": "__WORKDIR__/run/dashboard/web"
 			}
-		}
-	],
-	"http_clients": [
-		{
-			"tag": "hp-wg",
-			"detour": "wg"
 		}
 	],
 	"experimental": {

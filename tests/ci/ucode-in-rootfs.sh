@@ -8,7 +8,7 @@
 ROOT="${1:-/src}"
 
 apk update > "/dev/null" || exit 1
-apk add ucode-mod-digest unshare diffutils || exit 1
+apk add ucode-mod-digest unshare diffutils unzip || exit 1
 
 # rpcd and firewall_post.ut import homeproxy.uc by its installed path, and the
 # firewall template reads the config and resource lists from their installed

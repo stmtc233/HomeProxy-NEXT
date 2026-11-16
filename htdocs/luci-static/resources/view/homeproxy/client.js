@@ -72,23 +72,36 @@ const callDashboardStatus = rpc.declare({
 	expect: { '': {} }
 });
 
-/* sing-box retries a failed download only a day later, hence the hint to restart */
+const callDashboardUpdate = rpc.declare({
+	object: 'luci.homeproxy',
+	method: 'dashboard_update',
+	expect: { '': {} }
+});
+
+/* `status` as dashboard_status returns it (update_resources.sh writes it) */
 function renderDashboardStatus(status) {
+	const updated = status?.updated ? new Date(status.updated * 1000).toLocaleString() : null;
+
 	switch (status?.state) {
-	case 'ready':
-		return status.updated ?
-			_('Dashboard downloaded at %s').format(new Date(status.updated * 1000).toLocaleString()) :
-			_('Dashboard ready');
-	case 'downloading':
+	case 'running':
 		return E('em', { 'class': 'spinning' }, _('Downloading the dashboard…'));
-	case 'failed':
-		return E('span', { 'style': 'color:#d9534f' },
-			_('Dashboard download failed: %s. sing-box tries again in 24 hours; restart to try now.').format(status.error));
-	case 'invalid':
-		return E('span', { 'style': 'color:#d9534f' },
-			_('The dashboard archive has no index.html at its top level, so the dashboard is not found. Check the dashboard download URL.'));
+	case 'done':
+		return _('Dashboard downloaded at %s').format(updated);
+	case 'failed': {
+		const reasons = {
+			download: _('the archive could not be downloaded, see the HomeProxy log'),
+			unzip: _('the file is not a ZIP archive'),
+			no_index: _('the archive has no index.html at its top level, check the dashboard download URL'),
+			install: _('the files could not be installed, see the HomeProxy log'),
+			interrupted: _('the download was interrupted')
+		};
+		return E('span', { 'style': 'color:#d9534f' }, [
+			_('Dashboard download failed: %s.').format(reasons[status.error] || status.error),
+			updated ? ' ' + _('The one downloaded at %s is still in use.').format(updated) : ''
+		]);
+	}
 	default:
-		return '';
+		return _('Dashboard not downloaded yet');
 	}
 }
 
@@ -183,7 +196,7 @@ return view.extend({
 				view.innerHTML = hp.renderStatus(_('HomeProxy NEXT'), features.version, res);
 
 				if (dashboard_enabled)
-					return (res ? L.resolveDefault(callDashboardStatus(), {}) : Promise.resolve({})).then((status) =>
+					return L.resolveDefault(callDashboardStatus(), {}).then((status) =>
 						document.getElementById('dashboard_status')?.replaceChildren(renderDashboardStatus(status)));
 			});
 			poll.add(updateStatus);
@@ -201,6 +214,11 @@ return view.extend({
 						title: _('Open the dashboard in a new tab'),
 						click: () => window.open(dashboard_url, '_blank', 'noopener')
 					}, [ _('Open dashboard') ]) : '',
+					dashboard_enabled ? E('button', {
+						class: 'btn cbi-button cbi-button-action',
+						title: _('Download the dashboard again'),
+						click: ui.createHandlerFn(this, () => callDashboardUpdate().then(updateStatus))
+					}, [ _('Update dashboard') ]) : '',
 					dashboard_enabled ? E('span', { id: 'dashboard_status' }) : ''
 			]);
 		}

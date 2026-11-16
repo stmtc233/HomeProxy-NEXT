@@ -19,7 +19,8 @@ LUCI_DEPENDS:= \
 	+kmod-nft-tproxy \
     +ip-full \
     +kmod-tun \
-	+ucode-mod-digest
+	+ucode-mod-digest \
+	+unzip
 
 PKG_NAME:=luci-app-homeproxy
 PKG_VERSION:=27.919.1.14

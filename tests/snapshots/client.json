@@ -321,7 +321,7 @@
 					"kind": "Value",
 					"name": "dashboard_url",
 					"title": "Dashboard download URL",
-					"description": "ZIP archive of the dashboard files. Leave empty to use the default sing-box dashboard. Downloaded into /var/run/homeproxy/dashboard/web and refreshed daily.",
+					"description": "ZIP archive of the dashboard files. Leave empty to use the default sing-box dashboard. HomeProxy downloads it into /var/run/homeproxy/dashboard/web when the service starts (again after a reboot or a change of this URL) and with the scheduled update; the status bar at the top of this page shows the result.",
 					"depends": [
 						[
 							"dashboard",

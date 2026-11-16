@@ -406,7 +406,6 @@ add_client_instance() {
 	procd_append_param command run --config "$RUN_DIR/sing-box-c.json"
 
 	[ "$disable_gso" -eq "1" ] && procd_set_param env "QUIC_GO_DISABLE_GSO"="true"
-	[ "$dashboard" = "1" ] && procd_append_param env "TMPDIR=$DASHBOARD_DIR/tmp"
 
 	if [ -x "/sbin/ujail" ] && ! grep -Eq '"type": "(wireguard|tun)"' "$RUN_DIR/sing-box-c.json"; then
 		procd_add_jail "sing-box-c" log procfs
@@ -417,7 +416,7 @@ add_client_instance() {
 		# path, so this parent cannot shadow the read-write cache.db below.
 		procd_add_jail_mount "$HP_DIR/"
 		procd_add_jail_mount_rw "$HP_DIR/cache.db"
-		[ "$dashboard" = "1" ] && procd_add_jail_mount_rw "$DASHBOARD_DIR/"
+		[ "$dashboard" = "1" ] && procd_add_jail_mount "$DASHBOARD_DIR/"
 		procd_add_jail_mount "$HP_DIR/certs/"
 		procd_add_jail_mount "/etc/acme/"
 		procd_add_jail_mount "/etc/ssl/"
@@ -529,6 +528,22 @@ add_helper_instances() {
 	fi
 }
 
+dashboard_prepare() {
+	# left by the downloader of sing-box (r39 and earlier): with it, sing-box would
+	# keep updating the files itself
+	rm -rf "$DASHBOARD_DIR/tmp" "$DASHBOARD_DIR/web/.etag"
+	[ -f "$DASHBOARD_DIR/web/index.html" ] && return 0
+	rm -f "$DASHBOARD_DIR/archive.ver"
+	mkdir -p "$DASHBOARD_DIR/web" || return 1
+	cat > "$DASHBOARD_DIR/web/index.html" <<-'EOF'
+		<!DOCTYPE html>
+		<html><head><meta charset="utf-8"><meta http-equiv="refresh" content="10">
+		<title>HomeProxy NEXT</title></head>
+		<body><p>The dashboard is not downloaded yet. The client page of HomeProxy NEXT
+		shows the download status; this page reloads by itself.</p></body></html>
+	EOF
+}
+
 # Files and directories the jailed sing-box (user sing-box) reads or writes.
 prepare_runtime_files() {
 	local client_mode="$1" server_enabled="$2" dashboard="$3"
@@ -543,15 +558,22 @@ prepare_runtime_files() {
 	chown -R sing-box:sing-box "$HP_DIR/ruleset" 2>"/dev/null" \
 		|| log "Warning: failed to hand ${HP_DIR}/ruleset to sing-box."
 
-	# The jailed client has no writable /tmp, and the flash overlay is often too
-	# small for the dashboard, so it lives in RAM under RUN_DIR (re-downloaded
-	# after a reboot). The archive and the unpacked files share one read-write
-	# mount so that sing-box never has to rename across filesystems.
+	# The flash overlay is often too small for the dashboard, so it lives in
+	# RAM under RUN_DIR (downloaded again after a reboot). update_resources.sh
+	# downloads it, not sing-box: sing-box retries a failed download only a
+	# day later and tells nobody but its log. Until the files are there, a
+	# placeholder page says so instead of a 404; with any files in the
+	# directory, sing-box never starts a download of its own.
 	rm -rf "$HP_DIR/dashboard"
 	if [ "$dashboard" = "1" ] && [ "$client_mode" != "nil" ]; then
-		mkdir -p "$DASHBOARD_DIR/tmp" \
-			&& chown -R sing-box:sing-box "$DASHBOARD_DIR" 2>"/dev/null" \
-			|| log "Warning: failed to prepare ${DASHBOARD_DIR} for sing-box."
+		dashboard_prepare || log "Warning: failed to prepare ${DASHBOARD_DIR}."
+		local dashboard_url
+		config_get dashboard_url "config" "dashboard_url" "$HP_DEFAULT_DASHBOARD_URL"
+		[ -n "$dashboard_url" ] || dashboard_url="$HP_DEFAULT_DASHBOARD_URL"
+		# again when the URL changed; the archive.ver line is "<md5> <url>"
+		if [ "$(cut -d ' ' -f2- "$DASHBOARD_DIR/archive.ver" 2>"/dev/null")" != "$dashboard_url" ]; then
+			"$HP_DIR/scripts/update_resources.sh" dashboard boot </dev/null >/dev/null 2>&1 &
+		fi
 	fi
 
 	[ "$client_mode" = "nil" ] || echo > "$RUN_DIR/sing-box-c.log"
