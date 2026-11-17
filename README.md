@@ -39,7 +39,7 @@ HomeProxy NEXT 是一个**以自用为主**的 LuCI 代理模块，源自 [Immor
 ## 运行要求
 
 - ImmortalWrt / OpenWrt ≥ 24.10（apk 或 opkg 均可安装）
-- sing-box ≥ 1.14.0（低于 1.14 时服务拒绝启动，并在日志中说明原因）
+- sing-box ≥ 1.14.0 或 sing-box-tiny ≥ 1.14.0（低于 1.14 时服务拒绝启动，并在日志中说明原因）
 - firewall4（nftables）
 
 ## 安装
@@ -47,6 +47,12 @@ HomeProxy NEXT 是一个**以自用为主**的 LuCI 代理模块，源自 [Immor
 从本仓库的 [Releases](../../releases) 下载对应包管理器的安装包（`luci-app-homeproxy-*.apk` 或 `*.ipk`，以及可选的 `luci-i18n-homeproxy-zh-cn-*`）：
 
 ```sh
+# 1. 安装核心（根据需要选择完整版 sing-box 或体积更小的 sing-box-tiny，亦可手动放置二进制到 /usr/bin/sing-box）
+opkg update && opkg install sing-box
+# 或: opkg update && opkg install sing-box-tiny
+# apk 对应为: apk add sing-box 或 apk add sing-box-tiny
+
+# 2. 安装 HomeProxy NEXT
 # apk（ImmortalWrt / OpenWrt 25.x）
 apk add --allow-untrusted luci-app-homeproxy-*.apk luci-i18n-homeproxy-zh-cn-*.apk
 

@@ -7,18 +7,15 @@ include $(TOPDIR)/rules.mk
 
 LUCI_TITLE:=HomeProxy NEXT - a lean sing-box 1.14 proxy for ImmortalWrt
 # Pure ucode/JS payload with no compiled code, so the package itself is arch
-# independent. The real arch constraint comes from the +sing-box dependency,
-# which the feed builds for every architecture Go supports (aarch64, arm,
-# mipsel, riscv64, x86_64, ...); where no sing-box package exists, dependency
-# resolution refuses the install. Checked against the ImmortalWrt 25.12.1
-# package index (sing-box 1.14.0-r1 published for all of the above).
+# independent. sing-box (or sing-box-tiny) >= 1.14 is required at runtime, but
+# not listed in LUCI_DEPENDS so that removing or switching the core package
+# does not cascade into removing luci-app-homeproxy, and custom binaries work.
 LUCI_PKGARCH:=all
 LUCI_DEPENDS:= \
-	+sing-box \
 	+firewall4 \
 	+kmod-nft-tproxy \
-    +ip-full \
-    +kmod-tun \
+	+ip-full \
+	+kmod-tun \
 	+ucode-mod-digest \
 	+unzip
 
