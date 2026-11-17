@@ -6,3 +6,8 @@
 # luci-app-homeproxy-pro.
 /docs/
 /scratch/
+
+# Build artifacts and downloaded dashboard files
+/root/etc/homeproxy/dashboard/
+*.apk
+*.ipk

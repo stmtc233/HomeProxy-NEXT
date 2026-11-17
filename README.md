@@ -44,7 +44,11 @@ HomeProxy NEXT 是一个**以自用为主**的 LuCI 代理模块，源自 [Immor
 
 ## 安装
 
-从本仓库的 [Releases](../../releases) 下载对应包管理器的安装包（`luci-app-homeproxy-*.apk` 或 `*.ipk`，以及可选的 `luci-i18n-homeproxy-zh-cn-*`）：
+从本仓库的 [Releases](../../releases) 下载对应包管理器的安装包（分为标准精简版与自带面板版，语言包通用）：
+
+- **标准精简版**：`luci-app-homeproxy-*.apk` / `*.ipk`（体积小，开启面板时后台按需下载）
+- **自带面板版**：`luci-app-homeproxy-dashboard-*.apk` / `*.ipk`（内置 sing-box 官方 Dashboard 静态文件，开箱即用，无需联网拉取面板，适合无代理初装或离线环境）
+- **中文语言包**：`luci-i18n-homeproxy-zh-cn-*.apk` / `*.ipk`（可选，两种版本通用）
 
 ```sh
 # 1. 安装核心（根据需要选择完整版 sing-box 或体积更小的 sing-box-tiny，亦可手动放置二进制到 /usr/bin/sing-box）
@@ -52,7 +56,7 @@ opkg update && opkg install sing-box
 # 或: opkg update && opkg install sing-box-tiny
 # apk 对应为: apk add sing-box 或 apk add sing-box-tiny
 
-# 2. 安装 HomeProxy NEXT
+# 2. 安装 HomeProxy NEXT（以标准版为例，若安装自带面板版则替换为 luci-app-homeproxy-dashboard-*.apk/ipk）
 # apk（ImmortalWrt / OpenWrt 25.x）
 apk add --allow-untrusted luci-app-homeproxy-*.apk luci-i18n-homeproxy-zh-cn-*.apk
 

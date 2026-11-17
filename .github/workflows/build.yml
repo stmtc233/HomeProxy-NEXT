@@ -88,7 +88,7 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
         run: |
           sudo -E apt-get update -qq
-          sudo -E apt-get install -y build-essential curl fakeroot libssl-dev lua5.1 meson ninja-build
+          sudo -E apt-get install -y build-essential curl fakeroot libssl-dev lua5.1 meson ninja-build unzip
 
           if [ "${{ steps.cache-apk-tools.outputs.cache-hit }}" != "true" ]; then
             pushd apk-tools
@@ -124,17 +124,30 @@ jobs:
           command -v apk >/dev/null || { echo "::error::apk 未正确安装"; exit 1; }
           command -v po2lmo >/dev/null || { echo "::error::po2lmo 未正确安装"; exit 1; }
           command -v ipkg-build >/dev/null || { echo "::error::ipkg-build 未正确安装"; exit 1; }
+          command -v unzip >/dev/null || { echo "::error::unzip 未正确安装"; exit 1; }
           apk --version
 
       - name: Build packages (apk + ipk)
         run: |
+          # 1. 编译标准版本（精简版，不含内置面板）及语言包
           fakeroot bash .github/build-pkg.sh apk "${{ github.event_name }}"
           fakeroot bash .github/build-pkg.sh ipk "${{ github.event_name }}"
+
+          # 2. 拉取 sing-box 官方面板静态文件
+          bash .github/fetch-dashboard.sh
+
+          # 3. 编译自带面板文件的版本
+          fakeroot bash .github/build-pkg.sh apk "${{ github.event_name }}" dashboard
+          fakeroot bash .github/build-pkg.sh ipk "${{ github.event_name }}" dashboard
+
+          # 4. 清理工作区拉取的面板文件，避免污染后续步骤或工作树
+          rm -rf root/etc/homeproxy/dashboard
+
           shopt -s nullglob
           apks=(.github/*.apk)
           ipks=(.github/*.ipk)
-          if [ "${#apks[@]}" -eq 0 ] || [ "${#ipks[@]}" -eq 0 ]; then
-            echo "::error::未生成预期的 apk/ipk 文件"
+          if [ "${#apks[@]}" -lt 2 ] || [ "${#ipks[@]}" -lt 2 ]; then
+            echo "::error::未生成预期的标准版及自带面板版 apk/ipk 文件"
             exit 1
           fi
           printf '生成的包:\n%s\n' "${apks[@]}" "${ipks[@]}"

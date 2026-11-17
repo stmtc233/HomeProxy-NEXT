@@ -550,6 +550,26 @@ dashboard_prepare() {
 	# keep updating the files itself
 	rm -rf "$DASHBOARD_DIR/tmp" "$DASHBOARD_DIR/web/.etag"
 	[ -f "$DASHBOARD_DIR/web/index.html" ] && return 0
+
+	mkdir -p "$DASHBOARD_DIR" || return 1
+
+	if [ -f "$HP_DIR/dashboard/web/index.html" ]; then
+		ln -sfn "$HP_DIR/dashboard/web" "$DASHBOARD_DIR/web"
+		if [ -f "$HP_DIR/dashboard/archive.ver" ]; then
+			cp -f "$HP_DIR/dashboard/archive.ver" "$DASHBOARD_DIR/archive.ver"
+		else
+			local default_url
+			config_get default_url "config" "dashboard_url" "$HP_DEFAULT_DASHBOARD_URL"
+			[ -n "$default_url" ] || default_url="$HP_DEFAULT_DASHBOARD_URL"
+			echo "bundled $default_url" > "$DASHBOARD_DIR/archive.ver"
+		fi
+		date "+%s" > "$DASHBOARD_DIR/archive.time"
+		local updated="$(cat "$DASHBOARD_DIR/archive.time" 2>"/dev/null")"
+		printf '{"state":"done","error":"","updated":%s}\n' "${updated:-null}" \
+			> "$RUN_DIR/dashboard.json.tmp" && mv -f "$RUN_DIR/dashboard.json.tmp" "$RUN_DIR/dashboard.json"
+		return 0
+	fi
+
 	rm -f "$DASHBOARD_DIR/archive.ver"
 	mkdir -p "$DASHBOARD_DIR/web" || return 1
 	cat > "$DASHBOARD_DIR/web/index.html" <<-'EOF'
@@ -581,7 +601,7 @@ prepare_runtime_files() {
 	# day later and tells nobody but its log. Until the files are there, a
 	# placeholder page says so instead of a 404; with any files in the
 	# directory, sing-box never starts a download of its own.
-	rm -rf "$HP_DIR/dashboard"
+	[ -f "$HP_DIR/dashboard/web/index.html" ] || rm -rf "$HP_DIR/dashboard"
 	if [ "$dashboard" = "1" ] && [ "$client_mode" != "nil" ]; then
 		dashboard_prepare || log "Warning: failed to prepare ${DASHBOARD_DIR}."
 		local dashboard_url

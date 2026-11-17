@@ -7,6 +7,7 @@ HomeProxy NEXT 的版本号沿用 `27.919.1.14-rN`（`Makefile` 中的 `PKG_VERS
 
 | 领域 | 变更 |
 | --- | --- |
+| **构建与打包** | 编译工作流（CI）增加编译自带面板文件的版本：通过 `.github/fetch-dashboard.sh` 下载解压 sing-box 官方 Dashboard（gh-pages）并打包为 `luci-app-homeproxy-dashboard-*.apk` / `.ipk`，免去首次启动或离线环境下下载面板的等待，服务启动时自动挂载识别；同时保留标准精简版本 |
 | **状态显示** | 状态栏明确显示当前运行的核心变体（`sing-box` 还是 `sing-box-tiny`）；未安装任何核心时状态栏标红显示“未安装”，并在客户端和服务端页面上方展示警告提示，禁用重启按钮，避免之前显示 `(sing-box vundefined) 未运行` 的误导 |
 | **核心解耦** | 从 `Makefile` 的 `LUCI_DEPENDS` 中移除硬依赖 `+sing-box`：删除或切换 `sing-box` / `sing-box-tiny` 时不再级联卸载 `luci-app-homeproxy`；支持用户自由选择安装 `sing-box`、`sing-box-tiny` 或手动放置二进制 |
 | **Dashboard** | 面板改由 HomeProxy 自己下载，不再交给 sing-box：sing-box 下载失败后要 24 小时才重试，失败也只写在它的日志里，开了面板进去却是 404。现在服务启动时（重启路由器、修改面板下载地址后）在后台下载并解压到 `/var/run/homeproxy/dashboard/web`，和订阅、资源列表一样先按路由规则下载、失败再直连，启动时失败会再试两次；开启订阅自动更新时随定时任务刷新。客户端页面顶部状态栏显示下载状态（下载中、下载于何时、失败原因：下载失败 / 不是 ZIP / 顶层没有 index.html），新增“更新面板”按钮随时重新下载；下载完成前打开面板看到的是一个提示页而不是 404。新增依赖 `unzip`。从旧版升级时会删掉 sing-box 留下的 `.etag`（否则它会继续自己更新），并重新下载一次 |

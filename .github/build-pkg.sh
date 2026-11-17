@@ -7,9 +7,15 @@ set -o nounset
 
 PKG_MGR="${1:-apk}"
 RELEASE_TYPE="${2:-snapshot}"
+BUILD_FLAVOR="${3:-default}"
 
 if [[ "$PKG_MGR" != "apk" && "$PKG_MGR" != "ipk" ]]; then
 	echo "error: unknown package manager '$PKG_MGR' (expected apk or ipk)" >&2
+	exit 1
+fi
+
+if [[ "$BUILD_FLAVOR" != "default" && "$BUILD_FLAVOR" != "dashboard" ]]; then
+	echo "error: unknown build flavor '$BUILD_FLAVOR' (expected default or dashboard)" >&2
 	exit 1
 fi
 
@@ -60,6 +66,18 @@ fi
 DESCRIPTION="$(get_mk_value "LUCI_TITLE")"
 [ -n "$DESCRIPTION" ] || DESCRIPTION="$PKG_NAME"
 
+if [ "$BUILD_FLAVOR" = "dashboard" ]; then
+	if [ ! -f "$PKG_DIR/root/etc/homeproxy/dashboard/web/index.html" ]; then
+		echo "error: dashboard files not found in root/etc/homeproxy/dashboard/web" >&2
+		exit 1
+	fi
+	OUTPUT_PKG_NAME="${PKG_NAME}-dashboard"
+	PKG_DESC="${DESCRIPTION} (with sing-box-dashboard)"
+else
+	OUTPUT_PKG_NAME="$PKG_NAME"
+	PKG_DESC="$DESCRIPTION"
+fi
+
 mapfile -t CONFFILES < <(get_conffiles "$PKG_NAME")
 if [ "${#CONFFILES[@]}" -eq 0 ]; then
 	echo "warning: no Package/$PKG_NAME/conffiles block found in Makefile — package will ship without conffile protection" >&2
@@ -84,7 +102,8 @@ else
 	PKG_VERSION="$PKG_SOURCE_DATE_EPOCH~$(git -C "$PKG_DIR" rev-parse --short HEAD)-r99"
 fi
 
-echo "Building $PKG_NAME $PKG_VERSION ($PKG_MGR)"
+echo "Building $OUTPUT_PKG_NAME $PKG_VERSION ($PKG_MGR)"
+[ "$BUILD_FLAVOR" = "dashboard" ] && echo "  Flavor: dashboard (bundled with sing-box-dashboard)"
 [ -n "$MK_PKG_VERSION" ] && echo "  Makefile PKG_VERSION=$MK_PKG_VERSION PKG_RELEASE=${MK_PKG_RELEASE:-<unset>}"
 
 TEMP_DIR="$(mktemp -d -p "$BASE_DIR")"
@@ -107,6 +126,10 @@ if [ -d "$PKG_DIR/root" ] && [ "$(ls -A "$PKG_DIR/root" 2>/dev/null)" ]; then
 	cp -fpR "$PKG_DIR/root"/* "$TEMP_PKG_DIR/"
 fi
 
+if [ "$BUILD_FLAVOR" != "dashboard" ]; then
+	rm -rf "$TEMP_PKG_DIR/etc/homeproxy/dashboard"
+fi
+
 if [ "${#CONFFILES[@]}" -gt 0 ]; then
 	{
 		for f in "${CONFFILES[@]}"; do
@@ -126,7 +149,9 @@ declare -A LUCI_LOCALE_MAP=(
 
 declare -a I18N_PACKAGES=()
 
-if [ -d "$PKG_DIR/po" ]; then
+if [ "$BUILD_FLAVOR" = "dashboard" ]; then
+	echo "note: skipping i18n packages for dashboard flavor (translations are shared with base package)"
+elif [ -d "$PKG_DIR/po" ]; then
 	for podir in "$PKG_DIR"/po/*/; do
 		[ -d "$podir" ] || continue
 		lang_dir="$(basename "$podir")"
@@ -173,7 +198,7 @@ if [ -d "$PKG_DIR/po" ]; then
 	done
 fi
 
-if [ "${#I18N_PACKAGES[@]}" -eq 0 ]; then
+if [ "${#I18N_PACKAGES[@]}" -eq 0 ] && [ "$BUILD_FLAVOR" != "dashboard" ]; then
 	echo "note: no po/<lang>/$APP_ID.po files found — skipping i18n packages"
 fi
 
@@ -239,7 +264,7 @@ if [ "$PKG_MGR" == "apk" ]; then
 	apk mkpkg \
 		--info "name:$PKG_NAME" \
 		--info "version:$PKG_VERSION" \
-		--info "description:$DESCRIPTION" \
+		--info "description:$PKG_DESC" \
 		--info "arch:noarch" \
 		--info "origin:$PKG_NAME" \
 		--info "maintainer:unspecified" \
@@ -248,9 +273,9 @@ if [ "$PKG_MGR" == "apk" ]; then
 		--script "post-upgrade:$TEMP_DIR/post-upgrade" \
 		--script "pre-deinstall:$TEMP_DIR/pre-deinstall" \
 		--files "$TEMP_PKG_DIR" \
-		--output "$TEMP_DIR/${PKG_NAME}-${PKG_VERSION}.apk"
+		--output "$TEMP_DIR/${OUTPUT_PKG_NAME}-${PKG_VERSION}.apk"
 
-	mv "$TEMP_DIR/${PKG_NAME}-${PKG_VERSION}.apk" "$BASE_DIR/${PKG_NAME}-${PKG_VERSION}.apk"
+	mv "$TEMP_DIR/${OUTPUT_PKG_NAME}-${PKG_VERSION}.apk" "$BASE_DIR/${OUTPUT_PKG_NAME}-${PKG_VERSION}.apk"
 else
 	mkdir -p "$TEMP_PKG_DIR/CONTROL/"
 
@@ -265,7 +290,7 @@ else
 		Maintainer: unspecified
 		Architecture: all
 		Installed-Size: TO-BE-FILLED-BY-IPKG-BUILD
-		Description: $DESCRIPTION
+		Description: $PKG_DESC
 	EOF
 	chmod 0644 "$TEMP_PKG_DIR/CONTROL/control"
 
@@ -306,7 +331,7 @@ else
 
 	ipkg-build -m "" "$TEMP_PKG_DIR" "$TEMP_DIR"
 
-	mv "$TEMP_DIR/${PKG_NAME}_${PKG_VERSION}_all.ipk" "$BASE_DIR/${PKG_NAME}-${PKG_VERSION}.ipk"
+	mv "$TEMP_DIR/${PKG_NAME}_${PKG_VERSION}_all.ipk" "$BASE_DIR/${OUTPUT_PKG_NAME}-${PKG_VERSION}.ipk"
 fi
 
 echo "Done. Output in $BASE_DIR:"
