@@ -109,13 +109,25 @@ return view.extend({
 			poll.add(() => {
 				return hp.getServiceStatus('sing-box-s').then((res) => {
 					let view = document.getElementById('service_status');
-					view.innerHTML = hp.renderStatus(_('HomeProxy NEXT Server'), features.version, res);
+					view.innerHTML = hp.renderStatus(_('HomeProxy NEXT Server'), features.version, res, features.core_type);
 				});
 			});
 
-			return E('div', { class: 'cbi-section', id: 'status_bar' }, [
-					E('p', { id: 'service_status' }, _('Collecting data...'))
+			const statusBar = E('div', { class: 'cbi-section', id: 'status_bar' }, [
+				E('p', { id: 'service_status' }, _('Collecting data...'))
 			]);
+
+			if (!features.version) {
+				return E('div', {}, [
+					statusBar,
+					E('div', { class: 'alert-message warning', style: 'margin-top: 1em' }, [
+						E('h4', {}, _('Core not found')),
+						E('p', {}, _('Neither %s nor %s is installed on the system. Please install one of them to enable the proxy service.').format('sing-box', 'sing-box-tiny'))
+					])
+				]);
+			}
+
+			return statusBar;
 		}
 
 		s = m.section(form.NamedSection, 'server', 'homeproxy', _('Global settings'));

@@ -11,7 +11,7 @@ import { access, error, lstat, popen, readfile, rename, writefile, unlink } from
 import { cursor } from 'uci';
 
 import {
-	isBinary, isValidPEM, listPlugins, readSubscriptionStatus, PLUGIN_NAME_RE
+	getSingBoxBinary, isBinary, isValidPEM, listPlugins, readSubscriptionStatus, PLUGIN_NAME_RE
 } from '/etc/homeproxy/scripts/homeproxy.uc';
 
 /* Kanged from ucode/luci */
@@ -439,10 +439,14 @@ const methods = {
 			if (!(req.args?.type in ['ech-keypair', 'uuid', 'reality-keypair', 'vapid-keypair', 'wg-keypair']))
 				return { result: false, error: 'illegal type' };
 
+			const bin = getSingBoxBinary();
+			if (!bin)
+				return { result: false, error: 'sing-box binary not found' };
+
 			const type = req.args?.type;
 			let result = {};
 
-			const fd = popen(`/usr/bin/sing-box generate ${type} ${shellquote(req.args?.params || '')}`);
+			const fd = popen(`${bin} generate ${type} ${shellquote(req.args?.params || '')}`);
 			if (fd) {
 				let ech_cfg_set = false;
 				let ech_key_set = false;
@@ -486,19 +490,44 @@ const methods = {
 		call: function() {
 			let features = {};
 
-			const fd = popen('/usr/bin/sing-box version');
-			if (fd) {
-				for (let line = fd.read('line'); length(line); line = fd.read('line')) {
-					if (match(trim(line), /^sing-box version (.*)/))
-						features.version = match(trim(line), /^sing-box version (.*)/)[1];
+			const bin = getSingBoxBinary();
+			features.installed = (bin !== null);
 
-					let tags = match(trim(line), /^Tags: (.*)/);
-					if (tags)
-						for (let i in split(tags[1], ','))
-							features[i] = true;
+			if (bin) {
+				const fd = popen(`${bin} version`);
+				if (fd) {
+					for (let line = fd.read('line'); length(line); line = fd.read('line')) {
+						if (match(trim(line), /^sing-box version (.*)/))
+							features.version = match(trim(line), /^sing-box version (.*)/)[1];
+
+						let tags = match(trim(line), /^Tags: (.*)/);
+						if (tags)
+							for (let i in split(tags[1], ','))
+								features[i] = true;
+					}
+
+					fd.close();
 				}
 
-				fd.close();
+				/* Detect variant: sing-box vs sing-box-tiny */
+				let is_tiny = false;
+				if (bin === '/usr/bin/sing-box-tiny') {
+					is_tiny = true;
+				} else if (access('/usr/lib/opkg/info/sing-box-tiny.control') ||
+				           access('/usr/lib/opkg/info/sing-box-tiny.list')) {
+					is_tiny = true;
+				} else if (access('/lib/apk/db/installed')) {
+					const apk_db = readfile('/lib/apk/db/installed');
+					if (apk_db && match(apk_db, /(^|\n)P:sing-box-tiny\n/))
+						is_tiny = true;
+				}
+
+				features.core_type = is_tiny ? 'sing-box-tiny' : 'sing-box';
+				features.is_tiny = is_tiny;
+			} else {
+				features.version = null;
+				features.core_type = null;
+				features.is_tiny = false;
 			}
 
 			features.hp_has_ip_full = access('/usr/libexec/ip-full');

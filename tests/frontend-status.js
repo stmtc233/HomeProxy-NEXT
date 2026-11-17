@@ -62,6 +62,18 @@ const renders = [
 			`render ${JSON.stringify(running)} -> ${state}`);
 	}
 
-	console.log(`${cases.length + renders.length} checks, ${failed} failures`);
+	const htmlTiny = hp.renderStatus('HomeProxy NEXT', '1.14.4', true, 'sing-box-tiny');
+	check(htmlTiny.includes('color:green') && htmlTiny.includes('(sing-box-tiny v1.14.4) RUNNING<'),
+		'render sing-box-tiny -> RUNNING');
+
+	const htmlMissing = hp.renderStatus('HomeProxy NEXT', null, false);
+	check(htmlMissing.includes('color:red') && htmlMissing.includes('(sing-box) NOT INSTALLED<'),
+		'render missing core -> NOT INSTALLED');
+
+	const htmlMissingTiny = hp.renderStatus('HomeProxy NEXT', null, false, 'sing-box-tiny');
+	check(htmlMissingTiny.includes('color:red') && htmlMissingTiny.includes('(sing-box-tiny) NOT INSTALLED<'),
+		'render missing tiny core -> NOT INSTALLED');
+
+	console.log(`${cases.length + renders.length + 3} checks, ${failed} failures`);
 	process.exit(failed ? 1 : 0);
 })();

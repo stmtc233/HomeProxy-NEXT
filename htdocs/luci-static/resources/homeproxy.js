@@ -520,7 +520,11 @@ return baseclass.extend({
 			res ? (res.homeproxy?.instances?.[instance]?.running === true) : null);
 	},
 
-	renderStatus(name, version, running) {
+	renderStatus(name, version, running, core_type) {
+		const core = core_type || 'sing-box';
+		if (!version)
+			return '<em><span style="color:red"><strong>%s (%s) %s</strong></span></em>'.format(name, core, _('NOT INSTALLED'));
+
 		let color, state;
 		if (running == null)
 			[ color, state ] = [ '#d08000', _('STATUS UNKNOWN') ];
@@ -529,7 +533,7 @@ return baseclass.extend({
 		else
 			[ color, state ] = [ 'red', _('NOT RUNNING') ];
 
-		return '<em><span style="color:%s"><strong>%s (sing-box v%s) %s</strong></span></em>'.format(color, name, version, state);
+		return '<em><span style="color:%s"><strong>%s (%s v%s) %s</strong></span></em>'.format(color, name, core, version, state);
 	},
 
 	generateRand(type, length) {

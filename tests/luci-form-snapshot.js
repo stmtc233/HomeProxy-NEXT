@@ -189,7 +189,7 @@ const deps = {
  * LuCI does (homeproxy.client.routing -> homeproxy/client/routing.js), once.
  */
 function loadLuciModule(file, extraDeps, loaded) {
-	const resources = path.resolve(file).replace(/(\/htdocs\/luci-static\/resources)\/.*$/, '$1');
+	const resources = path.resolve(file).replace(/([\\/]htdocs[\\/]luci-static[\\/]resources)[\\/].*$/, '$1');
 	const all = loaded || Object.assign({}, deps, extraDeps);
 	const dep = (mod) => {
 		const sub = path.join(resources, mod.replace(/\./g, '/') + '.js');

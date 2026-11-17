@@ -658,9 +658,20 @@ export function applyPlugins(kind, config, ctx, dir) {
 	return { config, results };
 };
 
+export function getSingBoxBinary() {
+	if (access('/usr/bin/sing-box'))
+		return '/usr/bin/sing-box';
+	if (access('/usr/bin/sing-box-tiny'))
+		return '/usr/bin/sing-box-tiny';
+	return null;
+};
+
 function checkConfig(file, config) {
 	writefile(file, sprintf('%.J\n', config));
-	const res = executeCommand('/usr/bin/sing-box', 'check', '--config', shellQuote(file));
+	const bin = getSingBoxBinary();
+	if (!bin)
+		return { ok: false, output: 'sing-box binary not found' };
+	const res = executeCommand(bin, 'check', '--config', shellQuote(file));
 	return { ok: res.exitcode === 0, output: trim(`${res.stdout ?? ''}${res.stderr ?? ''}`) };
 };
 

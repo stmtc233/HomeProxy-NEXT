@@ -4126,3 +4126,17 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/client.js:180
 msgid "Open the dashboard in a new tab"
 msgstr ""
+
+#: htdocs/luci-static/resources/homeproxy.js
+msgid "NOT INSTALLED"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+#: htdocs/luci-static/resources/view/homeproxy/server.js
+msgid "Core not found"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+#: htdocs/luci-static/resources/view/homeproxy/server.js
+msgid "Neither %s nor %s is installed on the system. Please install one of them to enable the proxy service."
+msgstr ""

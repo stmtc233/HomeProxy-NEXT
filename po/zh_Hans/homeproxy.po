@@ -4345,3 +4345,17 @@ msgstr "打开面板"
 #: htdocs/luci-static/resources/view/homeproxy/client.js:180
 msgid "Open the dashboard in a new tab"
 msgstr "在新标签页中打开面板"
+
+#: htdocs/luci-static/resources/homeproxy.js
+msgid "NOT INSTALLED"
+msgstr "未安装"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+#: htdocs/luci-static/resources/view/homeproxy/server.js
+msgid "Core not found"
+msgstr "核心未找到"
+
+#: htdocs/luci-static/resources/view/homeproxy/client.js
+#: htdocs/luci-static/resources/view/homeproxy/server.js
+msgid "Neither %s nor %s is installed on the system. Please install one of them to enable the proxy service."
+msgstr "系统中未检测到 %s 或 %s。请先安装其中一个软件包以启用代理服务。"

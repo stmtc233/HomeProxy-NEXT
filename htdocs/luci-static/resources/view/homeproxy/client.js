@@ -193,7 +193,7 @@ return view.extend({
 		s.render = function () {
 			const updateStatus = () => hp.getServiceStatus('sing-box-c').then((res) => {
 				let view = document.getElementById('service_status');
-				view.innerHTML = hp.renderStatus(_('HomeProxy NEXT'), features.version, res);
+				view.innerHTML = hp.renderStatus(_('HomeProxy NEXT'), features.version, res, features.core_type);
 
 				if (dashboard_enabled)
 					return L.resolveDefault(callDashboardStatus(), {}).then((status) =>
@@ -201,26 +201,43 @@ return view.extend({
 			});
 			poll.add(updateStatus);
 
-			return E('div', { class: 'cbi-section', id: 'status_bar',
-				style: 'display: flex; flex-wrap: wrap; align-items: center; gap: 0.5em 1em' }, [
-					E('p', { id: 'service_status', style: 'margin: 0' }, _('Collecting data...')),
-					E('button', {
-						class: 'btn cbi-button cbi-button-reload',
-						title: _('Restart the HomeProxy service'),
-						click: ui.createHandlerFn(this, () => restartService().then(updateStatus))
-					}, [ _('Restart') ]),
-					dashboard_url ? E('button', {
-						class: 'btn cbi-button cbi-button-action',
-						title: _('Open the dashboard in a new tab'),
-						click: () => window.open(dashboard_url, '_blank', 'noopener')
-					}, [ _('Open dashboard') ]) : '',
-					dashboard_enabled ? E('button', {
-						class: 'btn cbi-button cbi-button-action',
-						title: _('Download the dashboard again'),
-						click: ui.createHandlerFn(this, () => callDashboardUpdate().then(updateStatus))
-					}, [ _('Update dashboard') ]) : '',
-					dashboard_enabled ? E('span', { id: 'dashboard_status' }) : ''
-			]);
+			const statusChildren = [
+				E('p', { id: 'service_status', style: 'margin: 0' }, _('Collecting data...')),
+				E('button', {
+					class: 'btn cbi-button cbi-button-reload',
+					title: _('Restart the HomeProxy service'),
+					disabled: !features.version ? '' : null,
+					click: ui.createHandlerFn(this, () => features.version ? restartService().then(updateStatus) : null)
+				}, [ _('Restart') ]),
+				dashboard_url ? E('button', {
+					class: 'btn cbi-button cbi-button-action',
+					title: _('Open the dashboard in a new tab'),
+					click: () => window.open(dashboard_url, '_blank', 'noopener')
+				}, [ _('Open dashboard') ]) : '',
+				dashboard_enabled ? E('button', {
+					class: 'btn cbi-button cbi-button-action',
+					title: _('Download the dashboard again'),
+					click: ui.createHandlerFn(this, () => callDashboardUpdate().then(updateStatus))
+				}, [ _('Update dashboard') ]) : '',
+				dashboard_enabled ? E('span', { id: 'dashboard_status' }) : ''
+			];
+
+			const statusBar = E('div', { class: 'cbi-section', id: 'status_bar',
+				style: 'display: flex; flex-wrap: wrap; align-items: center; gap: 0.5em 1em' },
+				statusChildren
+			);
+
+			if (!features.version) {
+				return E('div', {}, [
+					statusBar,
+					E('div', { class: 'alert-message warning', style: 'margin-top: 1em' }, [
+						E('h4', {}, _('Core not found')),
+						E('p', {}, _('Neither %s nor %s is installed on the system. Please install one of them to enable the proxy service.').format('sing-box', 'sing-box-tiny'))
+					])
+				]);
+			}
+
+			return statusBar;
 		}
 
 		const ctx = { uciconfig: data[0], features, hosts, proxy_nodes, urltest_choices };

@@ -302,11 +302,20 @@ start_service() {
 	return 1
 }
 
-# Sets sb_ver (a local of the caller) to the installed sing-box version;
+# Sets sb_ver and sb_core (locals of the caller) to the installed sing-box version and variant;
 # fails unless it is at least 1.14.
 check_singbox_version() {
 	local sb_major sb_minor
-	sb_ver="$(sing-box version -n 2>/dev/null)"
+	if [ ! -x "$PROG" ]; then
+		if [ -x "/usr/bin/sing-box-tiny" ]; then
+			PROG="/usr/bin/sing-box-tiny"
+		else
+			log "Error: sing-box binary not found at $PROG, abort."
+			return 1
+		fi
+	fi
+
+	sb_ver="$("$PROG" version -n 2>/dev/null)"
 	if [ -z "$sb_ver" ]; then
 		log "Error: cannot detect sing-box version, abort."
 		return 1
@@ -317,6 +326,14 @@ check_singbox_version() {
 	if [ "$sb_major" -lt 1 ] || { [ "$sb_major" -eq 1 ] && [ "$sb_minor" -lt 14 ]; }; then
 		log "Error: sing-box >= 1.14.0 required, found ${sb_ver}."
 		return 1
+	fi
+
+	sb_core="sing-box"
+	if [ "$PROG" = "/usr/bin/sing-box-tiny" ] \
+		|| [ -f "/usr/lib/opkg/info/sing-box-tiny.control" ] \
+		|| [ -f "/usr/lib/opkg/info/sing-box-tiny.list" ] \
+		|| { [ -f "/lib/apk/db/installed" ] && grep -Eq '^P:sing-box-tiny$' "/lib/apk/db/installed" 2>/dev/null; }; then
+		sb_core="sing-box-tiny"
 	fi
 }
 
@@ -598,7 +615,7 @@ prepare_runtime_files() {
 start_homeproxy() {
 	config_load "$CONF"
 
-	local sb_ver
+	local sb_ver sb_core
 	check_singbox_version || return 1
 
 	local proxy_mode ipv6_support
@@ -639,7 +656,7 @@ start_homeproxy() {
 	apply_firewall "$client_mode"
 	restart_fingerprint > "$RUN_DIR/restart.fingerprint"
 
-	log "sing-box ${sb_ver} started."
+	log "${sb_core:-sing-box} ${sb_ver} started."
 }
 
 stop_service() {
